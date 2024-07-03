@@ -9,7 +9,7 @@ export default class Server implements Party.Server {
       `Connected:
   id: ${conn.id}
   room: ${this.room.id}
-  url: ${new URL(ctx.request.url).pathname}`,
+  url: ${new URL(ctx.request.url).pathname}`
     );
 
     // let's send a message to the connection
@@ -23,7 +23,7 @@ export default class Server implements Party.Server {
     this.room.broadcast(
       `${sender.id}: ${message}`,
       // ...except for the connection it came from
-      [sender.id],
+      [sender.id]
     );
   }
 }

@@ -1,29 +1,21 @@
 import { ConnectS3 } from "./connect-s3.js";
 import { Connectable } from "@fireproof/core/block-store";
 import type { AnyLink, UploadDataFnParams } from "@fireproof/core/block-store";
-import {
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadMetaFnParams,
-} from "@fireproof/core/block-store";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadMetaFnParams } from "@fireproof/core/block-store";
 export type { AnyLink };
 
 export const connect = {
   s3free: ({ blockstore }: Connectable) => {
-    const upload =
-      "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
-    const download =
-      "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
+    const upload = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
+    const download = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
     const websocket = "";
     const connection = new ConnectS3(upload, download, websocket);
     connection.connect(blockstore);
     return connection;
   },
   awsFree: ({ blockstore, name }: Connectable) => {
-    const upload =
-      "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
-    const download =
-      "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
+    const upload = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
+    const download = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
     const websocket = `wss://v7eax67rm6.execute-api.us-east-2.amazonaws.com/Prod?database=${name}`;
     const connection = new ConnectS3(upload, download, websocket);
     connection.connect(blockstore);
@@ -31,11 +23,7 @@ export const connect = {
   },
   aws: (
     { blockstore, name }: Connectable,
-    {
-      upload,
-      download,
-      websocket,
-    }: { upload: string; download: string; websocket: string },
+    { upload, download, websocket }: { upload: string; download: string; websocket: string }
   ) => {
     const updatedwebsocket = `${websocket}?database=${name}`;
     const connection = new ConnectS3(upload, download, updatedwebsocket);
@@ -44,9 +32,7 @@ export const connect = {
   },
 };
 
-export function validateDataParams(
-  params: DownloadDataFnParams | UploadDataFnParams,
-) {
+export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
   const { type, name, car } = params;
   if (!name) throw new Error("name is required");
   if (!car) {
@@ -57,9 +43,7 @@ export function validateDataParams(
   }
 }
 
-export function validateMetaParams(
-  params: DownloadMetaFnParams | UploadMetaFnParams,
-) {
+export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
   const { name, branch } = params;
   if (!name) throw new Error("name is required");
   if (!branch) {

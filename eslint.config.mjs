@@ -17,5 +17,5 @@ export default tseslint.config(
       "**/examples/",
       "smoke/react/",
     ],
-  },
+  }
 );
