@@ -34,7 +34,9 @@ export default async (req: Request) => {
       const entries = (
         await Promise.all(
           blobs.map(async (blob) => {
-            const { data, parents } = await meta.get(blob.key, { type: "json" });
+            const { data, parents } = await meta.get(blob.key, {
+              type: "json",
+            });
             for (const p of parents) {
               allParents.push(p.toString());
               void meta.delete(`${metaDb}/${p}`);
@@ -42,11 +44,15 @@ export default async (req: Request) => {
             return { cid: blob.key.split("/")[1], data };
           }),
         )
-      ).filter((entry) => entry.data !== null && !allParents.includes(entry.cid));
+      ).filter(
+        (entry) => entry.data !== null && !allParents.includes(entry.cid),
+      );
       return new Response(JSON.stringify(entries), { status: 200 });
     }
   } else {
-    return new Response(JSON.stringify({ error: "Invalid path" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Invalid path" }), {
+      status: 400,
+    });
   }
 };
 

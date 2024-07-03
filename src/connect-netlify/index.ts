@@ -1,5 +1,5 @@
 import { ConnectNetlify } from "./connect-netlify.js";
-import type { Connectable } from "../../block-store/index.js";
+import type { Connectable } from "@fireproof/core/block-store";
 
 const netlifyCxs = new Map<string, ConnectNetlify>();
 

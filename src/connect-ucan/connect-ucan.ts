@@ -5,7 +5,7 @@ import {
   DownloadMetaFnParams,
   UploadDataFnParams,
   UploadMetaFnParams,
-} from "../../block-store/index.js";
+} from "@fireproof/core/block-store";
 import { Client } from "@web3-storage/w3up-client";
 import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
@@ -13,8 +13,8 @@ import { DID, Link, Proof } from "@ucanto/interface";
 import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
-import { Falsy, throwFalsy } from "../../types.js";
-import { ConnectionBase } from "../../block-store/connection-base.js";
+import { Falsy, throwFalsy } from "@fireproof/core";
+import { ConnectionBase } from "@fireproof/core/block-store";
 
 export interface ConnectUCANParams {
   name: string;
@@ -23,7 +23,10 @@ export interface ConnectUCANParams {
 
 const DEFAULT_CLOCK_SPACE_NAME = "_fireproof_account";
 
-function findClockSpace(client: Client, name: string = DEFAULT_CLOCK_SPACE_NAME): DID | Falsy {
+function findClockSpace(
+  client: Client,
+  name: string = DEFAULT_CLOCK_SPACE_NAME,
+): DID | Falsy {
   const spaces = client.spaces();
   const space = spaces
     // sort alphanumerically by space DID
@@ -33,7 +36,11 @@ function findClockSpace(client: Client, name: string = DEFAULT_CLOCK_SPACE_NAME)
   return space?.did();
 }
 
-async function createSpace(client: Client, account: Account.Account, name: string = DEFAULT_CLOCK_SPACE_NAME): Promise<DID> {
+async function createSpace(
+  client: Client,
+  account: Account.Account,
+  name: string = DEFAULT_CLOCK_SPACE_NAME,
+): Promise<DID> {
   const space = await client.createSpace(name);
   Result.try(await account.provision(space.did()));
   await client.addSpace(
@@ -55,7 +62,9 @@ async function createSpace(client: Client, account: Account.Account, name: strin
 
 function parseEmail(email: string): Account.EmailAddress {
   if (email.split("@").length !== 2) {
-    throw new Error(`${email} doesn't look anything like an email address, try again?`);
+    throw new Error(
+      `${email} doesn't look anything like an email address, try again?`,
+    );
   }
   return email as Account.EmailAddress;
 }
@@ -110,7 +119,9 @@ export class ConnectUCAN extends ConnectionBase {
     }
   }
 
-  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy> {
+  async dataDownload(
+    params: DownloadDataFnParams,
+  ): Promise<Uint8Array | Falsy> {
     const url = `https://${params.car}.ipfs.w3s.link/`;
     const response = await fetch(url);
     if (response.ok) {
@@ -120,10 +131,16 @@ export class ConnectUCAN extends ConnectionBase {
     }
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
+  async dataUpload(
+    bytes: Uint8Array,
+    params: UploadDataFnParams,
+    opts?: { public?: boolean },
+  ): Promise<void> {
     const client = this.client;
     if (!client) {
-      throw new Error("client not initialized, cannot dataUpload, please authorize first");
+      throw new Error(
+        "client not initialized, cannot dataUpload, please authorize first",
+      );
     }
 
     // uploadCar is processed so roots are reachable via CDN
@@ -137,14 +154,20 @@ export class ConnectUCAN extends ConnectionBase {
     });
   }
 
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
+  async metaDownload(
+    params: DownloadMetaFnParams,
+  ): Promise<Uint8Array[] | Falsy> {
     const client = this.client;
     if (!client) {
-      throw new Error("client not initialized, cannot metaDownload, please authorize first");
+      throw new Error(
+        "client not initialized, cannot metaDownload, please authorize first",
+      );
     }
     const clockSpaceDID = this.clockSpaceDID;
     if (!clockSpaceDID) {
-      throw new Error("clockSpaceDID not initialized, cannot metaDownload, please authorize first");
+      throw new Error(
+        "clockSpaceDID not initialized, cannot metaDownload, please authorize first",
+      );
     }
     if (params.branch !== "main") {
       throw new Error("todo, implement space per branch");
@@ -156,21 +179,35 @@ export class ConnectUCAN extends ConnectionBase {
       proofs: clockProofs,
     });
     if (head.out.ok) {
-      return this.fetchAndUpdateHead(head.out.ok.head as unknown as Link<DbMetaEventBlock, number, number, 1>[]);
+      return this.fetchAndUpdateHead(
+        head.out.ok.head as unknown as Link<
+          DbMetaEventBlock,
+          number,
+          number,
+          1
+        >[],
+      );
     } else {
       console.log("w3clock error", head.out.error);
       throw new Error(`Failed to download ${params.name}`);
     }
   }
 
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  async metaUpload(
+    bytes: Uint8Array,
+    params: UploadMetaFnParams,
+  ): Promise<Uint8Array[] | undefined> {
     const client = this.client;
     if (!client) {
-      throw new Error("client not initialized, cannot metaUpload, please authorize first");
+      throw new Error(
+        "client not initialized, cannot metaUpload, please authorize first",
+      );
     }
     const clockSpaceDID = this.clockSpaceDID;
     if (!clockSpaceDID) {
-      throw new Error("clockSpaceDID not initialized, cannot metaUpload, please authorize first");
+      throw new Error(
+        "clockSpaceDID not initialized, cannot metaUpload, please authorize first",
+      );
     }
     if (params.branch !== "main") {
       throw new Error("todo, implement space per branch");
@@ -217,7 +254,9 @@ export class ConnectUCAN extends ConnectionBase {
     for (const cid of remoteHead) {
       const local = await cache.get(cid);
       if (local) {
-        const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(local.bytes);
+        const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(
+          local.bytes,
+        );
         outBytess.push(event.value.data.dbMeta);
       } else {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`;
@@ -225,7 +264,9 @@ export class ConnectUCAN extends ConnectionBase {
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer());
           await cache.put(cid, metaBlock);
-          const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(metaBlock);
+          const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(
+            metaBlock,
+          );
           outBytess.push(event.value.data.dbMeta);
         } else {
           throw new Error(`Failed to download ${url}`);
@@ -239,13 +280,19 @@ export class ConnectUCAN extends ConnectionBase {
   async clockProofsForDb(): Promise<Proof[]> {
     const client = this.client;
     if (!client) {
-      throw new Error("client not initialized, cannot get clock proofs, please authorize first");
+      throw new Error(
+        "client not initialized, cannot get clock proofs, please authorize first",
+      );
     }
     const clockSpaceDID = this.clockSpaceDID;
     if (!clockSpaceDID) {
-      throw new Error("clockSpaceDID not initialized, cannot get clock proofs, please authorize first");
+      throw new Error(
+        "clockSpaceDID not initialized, cannot get clock proofs, please authorize first",
+      );
     }
-    const clockProofs = client.proofs([{ can: "clock/*", with: clockSpaceDID }]);
+    const clockProofs = client.proofs([
+      { can: "clock/*", with: clockSpaceDID },
+    ]);
     if (!clockProofs.length) {
       throw new Error("missing clock/* capability on account space");
     }

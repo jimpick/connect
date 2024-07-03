@@ -1,9 +1,14 @@
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../block-store/types.js";
-import { throwFalsy } from "../../types.js";
+import {
+  DownloadDataFnParams,
+  DownloadMetaFnParams,
+  UploadDataFnParams,
+  UploadMetaFnParams,
+} from "@fireproof/core/block-store";
+import { throwFalsy } from "@fireproof/core";
 import { CID } from "multiformats";
-import { ConnectionBase } from "../../block-store/connection-base.js";
+import { ConnectionBase } from "@fireproof/core/block-store";
 
 interface MetaResultItem {
   readonly cid: string;
@@ -39,7 +44,12 @@ export class ConnectS3 extends ConnectionBase {
     const response = await fetch(fetchUploadUrl);
     if (!response.ok) {
       // console.log('failed to get upload url for data', params, response)
-      throw new Error("failed to get upload url for data " + new Date().toISOString() + " " + response.statusText);
+      throw new Error(
+        "failed to get upload url for data " +
+          new Date().toISOString() +
+          " " +
+          response.statusText,
+      );
     }
     const { uploadURL } = (await response.json()) as { uploadURL: string };
     const done = await fetch(uploadURL, { method: "PUT", body: bytes });
@@ -55,14 +65,19 @@ export class ConnectS3 extends ConnectionBase {
       data: base64String,
       parents: this.parents.map((p) => p.toString()),
     };
-    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl);
+    const fetchUploadUrl = new URL(
+      `?${new URLSearchParams({ type: "meta", ...params }).toString()}`,
+      this.uploadUrl,
+    );
     const done = await fetch(fetchUploadUrl, {
       method: "PUT",
       body: JSON.stringify(crdtEntry),
     });
     const result = await done.json();
     if (result.status != 201) {
-      throw new Error("failed to upload data " + JSON.parse(result.body).message);
+      throw new Error(
+        "failed to upload data " + JSON.parse(result.body).message,
+      );
     }
     this.parents = [event.cid];
     return undefined;
@@ -70,7 +85,10 @@ export class ConnectS3 extends ConnectionBase {
 
   async dataDownload(params: DownloadDataFnParams) {
     const { type, name, car } = params;
-    const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl);
+    const fetchFromUrl = new URL(
+      `${type}/${name}/${car}.car`,
+      this.downloadUrl,
+    );
     const response = await fetch(fetchFromUrl);
     if (!response.ok) {
       return undefined; // throw new Error('failed to download data ' + response.statusText)
@@ -115,7 +133,10 @@ export class ConnectS3 extends ConnectionBase {
    */
 
   async metaDownload(params: DownloadMetaFnParams) {
-    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl);
+    const fetchUploadUrl = new URL(
+      `?${new URLSearchParams({ type: "meta", ...params }).toString()}`,
+      this.uploadUrl,
+    );
     const data = await fetch(fetchUploadUrl);
     const response = await data.json();
     if (response.status != 200) throw new Error("Failed to download data");
@@ -128,7 +149,12 @@ export class ConnectS3 extends ConnectionBase {
       }),
     );
     const cids = events.map((e) => e.cid);
-    const uniqueParentsMap = new Map([...this.parents, ...cids.map((i) => CID.parse(i))].map((p) => [p.toString(), p]));
+    const uniqueParentsMap = new Map(
+      [...this.parents, ...cids.map((i) => CID.parse(i))].map((p) => [
+        p.toString(),
+        p,
+      ]),
+    );
     this.parents = Array.from(uniqueParentsMap.values());
     return events.map((e) => e.bytes);
   }
