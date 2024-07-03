@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
+    "build": "pnpm run '/^build:/' && pnpm run '/^pub:/'",
     "build:tsc": "tsc",
     "xbuild:tsup": "tsup",
+    "pub:noop": "echo",
     "xpub:fireproof-core": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/fireproof-core/; cp package-fireproof-core.json dist/fireproof-core/package.json",
     "xpub:use-fireproof": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/use-fireproof/; cp package-use-fireproof.json dist/use-fireproof/package.json",
     "presmoke": "pnpm run build",
