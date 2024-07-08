@@ -1,12 +1,12 @@
 import { ConnectNetlify } from "./connect-netlify.js";
-import type { Connectable } from "@fireproof/core/block-store";
+import { bs } from "@fireproof/core";
 
 const netlifyCxs = new Map<string, ConnectNetlify>();
 
 export { ConnectNetlify };
 
 export const connect = {
-  netlify: ({ name, blockstore }: Connectable, refresh = false) => {
+  netlify: ({ name, blockstore }: bs.Connectable, refresh = false) => {
     if (!name) throw new Error("database name is required");
     if (!refresh && netlifyCxs.has(name)) {
       return netlifyCxs.get(name);

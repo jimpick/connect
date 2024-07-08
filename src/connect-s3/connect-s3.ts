@@ -1,20 +1,13 @@
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
-import {
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadDataFnParams,
-  UploadMetaFnParams,
-} from "@fireproof/core/block-store";
-import { throwFalsy } from "@fireproof/core";
+import { throwFalsy, bs } from "@fireproof/core";
 import { CID } from "multiformats";
-import { ConnectionBase } from "@fireproof/core/block-store";
 
 interface MetaResultItem {
   readonly cid: string;
   readonly data: string;
 }
-export class ConnectS3 extends ConnectionBase {
+export class ConnectS3 extends bs.ConnectionBase {
   readonly uploadUrl: URL;
   readonly downloadUrl: URL;
   readonly ws?: WebSocket;
@@ -35,11 +28,11 @@ export class ConnectS3 extends ConnectionBase {
     });
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
+  async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams) {
     // console.log('s3 dataUpload', params.car.toString())
     const fetchUploadUrl = new URL(
       `?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`,
-      this.uploadUrl
+      this.uploadUrl,
     );
     const response = await fetch(fetchUploadUrl);
     if (!response.ok) {
@@ -52,7 +45,7 @@ export class ConnectS3 extends ConnectionBase {
     if (!done.ok) throw new Error("failed to upload data " + done.statusText);
   }
 
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
+  async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams) {
     const event = await this.createEventBlock(bytes);
     const base64String = Base64.fromUint8Array(bytes);
     const crdtEntry = {
@@ -73,7 +66,7 @@ export class ConnectS3 extends ConnectionBase {
     return undefined;
   }
 
-  async dataDownload(params: DownloadDataFnParams) {
+  async dataDownload(params: bs.DownloadDataFnParams) {
     const { type, name, car } = params;
     const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl);
     const response = await fetch(fetchFromUrl);
@@ -119,7 +112,7 @@ export class ConnectS3 extends ConnectionBase {
    * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
    */
 
-  async metaDownload(params: DownloadMetaFnParams) {
+  async metaDownload(params: bs.DownloadMetaFnParams) {
     const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl);
     const data = await fetch(fetchUploadUrl);
     const response = await data.json();
@@ -130,7 +123,7 @@ export class ConnectS3 extends ConnectionBase {
         const base64String = element.data;
         const bytes = Base64.toUint8Array(base64String);
         return { cid: element.cid, bytes };
-      })
+      }),
     );
     const cids = events.map((e) => e.cid);
     const uniqueParentsMap = new Map([...this.parents, ...cids.map((i) => CID.parse(i))].map((p) => [p.toString(), p]));

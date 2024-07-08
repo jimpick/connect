@@ -1,14 +1,8 @@
 import { Base64 } from "js-base64";
-import {
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadDataFnParams,
-  UploadMetaFnParams,
-} from "@fireproof/core/block-store";
+import { bs } from "@fireproof/core";
 import { Falsy } from "@fireproof/core";
-import { ConnectionBase } from "@fireproof/core/block-store";
 
-export class ConnectNetlify extends ConnectionBase {
+export class ConnectNetlify extends bs.ConnectionBase {
   readonly name: string;
 
   constructor(name: string) {
@@ -16,7 +10,7 @@ export class ConnectNetlify extends ConnectionBase {
     this.name = name;
   }
 
-  async dataUpload(bytes: Uint8Array, { car }: UploadDataFnParams) {
+  async dataUpload(bytes: Uint8Array, { car }: bs.UploadDataFnParams) {
     const fetchUploadUrl = new URL(`/fireproof?car=${car}`, document.location.origin);
     const base64String = Base64.fromUint8Array(bytes);
     const done = await fetch(fetchUploadUrl, {
@@ -28,7 +22,7 @@ export class ConnectNetlify extends ConnectionBase {
     }
   }
 
-  async dataDownload({ car }: DownloadDataFnParams) {
+  async dataDownload({ car }: bs.DownloadDataFnParams) {
     const fetchDownloadUrl = new URL(`/fireproof?car=${car}`, document.location.origin);
     const response = await fetch(fetchDownloadUrl);
     if (!response.ok) throw new Error("failed to download data " + response.statusText);
@@ -37,7 +31,7 @@ export class ConnectNetlify extends ConnectionBase {
     return data;
   }
 
-  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | Falsy> {
+  async metaUpload(bytes: Uint8Array, { name }: bs.UploadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     const event = await this.createEventBlock(bytes);
     const base64String = Base64.fromUint8Array(bytes);
     const crdtEntry = {
@@ -55,7 +49,7 @@ export class ConnectNetlify extends ConnectionBase {
     return undefined;
   }
 
-  async metaDownload({ name }: DownloadMetaFnParams) {
+  async metaDownload({ name }: bs.DownloadMetaFnParams) {
     const fetchDownloadUrl = new URL(`/fireproof?meta=${name}`, document.location.origin);
     const response = await fetch(fetchDownloadUrl);
     if (!response.ok) throw new Error("failed to download meta " + response.statusText);

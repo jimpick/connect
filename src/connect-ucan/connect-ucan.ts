@@ -1,11 +1,4 @@
-import {
-  CarClockHead,
-  DbMetaEventBlock,
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadDataFnParams,
-  UploadMetaFnParams,
-} from "@fireproof/core/block-store";
+import { bs } from "@fireproof/core";
 import { Client } from "@web3-storage/w3up-client";
 import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
@@ -14,7 +7,6 @@ import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
 import { Falsy, throwFalsy } from "@fireproof/core";
-import { ConnectionBase } from "@fireproof/core/block-store";
 
 export interface ConnectUCANParams {
   name: string;
@@ -64,7 +56,7 @@ function parseEmail(email: string): Account.EmailAddress {
   return email as Account.EmailAddress;
 }
 
-export class ConnectUCAN extends ConnectionBase {
+export class ConnectUCAN extends bs.ConnectionBase {
   client?: Client;
   clockSpaceDID?: DID;
   readonly params: ConnectUCANParams;
@@ -114,7 +106,7 @@ export class ConnectUCAN extends ConnectionBase {
     }
   }
 
-  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy> {
+  async dataDownload(params: bs.DownloadDataFnParams): Promise<Uint8Array | Falsy> {
     const url = `https://${params.car}.ipfs.w3s.link/`;
     const response = await fetch(url);
     if (response.ok) {
@@ -124,7 +116,7 @@ export class ConnectUCAN extends ConnectionBase {
     }
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
+  async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot dataUpload, please authorize first");
@@ -141,7 +133,7 @@ export class ConnectUCAN extends ConnectionBase {
     });
   }
 
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
+  async metaDownload(params: bs.DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot metaDownload, please authorize first");
@@ -160,14 +152,14 @@ export class ConnectUCAN extends ConnectionBase {
       proofs: clockProofs,
     });
     if (head.out.ok) {
-      return this.fetchAndUpdateHead(head.out.ok.head as unknown as Link<DbMetaEventBlock, number, number, 1>[]);
+      return this.fetchAndUpdateHead(head.out.ok.head as unknown as Link<bs.DbMetaEventBlock, number, number, 1>[]);
     } else {
       console.log("w3clock error", head.out.error);
       throw new Error(`Failed to download ${params.name}`);
     }
   }
 
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot metaUpload, please authorize first");
@@ -211,11 +203,11 @@ export class ConnectUCAN extends ConnectionBase {
     }
     this.parents = [event.cid];
 
-    const head = ok.head as CarClockHead;
+    const head = ok.head as bs.CarClockHead;
     return this.fetchAndUpdateHead(head);
   }
 
-  async fetchAndUpdateHead(remoteHead: CarClockHead) {
+  async fetchAndUpdateHead(remoteHead: bs.CarClockHead) {
     const outBytess = [];
     const cache = this.eventBlocks;
     for (const cid of remoteHead) {

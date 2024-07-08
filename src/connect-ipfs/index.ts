@@ -1,10 +1,10 @@
-import type { Connectable } from "@fireproof/core/block-store";
+import type { bs } from "@fireproof/core";
 import { ConnectUCAN, ConnectUCANParams } from "../connect-ucan/index.js";
 
 const ipfsCxs = new Map<string, ConnectUCAN>();
 
 export const connect = {
-  ucan: ({ name, blockstore }: Connectable, schemaName?: string) => {
+  ucan: ({ name, blockstore }: bs.Connectable, schemaName?: string) => {
     if (!name) throw new Error("database name is required");
     if (ipfsCxs.has(name)) {
       return ipfsCxs.get(name);

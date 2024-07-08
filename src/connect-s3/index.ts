@@ -1,11 +1,8 @@
 import { ConnectS3 } from "./connect-s3.js";
-import { Connectable } from "@fireproof/core/block-store";
-import type { AnyLink, UploadDataFnParams } from "@fireproof/core/block-store";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadMetaFnParams } from "@fireproof/core/block-store";
-export type { AnyLink };
+import { bs } from "@fireproof/core";
 
 export const connect = {
-  s3free: ({ blockstore }: Connectable) => {
+  s3free: ({ blockstore }: bs.Connectable) => {
     const upload = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
     const download = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
     const websocket = "";
@@ -13,7 +10,7 @@ export const connect = {
     connection.connect(blockstore);
     return connection;
   },
-  awsFree: ({ blockstore, name }: Connectable) => {
+  awsFree: ({ blockstore, name }: bs.Connectable) => {
     const upload = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
     const download = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
     const websocket = `wss://v7eax67rm6.execute-api.us-east-2.amazonaws.com/Prod?database=${name}`;
@@ -22,7 +19,7 @@ export const connect = {
     return connection;
   },
   aws: (
-    { blockstore, name }: Connectable,
+    { blockstore, name }: bs.Connectable,
     { upload, download, websocket }: { upload: string; download: string; websocket: string }
   ) => {
     const updatedwebsocket = `${websocket}?database=${name}`;
@@ -32,7 +29,7 @@ export const connect = {
   },
 };
 
-export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
+export function validateDataParams(params: bs.DownloadDataFnParams | bs.UploadDataFnParams) {
   const { type, name, car } = params;
   if (!name) throw new Error("name is required");
   if (!car) {
@@ -43,7 +40,7 @@ export function validateDataParams(params: DownloadDataFnParams | UploadDataFnPa
   }
 }
 
-export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
+export function validateMetaParams(params: bs.DownloadMetaFnParams | bs.UploadMetaFnParams) {
   const { name, branch } = params;
   if (!name) throw new Error("name is required");
   if (!branch) {
