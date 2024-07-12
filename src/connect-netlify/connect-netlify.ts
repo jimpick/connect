@@ -1,12 +1,12 @@
 import { Base64 } from "js-base64";
-import { bs } from "@fireproof/core";
+import { bs, ensureLogger } from "@fireproof/core";
 import { Falsy } from "@fireproof/core";
 
 export class ConnectNetlify extends bs.ConnectionBase {
   readonly name: string;
 
   constructor(name: string) {
-    super();
+    super(ensureLogger({}, "ConnectNetlify"));
     this.name = name;
   }
 

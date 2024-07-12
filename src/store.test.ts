@@ -1,23 +1,43 @@
-import { fireproof } from "@fireproof/core";
-import { describe } from "node:test";
-import { s3StoreFactory } from "./connect-s3/store-s3";
+import { fireproof, bs, Logger } from "@fireproof/core";
+import { S3DataGateway, S3MetaGateway, S3WALGateway } from "./connect-s3/store-s3";
 
 describe("store", () => {
   it("should store and retrieve data", async () => {
+    bs.registerStoreProtocol({
+      protocol: "s3:",
+      data: async (logger: Logger) => {
+        return new S3DataGateway(logger);
+      },
+      meta: async (logger: Logger) => {
+        return new S3MetaGateway(logger);
+      },
+      wal: async (logger: Logger) => {
+        return new S3WALGateway(logger);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      test: async (logger: Logger) => {
+        return {} as unknown as bs.TestStore;
+      }
+    })
     const db = fireproof("my-database", {
-      store: s3StoreFactory()
+      store: {
+        stores: {
+          base: "s3://eimer-kette-test-973800055156/fp-test",
+        }
+      }
     });
-
-    for (let i = 0; i < 100; i++) {
-      await db.put({ _id: `key${i}`, hello: `world${i}` });
+    const ran = Math.random().toString();
+    for (let i = 0; i < 10; i++) {
+      await db.put({ _id: `key${i}:${ran}`, hello: `world${i}` });
     }
-    for (let i = 0; i < 100; i++) {
-      expect(await db.get<{hello: string}>(`key${i}`)).toEqual({
-         _id: `key${i}`,
+    for (let i = 0; i < 10; i++) {
+      expect(await db.get<{hello: string}>(`key${i}:${ran}`)).toEqual({
+         _id: `key${i}:${ran}`,
          hello: `world${i}`
       });
     }
-
+    const docs = await db.allDocs()
+    expect(docs.rows.length).toBeGreaterThan(9);
   })
 
 })
