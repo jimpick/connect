@@ -238,3 +238,25 @@ export class SQLTestStore implements TestStore {
     }
   }
 }
+
+
+
+registerStoreProtocol({
+  protocol: "sqlite:",
+  data: async (logger) => {
+    const { SQLDataGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLDataGateway(logger);
+  },
+  meta: async (logger) => {
+    const { SQLMetaGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLMetaGateway(logger);
+  },
+  wal: async (logger) => {
+    const { SQLWalGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLWalGateway(logger);
+  },
+  test: async (logger) => {
+    const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLTestStore(logger);
+  },
+});

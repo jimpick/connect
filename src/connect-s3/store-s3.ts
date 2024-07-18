@@ -1,14 +1,12 @@
 import { ResolveOnce, Result } from "@adviser/cement"
-import { GetObjectCommand, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { bs, rt, ensureLogger, getStore, Logger,  } from "@fireproof/core";
-import { fetch } from "cross-fetch";
+import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { bs, rt, ensureLogger, getStore, Logger, } from "@fireproof/core";
 
 export interface S3Opts {
     readonly region: string;
     readonly accessKeyId: string;
     readonly secretAccessKey: string;
 }
-
 
 /*
 const client = new S3Client({});
@@ -57,11 +55,11 @@ export const main = async () => {
 // }
 
 
-function ensureCache(url: URL): URL {
-    const fetchUploadUrl = new URL(url.toString());
-    fetchUploadUrl.searchParams.set("cache", Math.random().toString());
-    return fetchUploadUrl;
-}
+// function ensureCache(url: URL): URL {
+//     const fetchUploadUrl = new URL(url.toString());
+//     fetchUploadUrl.searchParams.set("cache", Math.random().toString());
+//     return fetchUploadUrl;
+// }
 
 const s3ClientOnce = new ResolveOnce<S3Client>();
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -70,18 +68,21 @@ export async function s3Client(logger: Logger) {
 }
 
 function getBucketFromString(s: string) {
-    const bucket = s.split("/");
-    const ret = { bucket: bucket[0], prefix: bucket.slice(1).join("/") };
+    const splitPath = s.split("/");
+    const ret = { bucket: splitPath[0], prefix: splitPath.slice(1).join("/") };
     return ret;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getBucket(url: URL, logger: Logger): { bucket: string, prefix: string } {
-    const bucket = url.toString()
-        .replace(/^s3:\/\//, "")
-        .replace(/\?.*/, "")
-
-    return getBucketFromString(bucket)
+    let path = url.toString()
+        .replace(new RegExp(`^${url.protocol}//`), "")
+        .replace(/\?.*$/, "")
+    const name = url.searchParams.get("name");
+    if (name && !path.includes("/" + name)) {
+        path = rt.SysContainer.join(path, name);
+    }
+    return getBucketFromString(path)
 }
 
 export abstract class S3Gateway implements bs.Gateway {
@@ -90,11 +91,38 @@ export abstract class S3Gateway implements bs.Gateway {
 
     abstract buildUrl(url: URL, key: string): Promise<Result<URL>>
 
-    destroyDir(url: URL): Promise<Result<void>> {
-        throw this.logger.Error().Str("url", url.toString()).Msg("destroyDir not implemented").AsError();
+    async destroyDir(url: URL): Promise<Result<void>> {
+        const s3 = await s3Client(this.logger);
+        const { bucket, prefix } = getBucket(url, this.logger);
+        this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", prefix).Msg("destroyDir");
+        for (let objs = await s3.send(new ListObjectsV2Command({
+            Bucket: bucket,
+            Prefix: prefix,
+        })); objs.NextContinuationToken; objs = await s3.send(
+            new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: prefix,
+                ContinuationToken: objs.NextContinuationToken,
+            }))) {
+            if (!objs.Contents) {
+                continue;
+            }
+            this.logger.Debug().Str("bucket", bucket)
+                .Str("prefix", prefix)
+                .Any("objs", objs.Contents.map(i => i.Key))
+                .Msg("destroyDir");
+            for (const obj of objs.Contents) {
+                await s3.send(new DeleteObjectCommand({
+                    Key: obj.Key,
+                    Bucket: bucket,
+                }))
+            }
+        }
+        return Result.Ok(undefined);
     }
 
     async start(url: URL): Promise<bs.VoidResult> {
+        this.logger.Debug().Str("url", url.toString()).Msg("start");
         url.searchParams.set("version", url.searchParams.get("version") || "v0.1-s3");
         return Result.Ok(undefined);
     }
@@ -111,6 +139,7 @@ export abstract class S3Gateway implements bs.Gateway {
     async put(url: URL, body: Uint8Array): Promise<bs.VoidResult> {
         const store = getStore(url, this.logger, (...args) => args.join("/"));
         const { bucket, prefix } = getBucket(url, this.logger);
+        this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", prefix).Msg("put");
         const putObjectCommand = new PutObjectCommand({
             Key: prefix,
             Bucket: bucket,
@@ -127,6 +156,7 @@ export abstract class S3Gateway implements bs.Gateway {
 
     async get(url: URL): Promise<bs.GetResult> {
         const { bucket, prefix } = getBucket(url, this.logger);
+        this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", prefix).Msg("get");
         const getObjectCommand = new GetObjectCommand({
             Key: prefix,
             Bucket: bucket,
@@ -145,13 +175,12 @@ export abstract class S3Gateway implements bs.Gateway {
         }
     }
     async delete(url: URL): Promise<bs.VoidResult> {
-        const response = await fetch(ensureCache(url), { method: "DELETE" });
-        if (!response.ok) {
-            throw this.logger.Error().Str("url", url.toString())
-                .Uint64("code", response.status)
-                .Str("status", response.statusText)
-                .Msg("failed to get upload url for data").AsError();
-        }
+        const { bucket, prefix } = getBucket(url, this.logger);
+        this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", prefix).Msg("delete");
+        await (await s3Client(this.logger)).send(new DeleteObjectCommand({
+            Key: prefix,
+            Bucket: bucket,
+        }))
         return Result.Ok(undefined);
     }
 
@@ -209,3 +238,20 @@ export class S3DataGateway extends S3Gateway {
         return Result.Ok(url);
     }
 }
+
+export const unregisterProtocol = bs.registerStoreProtocol({
+    protocol: "s3:",
+    data: async (logger) => {
+        return new S3DataGateway(logger);
+    },
+    meta: async (logger) => {
+        return new S3MetaGateway(logger);
+    },
+    wal: async (logger) => {
+        return new S3WALGateway(logger);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    test: async (logger: Logger) => {
+        return {} as unknown as bs.TestStore;
+    }
+})
