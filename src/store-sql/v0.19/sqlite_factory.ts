@@ -1,31 +1,74 @@
-import { DataSQLStore, DBConnection, MetaSQLStore, SQLGestalt, SQLOpts, WalSQLStore } from "../types";
+import { ensureLogger } from "@fireproof/core";
+import { DataSQLStore, DBConnection, MetaSQLStore, SQLOpts, WalSQLStore } from "../types";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function v0_19sqliteWalFactory(gs: SQLGestalt): Promise<WalSQLStore> {
-    throw new Error("Not implemented");
-    //   const { V0_18_0SQLiteWalStore } = await import("./v0.19/better-sqlite3/sqlite-wal-store.js");
-    //   const store = new V0_18_0SQLiteWalStore(db);
+export async function v0_19sqliteWalFactory(db: DBConnection): Promise<WalSQLStore> {
+  switch (db.opts.sqlGestalt.taste) {
+    case "better-sqlite3": {
+      const { V0_19BS3WalStore } = await import("./better-sqlite3/sqlite-wal-store.js");
+      return new V0_19BS3WalStore(db);
+    }
+    case "node-sqlite3-wasm": {
+      const { V0_19NSWWalStore } = await import("./node-sqlite3-wasm/sqlite-wal-store.js");
+      return new V0_19NSWWalStore(db);
+    }
+    default:
+      throw ensureLogger(db.opts, "v0_19sqliteWalFactory")
+        .Error()
+        .Any("gestalt", db.opts.sqlGestalt)
+        .Msg("unsupported db connection")
+        .AsError();
+  }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function v0_19sqliteDataFactory(gs: SQLGestalt): Promise<DataSQLStore> {
-    throw new Error("Not implemented");
-    //   const { V0_18_0SQLiteDataStore } = await import("./v0.19/better-sqlite3/sqlite-data-store.js");
-    //   const store = new V0_18_0SQLiteDataStore(db);
-    //   return store;
+export async function v0_19sqliteDataFactory(db: DBConnection): Promise<DataSQLStore> {
+  switch (db.opts.sqlGestalt.taste) {
+    case "better-sqlite3": {
+      const { V0_19BS3DataStore } = await import("./better-sqlite3/sqlite-data-store.js");
+      return new V0_19BS3DataStore(db);
+    }
+    case "node-sqlite3-wasm": {
+      const { V0_19NSWDataStore } = await import("./node-sqlite3-wasm/sqlite-data-store.js");
+      return new V0_19NSWDataStore(db);
+    }
+    default:
+      throw ensureLogger(db.opts, "v0_19sqliteDataFactory")
+        .Error()
+        .Any("gestalt", db.opts.sqlGestalt)
+        .Msg("unsupported db connection")
+        .AsError();
+  }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function v0_19sqliteMetaFactory(gs: SQLGestalt): Promise<MetaSQLStore> {
-    throw new Error("Not implemented");
-    //   const { V0_18_0SQLiteMetaStore } = await import("./v0.19/better-sqlite3/sqlite-meta-store.js");
-    //   const store = new V0_18_0SQLiteMetaStore(db);
-    //   return store;
+export async function v0_19sqliteMetaFactory(db: DBConnection): Promise<MetaSQLStore> {
+  switch (db.opts.sqlGestalt.taste) {
+    case "better-sqlite3": {
+      const { V0_19BS3MetaStore } = await import("./better-sqlite3/sqlite-meta-store.js");
+      return new V0_19BS3MetaStore(db);
+    }
+    case "node-sqlite3-wasm": {
+      const { V0_19NSWMetaStore } = await import("./node-sqlite3-wasm/sqlite-meta-store.js");
+      return new V0_19NSWMetaStore(db);
+    }
+    default:
+      throw ensureLogger(db.opts, "v0_19sqliteMetaFactory")
+        .Error()
+        .Any("gestalt", db.opts.sqlGestalt)
+        .Msg("unsupported db connection")
+        .AsError();
+  }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function v0_19sqliteConnectionFactory(url: URL, opts: Partial<SQLOpts>): Promise<DBConnection> {
-    throw new Error("Not implemented");
-    //   const { V0_18_0SQLiteConnection } = await import("./v0.19/better-sqlite3/sqlite-connection.js");
-    //   return new V0_18_0SQLiteConnection(url, opts);
+export async function v0_19sqliteConnectionFactory(url: URL, opts: Partial<SQLOpts>): Promise<DBConnection> {
+  url.searchParams.set("taste", url.searchParams.get("taste") || "better-sqlite3");
+  switch (url.searchParams.get("taste")) {
+    case "node-sqlite3-wasm": {
+      const { V0_19NSWConnection } = await import("./node-sqlite3-wasm/sqlite-connection.js");
+      return new V0_19NSWConnection(url, opts);
+    }
+    case "better-sqlite3":
+    default: {
+      const { V0_19BS3Connection } = await import("./better-sqlite3/sqlite-connection.js");
+      return new V0_19BS3Connection(url, opts);
+    }
+  }
 }

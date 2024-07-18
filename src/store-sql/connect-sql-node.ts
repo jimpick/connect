@@ -1,10 +1,6 @@
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../blockstore/index.js";
-
-import { ConnectionBase } from "../../blockstore/connection-base.js";
+import { ensureLogger, Falsy, bs } from "@fireproof/core";
 import { ensureSQLOpts } from "./ensurer.js";
 import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
-import { Falsy } from "../../types.js";
-import { ensureLogger } from "../../utils.js";
 
 export interface StoreOptions {
   readonly data: DataSQLStore;
@@ -12,7 +8,7 @@ export interface StoreOptions {
   readonly wal: WalSQLStore;
 }
 
-export class ConnectSQL extends ConnectionBase {
+export class ConnectSQL extends bs.ConnectionBase {
   readonly store: StoreOptions;
   readonly textEncoder = new TextEncoder();
 
@@ -25,13 +21,13 @@ export class ConnectSQL extends ConnectionBase {
         ...iopts,
         logger: this.logger,
       },
-      "ConnectSQL",
+      "ConnectSQL"
     );
     this.textEncoder = opts.textEncoder;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
+  async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams) {
     this.logger.Debug().Msg("dataUpload");
     throw this.logger.Error().Msg("dataUpload not implemented").AsError();
     // await this.store.data.insert(DataSQLRecordBuilder.fromUploadParams(bytes, params).build());
@@ -39,7 +35,7 @@ export class ConnectSQL extends ConnectionBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null> {
+  dataDownload(params: bs.DownloadDataFnParams): Promise<Uint8Array | null> {
     this.logger.Debug().Msg("dataDownload");
 
     // const { type, name, car } = params
@@ -52,7 +48,7 @@ export class ConnectSQL extends ConnectionBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
+  async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams): Promise<Uint8Array[] | null> {
     this.logger.Debug().Msg("metaUpload");
     throw this.logger.Error().Msg("metaUpload not implemented").AsError();
     // await this.store.meta.insert(MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params, this.textEncoder).build());
@@ -60,7 +56,7 @@ export class ConnectSQL extends ConnectionBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
+  async metaDownload(params: bs.DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     this.logger.Debug().Msg("metaDownload");
     throw this.logger.Error().Msg("metaDownload not implemented").AsError();
     // const result = await this.store.meta.select({

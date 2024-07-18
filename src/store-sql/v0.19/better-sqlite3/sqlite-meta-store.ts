@@ -2,9 +2,8 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { UploadMetaFnParams } from "../../../../blockstore/types.js";
 import { ensureBS3Version } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;
@@ -15,7 +14,11 @@ export class MetaSQLRecordBuilder {
     this.textEncoder = textEncoder;
   }
 
-  static fromUploadMetaFnParams(data: Uint8Array, params: UploadMetaFnParams, textEncoder: TextEncoder): MetaSQLRecordBuilder {
+  static fromUploadMetaFnParams(
+    data: Uint8Array,
+    params: bs.UploadMetaFnParams,
+    textEncoder: TextEncoder
+  ): MetaSQLRecordBuilder {
     return new MetaSQLRecordBuilder(
       {
         name: params.name,
@@ -23,7 +26,7 @@ export class MetaSQLRecordBuilder {
         meta: data,
         updated_at: new Date(),
       },
-      textEncoder,
+      textEncoder
     );
   }
 
@@ -35,7 +38,7 @@ export class MetaSQLRecordBuilder {
         meta: textEncoder.encode(str),
         updated_at: new Date(),
       },
-      textEncoder,
+      textEncoder
     );
   }
 
@@ -81,7 +84,7 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
             meta BLOB NOT NULL,
             updated_at TEXT NOT NULL,
             PRIMARY KEY (name, branch)
-            )`,
+            )`
         )
         .run();
     });
@@ -103,7 +106,9 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
   private async selectStmt(url: URL) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
-      return this.dbConn.client.prepare(`select name, branch, meta, updated_at from ${table} where name = ? and branch = ?`);
+      return this.dbConn.client.prepare(
+        `select name, branch, meta, updated_at from ${table} where name = ? and branch = ?`
+      );
     });
   }
 
@@ -116,10 +121,15 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
   }
 
   async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
-    this.logger.Debug().Str("name", ose.name).Str("branch", ose.branch).Uint64("data-len", ose.meta.length).Msg("insert");
+    this.logger
+      .Debug()
+      .Str("name", ose.name)
+      .Str("branch", ose.branch)
+      .Uint64("data-len", ose.meta.length)
+      .Msg("insert");
     const bufMeta = Buffer.from(ose.meta);
     return this.insertStmt(url).then((i) =>
-      i.run(ose.name, ose.branch, bufMeta, ose.updated_at.toISOString(), bufMeta, ose.updated_at.toISOString()),
+      i.run(ose.name, ose.branch, bufMeta, ose.updated_at.toISOString(), bufMeta, ose.updated_at.toISOString())
     );
   }
   async select(url: URL, key: MetaRecordKey): Promise<MetaRecord[]> {

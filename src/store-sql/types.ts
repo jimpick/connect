@@ -33,9 +33,9 @@ export const DefaultSQLTableNames: SQLTableNames = {
 };
 
 export interface SQLGestalt {
-    readonly flavor: "sqlite" | "mysql" | "postgres";
-    readonly version?: string;
-    readonly taste?: string; // bs3(better-sqlite3) - nsw(node-sqlite3-wasm)
+  readonly flavor: "sqlite" | "mysql" | "postgres";
+  readonly version?: string;
+  readonly taste?: string; // bs3(better-sqlite3) - nsw(node-sqlite3-wasm)
 }
 
 export interface SQLOpts {

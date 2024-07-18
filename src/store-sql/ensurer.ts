@@ -1,4 +1,4 @@
-import { ensureLogger, type Logger } from "../../utils";
+import { ensureLogger, type Logger } from "@fireproof/core";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames, SQLGestalt } from "./types";
 
 function sqlTableName(...names: string[]): string {
@@ -39,9 +39,7 @@ function ensureTextDecoder(opts?: Partial<SQLOpts>): TextDecoder {
   return opts?.textDecoder || textDecoder;
 }
 
-
-
-function url2sqlFlavor(url: URL, logger: Logger): SQLGestalt{
+function url2sqlFlavor(url: URL, logger: Logger): SQLGestalt {
   const flavor = url.protocol.replace(/:.*$/, "");
   switch (flavor) {
     case "sqlite":
@@ -55,7 +53,12 @@ function url2sqlFlavor(url: URL, logger: Logger): SQLGestalt{
   }
 }
 
-export function ensureSQLOpts(url: URL, opts: Partial<SQLOpts>, componentName: string, ctx?: Record<string, unknown>): SQLOpts {
+export function ensureSQLOpts(
+  url: URL,
+  opts: Partial<SQLOpts>,
+  componentName: string,
+  ctx?: Record<string, unknown>
+): SQLOpts {
   const logger = ensureLogger(opts, componentName, ctx);
   return {
     url,

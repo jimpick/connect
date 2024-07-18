@@ -1,13 +1,12 @@
 import { Logger, Result } from "@adviser/cement";
 
-import { TestStore } from "../../blockstore/types.js";
+// import { TestStore } from "../../blockstore/types.js";
 import { SQLConnectionFactory } from "./sql-connection-factory.js";
 import { DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
 import { DataStoreFactory, MetaStoreFactory, WalStoreFactory } from "./store-version-factory.js";
-import { ensureLogger, exception2Result, exceptionWrapper, getKey, getName } from "../../utils.js";
-import { Gateway, GetResult, NotFoundError } from "../../blockstore/gateway.js";
+import { ensureLogger, exception2Result, exceptionWrapper, getKey, getName, bs } from "@fireproof/core";
 
-export class SQLWalGateway implements Gateway {
+export class SQLWalGateway implements bs.Gateway {
   readonly logger: Logger;
   walSQLStore: WalSQLStore = {} as WalSQLStore;
   constructor(logger: Logger) {
@@ -48,13 +47,13 @@ export class SQLWalGateway implements Gateway {
       });
     });
   }
-  async get(url: URL): Promise<GetResult> {
+  async get(url: URL): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
       const branch = getKey(url, this.logger);
       const name = getName(url, this.logger);
       const record = await this.walSQLStore.select(url, { name, branch });
       if (record.length === 0) {
-        return Result.Err(new NotFoundError(`not found ${name} ${branch}`));
+        return Result.Err(new bs.NotFoundError(`not found ${name} ${branch}`));
       }
       return Result.Ok(record[0].state);
     });
@@ -68,7 +67,7 @@ export class SQLWalGateway implements Gateway {
   }
 }
 
-export class SQLMetaGateway implements Gateway {
+export class SQLMetaGateway implements bs.Gateway {
   readonly logger: Logger;
   metaSQLStore: MetaSQLStore = {} as MetaSQLStore;
   constructor(logger: Logger) {
@@ -110,7 +109,7 @@ export class SQLMetaGateway implements Gateway {
       });
     });
   }
-  async get(url: URL): Promise<GetResult> {
+  async get(url: URL): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
       const branch = getKey(url, this.logger);
       const name = getName(url, this.logger);
@@ -119,7 +118,7 @@ export class SQLMetaGateway implements Gateway {
         branch,
       });
       if (record.length === 0) {
-        return Result.Err(new NotFoundError(`not found ${name} ${branch}`));
+        return Result.Err(new bs.NotFoundError(`not found ${name} ${branch}`));
       }
       return Result.Ok(record[0].meta);
     });
@@ -136,7 +135,7 @@ export class SQLMetaGateway implements Gateway {
   }
 }
 
-export class SQLDataGateway implements Gateway {
+export class SQLDataGateway implements bs.Gateway {
   readonly logger: Logger;
   dataSQLStore: DataSQLStore = {} as DataSQLStore;
   constructor(logger: Logger) {
@@ -180,12 +179,12 @@ export class SQLDataGateway implements Gateway {
       });
     });
   }
-  async get(url: URL): Promise<GetResult> {
+  async get(url: URL): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
       const branch = getKey(url, this.logger);
       const record = await this.dataSQLStore.select(url, branch);
       if (record.length === 0) {
-        return Result.Err(new NotFoundError(`not found ${branch}`));
+        return Result.Err(new bs.NotFoundError(`not found ${branch}`));
       }
       return Result.Ok(record[0].data);
     });
@@ -199,7 +198,7 @@ export class SQLDataGateway implements Gateway {
   }
 }
 
-export class SQLTestStore implements TestStore {
+export class SQLTestStore implements bs.TestStore {
   readonly logger: Logger;
   constructor(ilogger: Logger) {
     const logger = ensureLogger(ilogger, "SQLTestStore");
@@ -239,24 +238,24 @@ export class SQLTestStore implements TestStore {
   }
 }
 
-
-
-registerStoreProtocol({
-  protocol: "sqlite:",
-  data: async (logger) => {
-    const { SQLDataGateway } = await import("../runtime/store-sql/store-sql.js");
-    return new SQLDataGateway(logger);
-  },
-  meta: async (logger) => {
-    const { SQLMetaGateway } = await import("../runtime/store-sql/store-sql.js");
-    return new SQLMetaGateway(logger);
-  },
-  wal: async (logger) => {
-    const { SQLWalGateway } = await import("../runtime/store-sql/store-sql.js");
-    return new SQLWalGateway(logger);
-  },
-  test: async (logger) => {
-    const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
-    return new SQLTestStore(logger);
-  },
-});
+export function registerSqliteStoreProtocol() {
+  bs.registerStoreProtocol({
+    protocol: "sqlite:",
+    data: async (logger) => {
+      // const { SQLDataGateway } = await import("../runtime/store-sql/store-sql.js");
+      return new SQLDataGateway(logger);
+    },
+    meta: async (logger) => {
+      // const { SQLMetaGateway } = await import("../runtime/store-sql/store-sql.js");
+      return new SQLMetaGateway(logger);
+    },
+    wal: async (logger) => {
+      // const { SQLWalGateway } = await import("../runtime/store-sql/store-sql.js");
+      return new SQLWalGateway(logger);
+    },
+    test: async (logger) => {
+      // const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
+      return new SQLTestStore(logger);
+    },
+  });
+}

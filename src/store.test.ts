@@ -16,8 +16,8 @@ const s3test: bs.StoreFactoryItem = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   test: async (logger: Logger) => {
     return {} as unknown as bs.TestStore;
-  }
-}
+  },
+};
 
 async function smokeDB(db: Database) {
   const ran = Math.random().toString();
@@ -27,42 +27,40 @@ async function smokeDB(db: Database) {
   for (let i = 0; i < 10; i++) {
     expect(await db.get<{ hello: string }>(`key${i}:${ran}`)).toEqual({
       _id: `key${i}:${ran}`,
-      hello: `world${i}`
+      hello: `world${i}`,
     });
   }
-  const docs = await db.allDocs()
+  const docs = await db.allDocs();
   expect(docs.rows.length).toBeGreaterThan(9);
 }
 
 describe("store", () => {
   it("test unregister", async () => {
-    let unreg = bs.registerStoreProtocol(s3test)
+    let unreg = bs.registerStoreProtocol(s3test);
     expect(() => {
-      bs.registerStoreProtocol(s3test)
-    }).toThrowError("protocol s3test: already registered")
-    unreg()
-    unreg = bs.registerStoreProtocol(s3test)
-    unreg()
-  })
+      bs.registerStoreProtocol(s3test);
+    }).toThrowError("protocol s3test: already registered");
+    unreg();
+    unreg = bs.registerStoreProtocol(s3test);
+    unreg();
+  });
   it("should store and retrieve data", async () => {
-    const unreg = bs.registerStoreProtocol(s3test)
+    const unreg = bs.registerStoreProtocol(s3test);
     const db = fireproof("my-database", {
       store: {
         stores: {
           base: "s3test://eimer-kette-test-973800055156/fp-test",
-        }
-      }
+        },
+      },
     });
-    await smokeDB(db)
-    unreg()
-  })
+    await smokeDB(db);
+    unreg();
+  });
 
   it("override default Base Dir", async () => {
-    const unreg = bs.registerStoreProtocol(s3test)
-    const db = fireproof("override-database")
-    await smokeDB(db)
-    unreg()
-  })
-
-})
-
+    const unreg = bs.registerStoreProtocol(s3test);
+    const db = fireproof("override-database");
+    await smokeDB(db);
+    unreg();
+  });
+});

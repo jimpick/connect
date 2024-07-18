@@ -2,9 +2,8 @@ import type { RunResult, Statement } from "node-sqlite3-wasm";
 import { DBConnection, DataRecord, DataSQLStore } from "../../types.js";
 import { V0_19NSWConnection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { UploadDataFnParams } from "../../../../blockstore/types.js";
 import { ensureNSWVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;
@@ -12,7 +11,7 @@ export class DataSQLRecordBuilder {
     this.dataRecord = dataRecord;
   }
 
-  static fromUploadParams(data: Uint8Array, params: UploadDataFnParams): DataSQLRecordBuilder {
+  static fromUploadParams(data: Uint8Array, params: bs.UploadDataFnParams): DataSQLRecordBuilder {
     return new DataSQLRecordBuilder({
       name: params.name,
       car: params.car,
@@ -55,13 +54,13 @@ export class V0_19NSWDataStore implements DataSQLStore {
             name TEXT NOT NULL,
             car TEXT PRIMARY KEY,
             data BLOB NOT NULL,
-            updated_at TEXT NOT NULL)`,
+            updated_at TEXT NOT NULL)`
         )
         .run();
     });
   }
 
-  readonly #insertStmt = new KeyedResolvOnce<Statement>()
+  readonly #insertStmt = new KeyedResolvOnce<Statement>();
   private async insertStmt(url: URL) {
     return this.#insertStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
@@ -72,7 +71,7 @@ export class V0_19NSWDataStore implements DataSQLStore {
     });
   }
 
-  readonly #selectStmt = new KeyedResolvOnce<Statement>()
+  readonly #selectStmt = new KeyedResolvOnce<Statement>();
   private async selectStmt(url: URL) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
@@ -99,20 +98,26 @@ export class V0_19NSWDataStore implements DataSQLStore {
   async insert(url: URL, ose: DataRecord): Promise<RunResult> {
     this.logger.Debug().Str("name", ose.name).Str("car", ose.car).Uint64("data-len", ose.data.length).Msg("insert");
     const updated_at = ose.updated_at.toISOString();
-    return this.insertStmt(url).then((i) => i.run({
-      ':name': ose.name,
-      ':car': ose.car,
-      ':data': ose.data,
-      ':updated_at': updated_at,
-  }));
+    return this.insertStmt(url).then((i) =>
+      i.run({
+        ":name": ose.name,
+        ":car": ose.car,
+        ":data": ose.data,
+        ":updated_at": updated_at,
+      })
+    );
   }
 
   async select(url: URL, car: string): Promise<DataRecord[]> {
     this.logger.Debug().Str("car", car).Msg("select");
-    return (await this.selectStmt(url).then((i) => i.all({
-      ':car': car,
-    }))).map((irow) => {
-      const row = irow // as SQLiteDataRecord;
+    return (
+      await this.selectStmt(url).then((i) =>
+        i.all({
+          ":car": car,
+        })
+      )
+    ).map((irow) => {
+      const row = irow; // as SQLiteDataRecord;
       return {
         name: row.name?.toString() as string,
         car: row.car?.toString() as string,
@@ -124,7 +129,7 @@ export class V0_19NSWDataStore implements DataSQLStore {
 
   async delete(url: URL, car: string): Promise<RunResult> {
     this.logger.Debug().Str("car", car).Msg("delete");
-    const ret = await this.deleteStmt(url).then((i) => i.run({':car': car }));
+    const ret = await this.deleteStmt(url).then((i) => i.run({ ":car": car }));
     // await this.select(car);
     return ret;
   }

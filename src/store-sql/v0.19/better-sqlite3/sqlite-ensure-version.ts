@@ -1,7 +1,7 @@
 import { V0_19BS3Connection } from "./sqlite-connection";
 import { V0_19SQL_VERSION } from "../version";
 import { ResolveOnce } from "@adviser/cement";
-import { ensureLogger } from "../../../../utils";
+import { ensureLogger } from "@fireproof/core";
 
 const once = new ResolveOnce<string>();
 export async function ensureBS3Version(url: URL, dbConn: V0_19BS3Connection) {
@@ -14,7 +14,7 @@ export async function ensureBS3Version(url: URL, dbConn: V0_19BS3Connection) {
       .prepare(
         `CREATE TABLE IF NOT EXISTS version (
           version TEXT NOT NULL,
-          updated_at TEXT NOT NULL)`,
+          updated_at TEXT NOT NULL)`
       )
       .run();
     const rows = (await dbConn.client.prepare(`select version from version`).all()) as { version: string }[];

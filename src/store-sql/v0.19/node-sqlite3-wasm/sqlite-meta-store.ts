@@ -1,10 +1,9 @@
 import type { RunResult, Statement } from "node-sqlite3-wasm";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../../types.js";
-import { V0_19NSWConnection} from "./sqlite-connection.js";
+import { V0_19NSWConnection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { UploadMetaFnParams } from "../../../../blockstore/types.js";
 import { ensureNSWVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;
@@ -15,7 +14,11 @@ export class MetaSQLRecordBuilder {
     this.textEncoder = textEncoder;
   }
 
-  static fromUploadMetaFnParams(data: Uint8Array, params: UploadMetaFnParams, textEncoder: TextEncoder): MetaSQLRecordBuilder {
+  static fromUploadMetaFnParams(
+    data: Uint8Array,
+    params: bs.UploadMetaFnParams,
+    textEncoder: TextEncoder
+  ): MetaSQLRecordBuilder {
     return new MetaSQLRecordBuilder(
       {
         name: params.name,
@@ -23,7 +26,7 @@ export class MetaSQLRecordBuilder {
         meta: data,
         updated_at: new Date(),
       },
-      textEncoder,
+      textEncoder
     );
   }
 
@@ -35,7 +38,7 @@ export class MetaSQLRecordBuilder {
         meta: textEncoder.encode(str),
         updated_at: new Date(),
       },
-      textEncoder,
+      textEncoder
     );
   }
 
@@ -81,7 +84,7 @@ export class V0_19NSWMetaStore implements MetaSQLStore {
             meta BLOB NOT NULL,
             updated_at TEXT NOT NULL,
             PRIMARY KEY (name, branch)
-            )`,
+            )`
         )
         .run();
     });
@@ -103,7 +106,9 @@ export class V0_19NSWMetaStore implements MetaSQLStore {
   private async selectStmt(url: URL) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
-      return this.dbConn.client.prepare(`select name, branch, meta, updated_at from ${table} where name = :name and branch = :branch`);
+      return this.dbConn.client.prepare(
+        `select name, branch, meta, updated_at from ${table} where name = :name and branch = :branch`
+      );
     });
   }
 
@@ -116,24 +121,34 @@ export class V0_19NSWMetaStore implements MetaSQLStore {
   }
 
   async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
-    this.logger.Debug().Str("name", ose.name).Str("branch", ose.branch).Uint64("data-len", ose.meta.length).Msg("insert");
+    this.logger
+      .Debug()
+      .Str("name", ose.name)
+      .Str("branch", ose.branch)
+      .Uint64("data-len", ose.meta.length)
+      .Msg("insert");
     // const bufMeta = Buffer.from(ose.meta);
-    return this.insertStmt(url).then((i) =>
-      i.run({
-        ':name': ose.name,
-        ':branch': ose.branch,
-        ':meta': ose.meta,
-        ':updated_at': ose.updated_at.toISOString()
-      })//, bufMeta, ose.updated_at.toISOString()),
+    return this.insertStmt(url).then(
+      (i) =>
+        i.run({
+          ":name": ose.name,
+          ":branch": ose.branch,
+          ":meta": ose.meta,
+          ":updated_at": ose.updated_at.toISOString(),
+        }) //, bufMeta, ose.updated_at.toISOString()),
     );
   }
   async select(url: URL, key: MetaRecordKey): Promise<MetaRecord[]> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("select");
-    return (await this.selectStmt(url).then((i) => i.all({
-      ':name': key.name,
-      ':branch': key.branch
-    }))).map((irow) => {
-      const row = irow // as SQLiteMetaRecord;
+    return (
+      await this.selectStmt(url).then((i) =>
+        i.all({
+          ":name": key.name,
+          ":branch": key.branch,
+        })
+      )
+    ).map((irow) => {
+      const row = irow; // as SQLiteMetaRecord;
       return {
         name: row.name?.valueOf() as string,
         branch: row.branch?.valueOf() as string,
@@ -145,10 +160,12 @@ export class V0_19NSWMetaStore implements MetaSQLStore {
 
   async delete(url: URL, key: MetaRecordKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
-    return this.deleteStmt(url).then((i) => i.run({
-      ':name': key.name,
-      ':branch': key.branch
-  }));
+    return this.deleteStmt(url).then((i) =>
+      i.run({
+        ":name": key.name,
+        ":branch": key.branch,
+      })
+    );
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async close(url: URL): Promise<Result<void>> {

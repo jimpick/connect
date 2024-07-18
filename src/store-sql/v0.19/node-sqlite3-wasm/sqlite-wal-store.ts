@@ -3,7 +3,7 @@ import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../../types.js";
 import { V0_19NSWConnection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 import { ensureNSWVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore } from "@fireproof/core";
 
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;
@@ -65,7 +65,7 @@ export class V0_19NSWWalStore implements WalSQLStore {
             state BLOB NOT NULL,
             updated_at TEXT NOT NULL,
             PRIMARY KEY (name, branch)
-        )`,
+        )`
         )
         .run();
     });
@@ -89,7 +89,7 @@ export class V0_19NSWWalStore implements WalSQLStore {
       await this.createTable(url);
       return this.dbConn.client.prepare(
         `select name, branch, state, updated_at from ${table}
-         where name = :name and branch = :branch`,
+         where name = :name and branch = :branch`
       );
     });
   }
@@ -106,19 +106,23 @@ export class V0_19NSWWalStore implements WalSQLStore {
     const bufState = Buffer.from(this.textEncoder.encode(JSON.stringify(wal.state)));
     return this.insertStmt(url).then((i) =>
       i.run({
-        ':name': ose.name,
-        ':branch': ose.branch,
-        ':state': bufState,
-        ':updated_at': wal.updated_at.toISOString()
+        ":name": ose.name,
+        ":branch": ose.branch,
+        ":state": bufState,
+        ":updated_at": wal.updated_at.toISOString(),
       })
     );
   }
   async select(url: URL, key: WalKey): Promise<WalRecord[]> {
-    const res = (await this.selectStmt(url).then((i) => i.all({
-      ':name': key.name,
-      ':branch': key.branch
-    }))).map((irow) => {
-      const row = irow
+    const res = (
+      await this.selectStmt(url).then((i) =>
+        i.all({
+          ":name": key.name,
+          ":branch": key.branch,
+        })
+      )
+    ).map((irow) => {
+      const row = irow;
       return {
         name: row.name?.toString() as string,
         branch: row.branch?.toString() as string,
@@ -131,10 +135,12 @@ export class V0_19NSWWalStore implements WalSQLStore {
   }
   async delete(url: URL, key: WalKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
-    return this.deleteStmt(url).then((i) => i.run({
-      ':name': key.name,
-      ':branch':  key.branch
-  }));
+    return this.deleteStmt(url).then((i) =>
+      i.run({
+        ":name": key.name,
+        ":branch": key.branch,
+      })
+    );
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async close(url: URL): Promise<Result<void>> {

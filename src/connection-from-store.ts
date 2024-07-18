@@ -1,10 +1,10 @@
-import { bs, ensureLogger, Falsy, LoggerOpts, rt } from "@fireproof/core";
+import { bs, ensureLogger, Falsy, LoggerOpts } from "@fireproof/core";
 import { CID } from "multiformats";
 
 export interface StoreOptions {
-  readonly data: rt.sql.DataSQLStore;
-  readonly meta: rt.sql.MetaSQLStore;
-  readonly wal: rt.sql.WalSQLStore;
+  readonly data: bs.DataStore;
+  readonly meta: bs.MetaStore;
+  readonly wal: bs.WALState;
 }
 
 const textEncoder = new TextEncoder();
@@ -15,7 +15,7 @@ export class ConnectionFromStore extends bs.ConnectionBase {
   stores?: {
     readonly data: bs.DataStore;
     readonly meta: bs.MetaStore;
-  } = undefined
+  } = undefined;
 
   constructor(store: bs.StoreRuntime, opts: LoggerOpts) {
     super(ensureLogger(opts, "ConnectionFromStore"));
@@ -26,7 +26,7 @@ export class ConnectionFromStore extends bs.ConnectionBase {
     this.logger.Debug().Msg("dataUpload");
     await this.stores?.data.save({
       cid: CID.parse(params.car),
-      bytes: bytes
+      bytes: bytes,
     });
     /*
      * readonly type: FnParamTypes 'data' | 'file';
@@ -62,8 +62,8 @@ export class ConnectionFromStore extends bs.ConnectionBase {
     this.logger.Debug().Msg("metaDownload");
 
     return this.stores?.meta.load(params.branch).then((dbmeta) => {
-      return [textEncoder.encode(JSON.stringify(dbmeta))]
-    })
+      return [textEncoder.encode(JSON.stringify(dbmeta))];
+    });
   }
 
   async onConnect(): Promise<void> {
@@ -71,8 +71,8 @@ export class ConnectionFromStore extends bs.ConnectionBase {
     const loader = { name: "loader" } as bs.Loadable;
     this.stores = {
       data: await this.storeRuntime.makeDataStore(loader),
-      meta: await this.storeRuntime.makeMetaStore(loader)
-    }
+      meta: await this.storeRuntime.makeMetaStore(loader),
+    };
     // await this.store.data.start();
     // await this.store.meta.start();
     // await this.store.wal.start();
@@ -80,17 +80,23 @@ export class ConnectionFromStore extends bs.ConnectionBase {
   }
 }
 
-export async function connectionFactory(iurl: string|URL, opts: LoggerOpts = {}): Promise<bs.ConnectionBase> {
+export async function connectionFactory(iurl: string | URL, opts: LoggerOpts = {}): Promise<bs.ConnectionBase> {
   let url: URL;
   if (typeof iurl === "string") {
     url = new URL(iurl);
   } else {
-    url = iurl
+    url = iurl;
   }
   const logger = ensureLogger(opts, "connectionFactory");
-  return new ConnectionFromStore(bs.toStoreRuntime({
-    stores: {
-      base: url
-    },
-  },logger), { logger });
+  return new ConnectionFromStore(
+    bs.toStoreRuntime(
+      {
+        stores: {
+          base: url,
+        },
+      },
+      logger
+    ),
+    { logger }
+  );
 }

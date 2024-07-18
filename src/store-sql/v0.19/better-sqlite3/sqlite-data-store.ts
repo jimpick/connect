@@ -2,9 +2,8 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, DataRecord, DataSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { UploadDataFnParams } from "../../../../blockstore/types.js";
 import { ensureBS3Version } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;
@@ -12,7 +11,7 @@ export class DataSQLRecordBuilder {
     this.dataRecord = dataRecord;
   }
 
-  static fromUploadParams(data: Uint8Array, params: UploadDataFnParams): DataSQLRecordBuilder {
+  static fromUploadParams(data: Uint8Array, params: bs.UploadDataFnParams): DataSQLRecordBuilder {
     return new DataSQLRecordBuilder({
       name: params.name,
       car: params.car,
@@ -55,7 +54,7 @@ export class V0_19BS3DataStore implements DataSQLStore {
             name TEXT NOT NULL,
             car TEXT PRIMARY KEY,
             data BLOB NOT NULL,
-            updated_at TEXT NOT NULL)`,
+            updated_at TEXT NOT NULL)`
         )
         .run();
     });

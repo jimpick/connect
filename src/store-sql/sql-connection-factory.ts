@@ -1,4 +1,4 @@
-import { ensureLogger } from "../../utils.js";
+import { ensureLogger } from "@fireproof/core";
 import { DBConnection, SQLOpts } from "./types.js";
 import { v0_19sqliteConnectionFactory } from "./v0.19/sqlite_factory.js";
 
@@ -9,7 +9,7 @@ export function SQLConnectionFactory(databaseURL: URL, opts: Partial<SQLOpts> = 
       logger.Debug().Str("databaseURL", databaseURL.toString()).Msg("connecting to sqlite");
       return v0_19sqliteConnectionFactory(databaseURL, {
         ...opts,
-        logger
+        logger,
       });
     default:
       throw logger

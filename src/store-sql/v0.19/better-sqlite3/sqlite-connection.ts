@@ -2,7 +2,7 @@ import type { Database } from "better-sqlite3";
 import { KeyedResolvOnce, Logger } from "@adviser/cement";
 
 import { DBConnection, SQLOpts } from "../../types.js";
-import { SysContainer } from "../../../sys-container.js";
+import { rt } from "@fireproof/core";
 import { ensureSQLOpts } from "../../ensurer.js";
 
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
@@ -20,7 +20,7 @@ export class V0_19BS3Connection implements DBConnection {
     return this._client;
   }
 
-  private constructor(url: URL, opts: Partial<SQLOpts>) {
+  constructor(url: URL, opts: Partial<SQLOpts>) {
     // console.log("better-sqlite3->url->", url);
     this.opts = ensureSQLOpts(url, opts, "V0_19BS3Connection", { url });
     this.logger = this.opts.logger;
@@ -38,7 +38,7 @@ export class V0_19BS3Connection implements DBConnection {
     // }
     const hasName = this.url.searchParams.get("name");
     if (hasName) {
-      fName = SysContainer.join(fName, hasName);
+      fName = rt.SysContainer.join(fName, hasName);
       if (!fName.endsWith(".sqlite")) {
         fName += ".sqlite";
       }
@@ -47,7 +47,7 @@ export class V0_19BS3Connection implements DBConnection {
       this.logger.Debug().Str("filename", fName).Msg("connect");
       const Sqlite3Database = (await import("better-sqlite3")).default;
       if (hasName) {
-        await SysContainer.mkdir(SysContainer.dirname(fName), { recursive: true });
+        await rt.SysContainer.mkdir(rt.SysContainer.dirname(fName), { recursive: true });
       }
       const db = new Sqlite3Database(fName, {
         // verbose: console.log,

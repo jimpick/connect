@@ -3,7 +3,7 @@ import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 import { ensureBS3Version } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
+import { ensureLogger, exception2Result, getStore } from "@fireproof/core";
 
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;
@@ -65,7 +65,7 @@ export class V0_19BS3WalStore implements WalSQLStore {
             state BLOB NOT NULL,
             updated_at TEXT NOT NULL,
             PRIMARY KEY (name, branch)
-        )`,
+        )`
         )
         .run();
     });
@@ -89,7 +89,7 @@ export class V0_19BS3WalStore implements WalSQLStore {
       await this.createTable(url);
       return this.dbConn.client.prepare(
         `select name, branch, state, updated_at from ${table}
-         where name = ? and branch = ?`,
+         where name = ? and branch = ?`
       );
     });
   }
@@ -105,7 +105,7 @@ export class V0_19BS3WalStore implements WalSQLStore {
     const wal = WalSQLRecordBuilder.fromRecord(ose).build();
     const bufState = Buffer.from(this.textEncoder.encode(JSON.stringify(wal.state)));
     return this.insertStmt(url).then((i) =>
-      i.run(ose.name, ose.branch, bufState, wal.updated_at.toISOString(), bufState, wal.updated_at.toISOString()),
+      i.run(ose.name, ose.branch, bufState, wal.updated_at.toISOString(), bufState, wal.updated_at.toISOString())
     );
   }
   async select(url: URL, key: WalKey): Promise<WalRecord[]> {

@@ -3,7 +3,7 @@ import type { Database } from "node-sqlite3-wasm";
 import { KeyedResolvOnce, Logger } from "@adviser/cement";
 
 import { DBConnection, SQLOpts } from "../../types.js";
-import { SysContainer } from "../../../sys-container.js";
+import { rt } from "@fireproof/core";
 import { ensureSQLOpts } from "../../ensurer.js";
 
 // export function SimpleSQLite(filename: string, opts?: Partial<SQLOpts>): StoreOpts {
@@ -18,7 +18,6 @@ import { ensureSQLOpts } from "../../ensurer.js";
 
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
 export class V0_19NSWConnection implements DBConnection {
-
   readonly url: URL;
   readonly logger: Logger;
   _client?: Database;
@@ -32,7 +31,7 @@ export class V0_19NSWConnection implements DBConnection {
     return this._client;
   }
 
-  private constructor(url: URL, opts: Partial<SQLOpts>) {
+  constructor(url: URL, opts: Partial<SQLOpts>) {
     // console.log("better-sqlite3->url->", url);
     this.opts = ensureSQLOpts(url, opts, "V0_19NSWConnection", { url });
     this.logger = this.opts.logger;
@@ -50,7 +49,7 @@ export class V0_19NSWConnection implements DBConnection {
     // }
     const hasName = this.url.searchParams.get("name");
     if (hasName) {
-      fName = SysContainer.join(fName, hasName);
+      fName = rt.SysContainer.join(fName, hasName);
       if (!fName.endsWith(".sqlite")) {
         fName += ".sqlite";
       }
@@ -60,7 +59,7 @@ export class V0_19NSWConnection implements DBConnection {
       // const Sqlite3Database = (await import("better-sqlite3")).default;
       const Sqlite3Database = (await import("node-sqlite3-wasm")).Database;
       if (hasName) {
-        await SysContainer.mkdir(SysContainer.dirname(fName), { recursive: true });
+        await rt.SysContainer.mkdir(rt.SysContainer.dirname(fName), { recursive: true });
       }
       const db = new Sqlite3Database(fName, {
         // verbose: console.log,
