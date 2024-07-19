@@ -1,31 +1,40 @@
 import type { Database } from "better-sqlite3";
-import { KeyedResolvOnce, Logger } from "@adviser/cement";
+import { KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 
-import { DBConnection, SQLOpts } from "../../types.js";
+import { SQLOpts } from "../../../types.js";
 import { rt } from "@fireproof/core";
-import { ensureSQLOpts } from "../../ensurer.js";
+import { ensureSQLOpts } from "../../../ensurer.js";
+import { Sqlite3Connection, TasteHandler } from "../../sqlite_factory.js";
 
+
+class BS3Taste implements TasteHandler {
+  readonly taste = "better-sqlite3" as const;
+
+  quoteTemplate(o: unknown): Record<string, unknown> {
+    return o as Record<string, unknown>;
+  }
+  toBlob(data: Uint8Array): unknown {
+    return Buffer.from(data);
+  }
+  fromBlob(data: unknown): Uint8Array {
+    return Uint8Array.from(data as Buffer);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const onceImport = new ResolveOnce<any>();
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
-export class V0_19BS3Connection implements DBConnection {
-  readonly url: URL;
-  readonly logger: Logger;
-  _client?: Database;
+export class V0_19BS3Connection extends Sqlite3Connection {
 
-  readonly opts: SQLOpts;
-
-  get client(): Database {
+  get client():  Database {
     if (!this._client) {
       throw this.logger.Error().Msg("client not connected").AsError();
     }
-    return this._client;
+    return this._client as Database;
   }
 
   constructor(url: URL, opts: Partial<SQLOpts>) {
-    // console.log("better-sqlite3->url->", url);
-    this.opts = ensureSQLOpts(url, opts, "V0_19BS3Connection", { url });
-    this.logger = this.opts.logger;
-    this.url = url;
-    this.logger.Debug().Msg("constructor");
+    super(url, ensureSQLOpts(url, opts, "V0_19BS3Connection", { url }), new BS3Taste());
   }
   async connect(): Promise<void> {
     let fName = this.url.toString().replace("sqlite://", "").replace(/\?.*$/, "");
@@ -45,7 +54,10 @@ export class V0_19BS3Connection implements DBConnection {
     }
     this._client = await onceSQLiteConnections.get(fName).once(async () => {
       this.logger.Debug().Str("filename", fName).Msg("connect");
-      const Sqlite3Database = (await import("better-sqlite3")).default;
+      const Sqlite3Database = await onceImport.once(async () => {
+        const sql = await import("better-sqlite3");
+        return sql.default;
+      });
       if (hasName) {
         await rt.SysContainer.mkdir(rt.SysContainer.dirname(fName), { recursive: true });
       }

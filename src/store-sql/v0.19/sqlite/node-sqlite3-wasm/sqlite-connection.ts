@@ -1,42 +1,46 @@
 // import type { Database } from "better-sqlite3";
 import type { Database } from "node-sqlite3-wasm";
-import { KeyedResolvOnce, Logger } from "@adviser/cement";
+import { KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 
-import { DBConnection, SQLOpts } from "../../types.js";
+import { SQLOpts } from "../../../types.js";
 import { rt } from "@fireproof/core";
-import { ensureSQLOpts } from "../../ensurer.js";
-
-// export function SimpleSQLite(filename: string, opts?: Partial<SQLOpts>): StoreOpts {
-//     ensureLogger(opts, "SimpleSQLite").Debug().Str("filename", filename).Msg("SimpleSQLite")
-//     const db = SQLiteConnection.fromFilename(filename, opts)
-//     return SQLiteStoreOptions({
-//         data: DataStoreFactory(db, opts),
-//         meta: MetaStoreFactory(db, opts),
-//         wal: WalStoreFactory(db, opts)
-//     }, opts)
-// }
+import { ensureSQLOpts } from "../../../ensurer.js";
+import { Sqlite3Connection, TasteHandler } from "../../sqlite_factory.js";
 
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
-export class V0_19NSWConnection implements DBConnection {
-  readonly url: URL;
-  readonly logger: Logger;
-  _client?: Database;
 
-  readonly opts: SQLOpts;
+class NSWTaste implements TasteHandler {
+  readonly taste = "node-sqlite3-wasm" as const;
+
+  quoteTemplate(o: unknown): Record<string, unknown> {
+    const i = o as Record<string, unknown>;
+    const out: Record<string, unknown> = {}
+    for (const k in i) {
+      out[`@${k}`] = i[k];
+    }
+    return out;
+  }
+  toBlob(data: Uint8Array): unknown {
+    return data
+  }
+  fromBlob(data: unknown): Uint8Array {
+    return data as Uint8Array
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const onceImport = new ResolveOnce<any>();
+export class V0_19NSWConnection extends Sqlite3Connection {
 
   get client(): Database {
     if (!this._client) {
       throw this.logger.Error().Msg("client not connected").AsError();
     }
-    return this._client;
+    return this._client as Database;
   }
 
   constructor(url: URL, opts: Partial<SQLOpts>) {
-    // console.log("better-sqlite3->url->", url);
-    this.opts = ensureSQLOpts(url, opts, "V0_19NSWConnection", { url });
-    this.logger = this.opts.logger;
-    this.url = url;
-    this.logger.Debug().Msg("constructor");
+    super(url, ensureSQLOpts(url, opts, "V0_19NSWConnection", { url }), new NSWTaste());
   }
   async connect(): Promise<void> {
     let fName = this.url.toString().replace("sqlite://", "").replace(/\?.*$/, "");
@@ -55,9 +59,13 @@ export class V0_19NSWConnection implements DBConnection {
       }
     }
     this._client = await onceSQLiteConnections.get(fName).once(async () => {
+      console.log("load->fName->", fName)
       this.logger.Debug().Str("filename", fName).Msg("connect");
       // const Sqlite3Database = (await import("better-sqlite3")).default;
-      const Sqlite3Database = (await import("node-sqlite3-wasm")).Database;
+      const Sqlite3Database = await onceImport.once(async () => {
+        const sql = await import("node-sqlite3-wasm")
+        return sql.Database
+      });
       if (hasName) {
         await rt.SysContainer.mkdir(rt.SysContainer.dirname(fName), { recursive: true });
       }

@@ -7,15 +7,19 @@ describe("sqlite", () => {
   function my_app() {
     return _my_app;
   }
-  const taste = "better-sqlite3";
+  let taste: string
+  let base: string
 
   beforeAll(async () => {
     await rt.SysContainer.start();
     registerSqliteStoreProtocol();
+    const url = new URL(process.env.FP_STORAGE_URL || "dummy://");
+    taste = url.searchParams.get("taste") || "better-sqlite3";
+    base = `sqlite://./dist/sqlite-${taste}`
   });
 
   it("sqlite path", async () => {
-    let dbFile = "sqlite://./dist/sqlite".replace(/\?.*$/, "").replace(/^sqlite:\/\//, "");
+    let dbFile = base.replace(/\?.*$/, "").replace(/^sqlite:\/\//, "");
     dbFile = rt.SysContainer.join(dbFile, `${my_app()}.sqlite`);
     await rt.SysContainer.rm(dbFile, { recursive: true }).catch(() => {
       /* */
@@ -24,7 +28,7 @@ describe("sqlite", () => {
     const db = fireproof(my_app(), {
       store: {
         stores: {
-          base: "sqlite://./dist/sqlite",
+          base: `${base}?taste=${taste}`,
         },
       },
     });
@@ -34,15 +38,15 @@ describe("sqlite", () => {
     expect(db.name).toBe(my_app());
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=meta&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}\\?name=${my_app()}&store=meta&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
     await db.close();
   });
@@ -51,12 +55,12 @@ describe("sqlite", () => {
     const db = fireproof(my_app(), {
       store: {
         stores: {
-          base: "sqlite://./dist/sqlite",
+          base: `${base}?taste=${taste}`,
 
-          meta: "sqlite://./dist/sqlite/meta",
-          data: "sqlite://./dist/sqlite/data",
-          index: "sqlite://./dist/sqlite/index",
-          remoteWAL: "sqlite://./dist/sqlite/wal",
+          meta: `${base}/meta?taste=${taste}`,
+          data: `${base}/data?taste=${taste}`,
+          index: `${base}/index?taste=${taste}`,
+          remoteWAL: `${base}/wal?taste=${taste}`,
         },
       },
     });
@@ -67,16 +71,16 @@ describe("sqlite", () => {
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
       // sqlite://./dist/sqlite/data?store=data&version=v0.19-sqlite
-      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}/data\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
 
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}/data\\?name=${my_app()}&store=data&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite/meta\\?name=${my_app()}&store=meta&taste=${taste}&version=${V0_19SQL_VERSION}`)
+      new RegExp(`${base}/meta\\?name=${my_app()}&store=meta&taste=${taste}&version=${V0_19SQL_VERSION}`)
     );
     await db.close();
   });

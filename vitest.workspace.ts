@@ -1,5 +1,6 @@
 import { defineWorkspace } from "vitest/config";
 
-import sqlite from "./vitest.sqlite.config.ts";
+import betterSqlite3 from "./vitest.better-sqlite3.config.ts";
+import nodeSqlite3Wasm from "./vitest.node-sqlite3-wasm.config.ts";
 
-export default defineWorkspace([sqlite]);
+export default defineWorkspace([nodeSqlite3Wasm, betterSqlite3]);

@@ -1,12 +1,12 @@
-import { V0_19NSWConnection } from "./sqlite-connection";
+import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection";
 import { V0_19SQL_VERSION } from "../version";
 import { ResolveOnce } from "@adviser/cement";
 import { ensureLogger } from "@fireproof/core";
 
 const once = new ResolveOnce<string>();
-export async function ensureNSWVersion(url: URL, dbConn: V0_19NSWConnection) {
+export async function ensureSqliteVersion(url: URL, dbConn: V0_19BS3Connection) {
   const version = await once.once(async () => {
-    const logger = ensureLogger(dbConn.opts, "ensureNSWVersion", {
+    const logger = ensureLogger(dbConn.opts, "ensureSqliteVersion", {
       version: V0_19SQL_VERSION,
       url: dbConn.url.toString(),
     });
@@ -17,18 +17,23 @@ export async function ensureNSWVersion(url: URL, dbConn: V0_19NSWConnection) {
           updated_at TEXT NOT NULL)`
       )
       .run();
-    const stmt = await dbConn.client.prepare(`select version from version`);
-    const rows = stmt.all() as { version: string }[];
-    stmt.finalize();
+    const rows = (await dbConn.client.prepare(`select version from version`).all()) as { version: string }[];
     if (rows.length > 1) {
       throw logger.Error().Msg(`more than one version row found`).AsError();
     }
     if (rows.length === 0) {
-      await dbConn.client.prepare(`insert into version (version, updated_at) values (:version, :updated_at)`).run({
-        ":version": V0_19SQL_VERSION,
-        ":updated_at": new Date().toISOString(),
+      const toInsert = dbConn.taste.quoteTemplate({
+        version: V0_19SQL_VERSION,
+        updated_at: new Date().toISOString(),
       });
+      try {
+      await dbConn.client
+        .prepare(`insert into version (version, updated_at) values (@version, @updated_at)`)
+        .run(toInsert);
       return V0_19SQL_VERSION;
+      } catch (e) {
+        throw logger.Error().Err(e).Any("toInsert", toInsert).Msg(`insert`).AsError();
+      }
     }
     if (rows[0].version !== V0_19SQL_VERSION) {
       logger.Warn().Any("row", rows[0]).Msg(`version mismatch`);
@@ -36,4 +41,5 @@ export async function ensureNSWVersion(url: URL, dbConn: V0_19NSWConnection) {
     return rows[0].version;
   });
   url.searchParams.set("version", version);
+  url.searchParams.set("taste", dbConn.taste.taste);
 }

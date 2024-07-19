@@ -1,8 +1,8 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../../types.js";
-import { V0_19BS3Connection } from "./sqlite-connection.js";
+import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureBS3Version } from "./sqlite-ensure-version.js";
+import { ensureSqliteVersion } from "./sqlite-ensure-version.js";
 import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
 
 export class MetaSQLRecordBuilder {
@@ -54,18 +54,18 @@ interface SQLiteMetaRecord {
   updated_at: string;
 }
 
-export class V0_19BS3MetaStore implements MetaSQLStore {
+export class V0_19_SqliteMetaStore implements MetaSQLStore {
   readonly dbConn: V0_19BS3Connection;
   readonly logger: Logger;
   constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as V0_19BS3Connection;
-    this.logger = ensureLogger(dbConn.opts, "V0_19BS3MetaStore");
+    this.logger = ensureLogger(dbConn.opts, "V0_19_SqliteMetaStore");
     this.logger.Debug().Msg("constructor");
   }
   async start(url: URL): Promise<void> {
     this.logger.Debug().Url(url).Msg("starting");
     await this.dbConn.connect();
-    await ensureBS3Version(url, this.dbConn);
+    await ensureSqliteVersion(url, this.dbConn);
     this.logger.Debug().Url(url).Msg("started");
   }
 
@@ -96,8 +96,8 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
       await this.createTable(url);
       return this.dbConn.client.prepare(`insert into ${table}
           (name, branch, meta, updated_at)
-          values (?, ?, ?, ?)
-          ON CONFLICT(name, branch) DO UPDATE SET meta=?, updated_at=?
+          values (@name, @branch, @meta, @updated_at)
+          ON CONFLICT(name, branch) DO UPDATE SET meta=@meta, updated_at=@updated_at
           `);
     });
   }
@@ -107,7 +107,7 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(
-        `select name, branch, meta, updated_at from ${table} where name = ? and branch = ?`
+        `select name, branch, meta, updated_at from ${table} where name = @name and branch = @branch`
       );
     });
   }
@@ -116,38 +116,55 @@ export class V0_19BS3MetaStore implements MetaSQLStore {
   private async deleteStmt(url: URL) {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
-      return this.dbConn.client.prepare(`delete from ${table} where name = ? and branch = ?`);
+      return this.dbConn.client.prepare(
+        `delete from ${table} where name = @name and branch = @branch`);
     });
   }
 
   async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
     this.logger
       .Debug()
+      .Url(url)
       .Str("name", ose.name)
       .Str("branch", ose.branch)
-      .Uint64("data-len", ose.meta.length)
+      .Len(ose.meta)
       .Msg("insert");
-    const bufMeta = Buffer.from(ose.meta);
-    return this.insertStmt(url).then((i) =>
-      i.run(ose.name, ose.branch, bufMeta, ose.updated_at.toISOString(), bufMeta, ose.updated_at.toISOString())
-    );
+    const bufMeta = this.dbConn.taste.toBlob(ose.meta);
+    const toInsert = this.dbConn.taste.quoteTemplate({
+      name: ose.name,
+      branch: ose.branch,
+      meta: bufMeta,
+      updated_at: ose.updated_at.toISOString()
+    })
+    return this.insertStmt(url).then((i) => {
+      try {
+        return i.run(toInsert);
+      } catch (e) {
+        throw this.logger.Error().Err(e).Url(url).Any("toInsert", toInsert).Msg("insert").AsError();
+      }
+    });
   }
   async select(url: URL, key: MetaRecordKey): Promise<MetaRecord[]> {
-    this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("select");
-    return (await this.selectStmt(url).then((i) => i.all(key.name, key.branch))).map((irow) => {
-      const row = irow as SQLiteMetaRecord;
-      return {
-        name: row.name,
-        branch: row.branch,
-        meta: Uint8Array.from(row.meta),
-        updated_at: new Date(row.updated_at),
-      };
-    });
+    const toKey = this.dbConn.taste.quoteTemplate(key);
+    this.logger.Debug().Any("key", toKey).Msg("select");
+    try {
+      return this.selectStmt(url).then((stmt) => stmt.all(toKey).map((irow) => {
+        const row = irow as SQLiteMetaRecord;
+        return {
+          name: row.name,
+          branch: row.branch,
+          meta: this.dbConn.taste.fromBlob(row.meta),
+          updated_at: new Date(row.updated_at),
+        };
+      }));
+    } catch (e) {
+      throw this.logger.Error().Err(e).Url(url).Any("toKey", toKey).Msg("select").AsError();
+    }
   }
 
   async delete(url: URL, key: MetaRecordKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
-    return this.deleteStmt(url).then((i) => i.run(key.name, key.branch));
+    return this.deleteStmt(url).then((i) => i.run(this.dbConn.taste.quoteTemplate(key)));
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async close(url: URL): Promise<Result<void>> {
