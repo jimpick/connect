@@ -7,15 +7,15 @@ describe("sqlite", () => {
   function my_app() {
     return _my_app;
   }
-  let taste: string
-  let base: string
+  let taste: string;
+  let base: string;
 
   beforeAll(async () => {
     await rt.SysContainer.start();
     registerSqliteStoreProtocol();
     const url = new URL(process.env.FP_STORAGE_URL || "dummy://");
     taste = url.searchParams.get("taste") || "better-sqlite3";
-    base = `sqlite://./dist/sqlite-${taste}`
+    base = `sqlite://./dist/sqlite-${taste}`;
   });
 
   it("sqlite path", async () => {

@@ -116,26 +116,19 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
   private async deleteStmt(url: URL) {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
-      return this.dbConn.client.prepare(
-        `delete from ${table} where name = @name and branch = @branch`);
+      return this.dbConn.client.prepare(`delete from ${table} where name = @name and branch = @branch`);
     });
   }
 
   async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
-    this.logger
-      .Debug()
-      .Url(url)
-      .Str("name", ose.name)
-      .Str("branch", ose.branch)
-      .Len(ose.meta)
-      .Msg("insert");
+    this.logger.Debug().Url(url).Str("name", ose.name).Str("branch", ose.branch).Len(ose.meta).Msg("insert");
     const bufMeta = this.dbConn.taste.toBlob(ose.meta);
     const toInsert = this.dbConn.taste.quoteTemplate({
       name: ose.name,
       branch: ose.branch,
       meta: bufMeta,
-      updated_at: ose.updated_at.toISOString()
-    })
+      updated_at: ose.updated_at.toISOString(),
+    });
     return this.insertStmt(url).then((i) => {
       try {
         return i.run(toInsert);
@@ -148,15 +141,17 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
     const toKey = this.dbConn.taste.quoteTemplate(key);
     this.logger.Debug().Any("key", toKey).Msg("select");
     try {
-      return this.selectStmt(url).then((stmt) => stmt.all(toKey).map((irow) => {
-        const row = irow as SQLiteMetaRecord;
-        return {
-          name: row.name,
-          branch: row.branch,
-          meta: this.dbConn.taste.fromBlob(row.meta),
-          updated_at: new Date(row.updated_at),
-        };
-      }));
+      return this.selectStmt(url).then((stmt) =>
+        stmt.all(toKey).map((irow) => {
+          const row = irow as SQLiteMetaRecord;
+          return {
+            name: row.name,
+            branch: row.branch,
+            meta: this.dbConn.taste.fromBlob(row.meta),
+            updated_at: new Date(row.updated_at),
+          };
+        })
+      );
     } catch (e) {
       throw this.logger.Error().Err(e).Url(url).Any("toKey", toKey).Msg("select").AsError();
     }

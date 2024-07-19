@@ -99,19 +99,23 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(
-        `delete from ${table} where name = @name and branch = @branch`) as unknown as Statement;
-    })
+        `delete from ${table} where name = @name and branch = @branch`
+      ) as unknown as Statement;
+    });
   }
 
   async insert(url: URL, ose: WalRecord): Promise<RunResult> {
     const wal = WalSQLRecordBuilder.fromRecord(ose).build();
     const bufState = this.dbConn.taste.toBlob(this.textEncoder.encode(JSON.stringify(wal.state)));
     return this.insertStmt(url).then((i) =>
-      i.run(this.dbConn.taste.quoteTemplate({
-        name: ose.name,
-        branch: ose.branch,
-        state: bufState,
-        updated_at: wal.updated_at.toISOString()}))
+      i.run(
+        this.dbConn.taste.quoteTemplate({
+          name: ose.name,
+          branch: ose.branch,
+          state: bufState,
+          updated_at: wal.updated_at.toISOString(),
+        })
+      )
     );
   }
 

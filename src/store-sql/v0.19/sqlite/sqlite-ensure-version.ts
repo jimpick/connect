@@ -27,10 +27,10 @@ export async function ensureSqliteVersion(url: URL, dbConn: V0_19BS3Connection) 
         updated_at: new Date().toISOString(),
       });
       try {
-      await dbConn.client
-        .prepare(`insert into version (version, updated_at) values (@version, @updated_at)`)
-        .run(toInsert);
-      return V0_19SQL_VERSION;
+        await dbConn.client
+          .prepare(`insert into version (version, updated_at) values (@version, @updated_at)`)
+          .run(toInsert);
+        return V0_19SQL_VERSION;
       } catch (e) {
         throw logger.Error().Err(e).Any("toInsert", toInsert).Msg(`insert`).AsError();
       }

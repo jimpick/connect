@@ -14,24 +14,23 @@ class NSWTaste implements TasteHandler {
 
   quoteTemplate(o: unknown): Record<string, unknown> {
     const i = o as Record<string, unknown>;
-    const out: Record<string, unknown> = {}
+    const out: Record<string, unknown> = {};
     for (const k in i) {
       out[`@${k}`] = i[k];
     }
     return out;
   }
   toBlob(data: Uint8Array): unknown {
-    return data
+    return data;
   }
   fromBlob(data: unknown): Uint8Array {
-    return data as Uint8Array
+    return data as Uint8Array;
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onceImport = new ResolveOnce<any>();
 export class V0_19NSWConnection extends Sqlite3Connection {
-
   get client(): Database {
     if (!this._client) {
       throw this.logger.Error().Msg("client not connected").AsError();
@@ -59,12 +58,12 @@ export class V0_19NSWConnection extends Sqlite3Connection {
       }
     }
     this._client = await onceSQLiteConnections.get(fName).once(async () => {
-      console.log("load->fName->", fName)
+      console.log("load->fName->", fName);
       this.logger.Debug().Str("filename", fName).Msg("connect");
       // const Sqlite3Database = (await import("better-sqlite3")).default;
       const Sqlite3Database = await onceImport.once(async () => {
-        const sql = await import("node-sqlite3-wasm")
-        return sql.Database
+        const sql = await import("node-sqlite3-wasm");
+        return sql.Database;
       });
       if (hasName) {
         await rt.SysContainer.mkdir(rt.SysContainer.dirname(fName), { recursive: true });

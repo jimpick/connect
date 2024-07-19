@@ -6,7 +6,6 @@ import { rt } from "@fireproof/core";
 import { ensureSQLOpts } from "../../../ensurer.js";
 import { Sqlite3Connection, TasteHandler } from "../../sqlite_factory.js";
 
-
 class BS3Taste implements TasteHandler {
   readonly taste = "better-sqlite3" as const;
 
@@ -25,8 +24,7 @@ class BS3Taste implements TasteHandler {
 const onceImport = new ResolveOnce<any>();
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
 export class V0_19BS3Connection extends Sqlite3Connection {
-
-  get client():  Database {
+  get client(): Database {
     if (!this._client) {
       throw this.logger.Error().Msg("client not connected").AsError();
     }

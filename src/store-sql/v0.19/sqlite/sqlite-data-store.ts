@@ -74,8 +74,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   private async selectStmt(url: URL) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
-      return this.dbConn.client.prepare(
-        `select name, car, data, updated_at from ${table} where car = @car`);
+      return this.dbConn.client.prepare(`select name, car, data, updated_at from ${table} where car = @car`);
     });
   }
 
@@ -96,13 +95,23 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   async insert(url: URL, ose: DataRecord): Promise<RunResult> {
-    this.logger.Debug().Url(url).Str("name", ose.name).Str("car", ose.car).Uint64("data-len", ose.data.length).Msg("insert");
-    return this.insertStmt(url).then((i) => i.run(this.dbConn.taste.quoteTemplate({
-      name: ose.name,
-      car: ose.car,
-      data: this.dbConn.taste.toBlob(ose.data),
-      updated_at: ose.updated_at.toISOString()
-    })));
+    this.logger
+      .Debug()
+      .Url(url)
+      .Str("name", ose.name)
+      .Str("car", ose.car)
+      .Uint64("data-len", ose.data.length)
+      .Msg("insert");
+    return this.insertStmt(url).then((i) =>
+      i.run(
+        this.dbConn.taste.quoteTemplate({
+          name: ose.name,
+          car: ose.car,
+          data: this.dbConn.taste.toBlob(ose.data),
+          updated_at: ose.updated_at.toISOString(),
+        })
+      )
+    );
   }
 
   async select(url: URL, car: string): Promise<DataRecord[]> {
