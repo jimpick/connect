@@ -41,7 +41,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   table(url: URL): string {
-    return getStore(url, this.logger, (...x: string[]) => x.join("_"));
+    return getStore(url, this.logger, (...x: string[]) => x.join("_")).name;
   }
 
   readonly #createTable = new KeyedResolvOnce();

@@ -6,6 +6,7 @@ import {
   NoSuchKey,
   PutObjectCommand,
   S3Client,
+  S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import { bs, rt, ensureLogger, getStore, Logger } from "@fireproof/core";
 
@@ -15,62 +16,21 @@ export interface S3Opts {
   readonly secretAccessKey: string;
 }
 
-/*
-const client = new S3Client({});
-
-export const main = async () => {
-  const command = new GetObjectCommand({
-    Bucket: "test-bucket",
-    Key: "hello-s3.txt",
-  });
-
- */
-
-// function buildUrl(type: string, name: string, s3opts: Partial<S3Opts>, opts: bs.StoreOpts): URL {
-//     const url = new URL(`s3://${name}`);
-//     url.searchParams.set("version", "v0.1-s3");
-//     url.searchParams.set("type", type);
-//     if (opts.isIndex) {
-//         url.searchParams.set("index", opts.isIndex);
-//     }
-//     if (s3opts.accessKeyId) {
-//         url.searchParams.set("accessKeyId", s3opts.accessKeyId);
-//     }
-//     if (s3opts.secretAccessKey) {
-//         url.searchParams.set("secretAccessKey", s3opts.secretAccessKey);
-//     }
-//     if (s3opts.region) {
-//         url.searchParams.set("region", s3opts.region);
-//     }
-//     return url
-// }
-
-// export function s3StoreFactory(s3opts: Partial<S3Opts> = {}, sopts: bs.StoreOpts & LoggerOpts = {}): bs.StoreFactory {
-//     const logger = ensureLogger(sopts, "s3StoreFactory");
-//     const gateway = new S3Gateway(logger);
-//     return {
-//         makeMetaStore: async (loader: bs.Loadable): Promise<bs.MetaStore> => {
-//             return new bs.MetaStore(loader.name, buildUrl("meta", loader.name, s3opts, sopts), logger, gateway);
-//         },
-//         makeDataStore: async (loader: bs.Loadable): Promise<bs.DataStore> => {
-//             return new bs.DataStore(loader.name, buildUrl("data", loader.name, s3opts, sopts), logger, gateway);
-//         },
-//         makeRemoteWAL: async (loader: bs.Loadable): Promise<bs.RemoteWAL> => {
-//             return new bs.RemoteWAL(loader, buildUrl("wal", loader.name, s3opts, sopts), logger, gateway);
-//         }
-//     };
-// }
-
-// function ensureCache(url: URL): URL {
-//     const fetchUploadUrl = new URL(url.toString());
-//     fetchUploadUrl.searchParams.set("cache", Math.random().toString());
-//     return fetchUploadUrl;
-// }
-
 const s3ClientOnce = new ResolveOnce<S3Client>();
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function s3Client(logger: Logger) {
-  return s3ClientOnce.once(async () => new S3Client());
+  return s3ClientOnce.once(async () => {
+    const cfg: S3ClientConfig = {};
+    if (process.env.AWS_S3_ENDPOINT) {
+      cfg.endpoint = process.env.AWS_S3_ENDPOINT;
+    }
+    logger.Debug().Any("cfg", cfg).Msg("create S3Client");
+    return new S3Client(cfg);
+  });
+}
+
+export interface S3File {
+  readonly bucket: string;
+  readonly prefix: string;
 }
 
 function getBucketFromString(s: string) {
@@ -79,65 +39,69 @@ function getBucketFromString(s: string) {
   return ret;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getBucket(url: URL, logger: Logger): { bucket: string; prefix: string } {
-  let path = url
-    .toString()
-    .replace(new RegExp(`^${url.protocol}//`), "")
-    .replace(/\?.*$/, "");
-  const name = url.searchParams.get("name");
-  if (name && !path.includes("/" + name)) {
-    path = rt.SysContainer.join(path, name);
-  }
+function getBucket(url: URL, logger: Logger): S3File {
+  // let path = url
+  //   .toString()
+  //   .replace(new RegExp(`^${url.protocol}//`), "")
+  //   .replace(/\?.*$/, "");
+
+  const path = rt.SysContainer.join(rt.getPath(url, logger), rt.getFileName(url, logger));
+  //   await rt.getPath(baseUrl, this.logger),
+  //   rt.ensureIndexName(baseUrl, "wal"),
+
+  // const name = url.searchParams.get("name");
+  // if (name && !path.includes("/" + name)) {
+  //   path = rt.SysContainer.join(path, name);
+  // }
   return getBucketFromString(path);
 }
 
 export abstract class S3Gateway implements bs.Gateway {
   constructor(readonly logger: Logger) {}
 
-  abstract buildUrl(url: URL, key: string): Promise<Result<URL>>;
+  buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    url.searchParams.set("key", key);
+    return Promise.resolve(Result.Ok(url));
+  }
 
-  async destroyDir(url: URL): Promise<Result<void>> {
+  async destroy(iurl: URL): Promise<Result<void>> {
     const s3 = await s3Client(this.logger);
-    const { bucket, prefix } = getBucket(url, this.logger);
-    this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", prefix).Msg("destroyDir");
-    for (
-      let objs = await s3.send(
+    const url = new URL(iurl.toString());
+    url.searchParams.set("key", "destroy");
+    const { bucket, prefix } = await getBucket(url, this.logger);
+    const s3Directory = rt.SysContainer.dirname(prefix);
+    this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", s3Directory).Msg("destroyDir");
+    let next: { ContinuationToken?: string } = {};
+    do {
+      const objs = await s3.send(
         new ListObjectsV2Command({
           Bucket: bucket,
-          Prefix: prefix,
+          Prefix: s3Directory,
+          ...next,
         })
       );
-      objs.NextContinuationToken;
-      objs = await s3.send(
-        new ListObjectsV2Command({
-          Bucket: bucket,
-          Prefix: prefix,
-          ContinuationToken: objs.NextContinuationToken,
-        })
-      )
-    ) {
-      if (!objs.Contents) {
-        continue;
+      if (objs.Contents) {
+        this.logger
+          .Debug()
+          .Str("bucket", bucket)
+          .Str("prefix", s3Directory)
+          .Any(
+            "objs",
+            objs.Contents.map((i) => i.Key)
+          )
+          .Msg("destroyDir");
+        for (const obj of objs.Contents) {
+          await s3.send(
+            new DeleteObjectCommand({
+              Key: obj.Key,
+              Bucket: bucket,
+            })
+          );
+        }
       }
-      this.logger
-        .Debug()
-        .Str("bucket", bucket)
-        .Str("prefix", prefix)
-        .Any(
-          "objs",
-          objs.Contents.map((i) => i.Key)
-        )
-        .Msg("destroyDir");
-      for (const obj of objs.Contents) {
-        await s3.send(
-          new DeleteObjectCommand({
-            Key: obj.Key,
-            Bucket: bucket,
-          })
-        );
-      }
-    }
+      next = { ContinuationToken: objs.NextContinuationToken };
+    } while (next.ContinuationToken);
     return Result.Ok(undefined);
   }
 
@@ -149,10 +113,6 @@ export abstract class S3Gateway implements bs.Gateway {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async close(url: URL): Promise<bs.VoidResult> {
-    return Result.Ok(undefined);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async destroy(url: URL): Promise<bs.VoidResult> {
     return Result.Ok(undefined);
   }
 
@@ -213,38 +173,11 @@ export class S3WALGateway extends S3Gateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "S3WALGateway"));
   }
-
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
-  }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const path = rt.SysContainer.join(
-      await rt.getPath(baseUrl, this.logger),
-      rt.ensureIndexName(baseUrl, "wal"),
-      key + ".json"
-    );
-
-    const url = new URL(`${baseUrl.protocol}//${path}${baseUrl.search}`);
-    return Result.Ok(url);
-  }
 }
 
 export class S3MetaGateway extends S3Gateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "S3MetaGateway"));
-  }
-
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
-  }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const path = rt.SysContainer.join(
-      await rt.getPath(baseUrl, this.logger),
-      rt.ensureIndexName(baseUrl, "meta"),
-      key + ".json"
-    );
-    const url = new URL(`${baseUrl.protocol}//${path}${baseUrl.search}`);
-    return Result.Ok(url);
   }
 }
 
@@ -253,34 +186,43 @@ export class S3DataGateway extends S3Gateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "S3DataGateway"));
   }
+}
 
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
+export class S3TestStore implements bs.TestStore {
+  readonly logger: Logger;
+  readonly gateway: bs.Gateway;
+  constructor(gw: bs.Gateway, ilogger: Logger) {
+    const logger = ensureLogger(ilogger, "S3TestStore");
+    this.logger = logger;
+    this.gateway = gw;
   }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const path = rt.SysContainer.join(
-      await rt.getPath(baseUrl, this.logger),
-      rt.ensureIndexName(baseUrl, "data"),
-      key + ".car"
-    );
-    const url = new URL(`${baseUrl.protocol}//${path}${baseUrl.search}`);
-    return Result.Ok(url);
+  async get(iurl: URL, key: string): Promise<Uint8Array> {
+    const url = new URL(iurl.toString());
+    url.searchParams.set("key", key);
+    const dbFile = rt.SysContainer.join(rt.getPath(url, this.logger), rt.getFileName(url, this.logger));
+    this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
+    const buffer = await this.gateway.get(url);
+    this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
+    return buffer.Ok();
   }
 }
 
-export const unregisterProtocol = bs.registerStoreProtocol({
-  protocol: "s3:",
-  data: async (logger) => {
-    return new S3DataGateway(logger);
-  },
-  meta: async (logger) => {
-    return new S3MetaGateway(logger);
-  },
-  wal: async (logger) => {
-    return new S3WALGateway(logger);
-  },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  test: async (logger: Logger) => {
-    return {} as unknown as bs.TestStore;
-  },
-});
+export function registerS3StoreProtocol(protocol = "s3:", overrideBaseURL?: string) {
+  return bs.registerStoreProtocol({
+    protocol,
+    overrideBaseURL,
+    data: async (logger) => {
+      return new S3DataGateway(logger);
+    },
+    meta: async (logger) => {
+      return new S3MetaGateway(logger);
+    },
+    wal: async (logger) => {
+      return new S3WALGateway(logger);
+    },
+    test: async (logger: Logger) => {
+      const gateway = new S3DataGateway(logger);
+      return new S3TestStore(gateway, logger);
+    },
+  });
+}
