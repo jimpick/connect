@@ -58,7 +58,6 @@ export class V0_19NSWConnection extends Sqlite3Connection {
       }
     }
     this._client = await onceSQLiteConnections.get(fName).once(async () => {
-      console.log("load->fName->", fName);
       this.logger.Debug().Str("filename", fName).Msg("connect");
       // const Sqlite3Database = (await import("better-sqlite3")).default;
       const Sqlite3Database = await onceImport.once(async () => {
