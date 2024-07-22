@@ -29,7 +29,7 @@ function getFromUrlAndEnv(url: URL, paramKey: string, envKey: string, destKey: s
       [destKey]: process.env[envKey],
     };
   }
-  return {}
+  return {};
 }
 
 const s3ClientOnce = new ResolveOnce<S3Client>();
@@ -38,20 +38,20 @@ export async function s3Client(url: URL, logger: Logger) {
     const cred: Partial<AwsCredentialIdentity> = {
       ...getFromUrlAndEnv(url, "accessKey", "AWS_ACCESS_KEY_ID", "accessKeyId"),
       ...getFromUrlAndEnv(url, "secretKey", "AWS_SECRET_ACCESS_KEY", "secretAccessKey"),
-    }
+    };
     const optionalCred: {
-      credentials?: AwsCredentialIdentity
-    } = {}
+      credentials?: AwsCredentialIdentity;
+    } = {};
     if (cred.accessKeyId && cred.secretAccessKey) {
       optionalCred.credentials = cred as AwsCredentialIdentity;
     }
     const cfg: S3ClientConfig = {
       ...getFromUrlAndEnv(url, "endpoint", "AWS_S3_ENDPOINT", "endpoint"),
       ...getFromUrlAndEnv(url, "region", "AWS_REGION", "region"),
-      ...optionalCred
-    }
+      ...optionalCred,
+    };
     logger.Debug().Any("cfg", cfg).Msg("create S3Client");
-    return new S3Client(cfg)
+    return new S3Client(cfg);
   });
 }
 
@@ -72,13 +72,9 @@ function getBucket(url: URL, logger: Logger): S3File {
   //   .replace(new RegExp(`^${url.protocol}//`), "")
   //   .replace(/\?.*$/, "");
 
-  const path = rt.SysContainer.join(
-    rt.getPath(url, logger),
-    rt.getFileName(url, logger),
-  );
+  const path = rt.SysContainer.join(rt.getPath(url, logger), rt.getFileName(url, logger));
   //   await rt.getPath(baseUrl, this.logger),
   //   rt.ensureIndexName(baseUrl, "wal"),
-
 
   // const name = url.searchParams.get("name");
   // if (name && !path.includes("/" + name)) {
@@ -88,7 +84,7 @@ function getBucket(url: URL, logger: Logger): S3File {
 }
 
 export abstract class S3Gateway implements bs.Gateway {
-  constructor(readonly logger: Logger) { }
+  constructor(readonly logger: Logger) {}
 
   buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
     const url = new URL(baseUrl.toString());
@@ -99,11 +95,11 @@ export abstract class S3Gateway implements bs.Gateway {
   async destroy(iurl: URL): Promise<Result<void>> {
     const s3 = await s3Client(iurl, this.logger);
     const url = new URL(iurl.toString());
-    url.searchParams.set("key", "destroy")
+    url.searchParams.set("key", "destroy");
     const { bucket, prefix } = await getBucket(url, this.logger);
     const s3Directory = rt.SysContainer.dirname(prefix);
     this.logger.Debug().Url(url).Str("bucket", bucket).Str("key", s3Directory).Msg("destroyDir");
-    let next: { ContinuationToken?: string } = {}
+    let next: { ContinuationToken?: string } = {};
     do {
       const objs = await s3.send(
         new ListObjectsV2Command({
@@ -131,7 +127,7 @@ export abstract class S3Gateway implements bs.Gateway {
           );
         }
       }
-      next = { ContinuationToken: objs.NextContinuationToken }
+      next = { ContinuationToken: objs.NextContinuationToken };
     } while (next.ContinuationToken);
     return Result.Ok(undefined);
   }
@@ -219,14 +215,13 @@ export class S3DataGateway extends S3Gateway {
   }
 }
 
-
 export class S3TestStore implements bs.TestStore {
   readonly logger: Logger;
   readonly gateway: bs.Gateway;
   constructor(gw: bs.Gateway, ilogger: Logger) {
     const logger = ensureLogger(ilogger, "S3TestStore");
     this.logger = logger;
-    this.gateway = gw
+    this.gateway = gw;
   }
   async get(iurl: URL, key: string): Promise<Uint8Array> {
     const url = new URL(iurl.toString());

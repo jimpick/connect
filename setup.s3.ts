@@ -8,16 +8,14 @@ url.searchParams.set("accessKey", "minioadmin");
 url.searchParams.set("secretKey", "minioadmin");
 url.searchParams.set("endpoint", "http://127.0.0.1:9000");
 const toSet = {
-	FP_STORAGE_URL: url.toString(),
-	// AWS_REGION: "eu-central-1",
-	// AWS_ACCESS_KEY_ID: "minioadmin",
-	// AWS_SECRET_ACCESS_KEY: "minioadmin",
-	// AWS_S3_ENDPOINT: "http://127.0.0.1:9000",
+  FP_STORAGE_URL: url.toString(),
+  // AWS_REGION: "eu-central-1",
+  // AWS_ACCESS_KEY_ID: "minioadmin",
+  // AWS_SECRET_ACCESS_KEY: "minioadmin",
+  // AWS_S3_ENDPOINT: "http://127.0.0.1:9000",
 };
 for (const [key, value] of Object.entries(toSet)) {
-	if (!process.env[key]) {
-		process.env[key] = value;
-	}
+  if (!process.env[key]) {
+    process.env[key] = value;
+  }
 }
-
-
