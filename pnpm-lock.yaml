@@ -66,6 +66,9 @@ importers:
       '@ipld/dag-cbor':
         specifier: ^9.2.1
         version: 9.2.1
+      '@smithy/types':
+        specifier: ^3.3.0
+        version: 3.3.0
       '@types/better-sqlite3':
         specifier: ^7.6.11
         version: 7.6.11

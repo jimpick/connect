@@ -10,8 +10,6 @@
     "build:tsc": "tsc",
     "xbuild:tsup": "tsup",
     "pub:noop": "echo",
-    "xpub:fireproof-core": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/fireproof-core/; cp package-fireproof-core.json dist/fireproof-core/package.json",
-    "xpub:use-fireproof": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/use-fireproof/; cp package-use-fireproof.json dist/use-fireproof/package.json",
     "presmoke": "pnpm run build",
     "xsmoke": "pnpm run '/smoke:/'",
     "presmoke:node": "cd dist/fireproof-core ; pnpm pack",
@@ -21,9 +19,7 @@
     "clean": "rm -rf node_modules dist",
     "prepare-s3-test": "docker run -d -p 9000:9000 --name minio -e MINIO_ACCESS_KEY=minioadmin -e MINIO_SECRET_KEY=minioadmin -v /tmp/data:/data -v /tmp/config:/root/.minio minio/minio server /data",
     "test": "vitest --run",
-    "xtest:file": "FP_STORAGE_URL=./dist/fp-dir vitest --run",
-    "xtest:sqlite": "FP_STORAGE_URL=sqlite://dist/fp-dir vitest --run",
-    "xtest:indexdb": "vitest --config vitest.browser.config.ts --run",
+    "stop-s3-test": "docker rm -f minio",
     "format": "prettier .",
     "lint": "eslint"
   },
@@ -46,6 +42,7 @@
   "devDependencies": {
     "@eslint/js": "^9.6.0",
     "@ipld/dag-cbor": "^9.2.1",
+    "@smithy/types": "^3.3.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^20.14.6",
