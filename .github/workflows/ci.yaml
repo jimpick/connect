@@ -49,6 +49,7 @@ jobs:
         working-directory: ./connector
         run: pnpm run build
       - name: S3 Mock
+        working-directory: ./connector
         run: |
           pnpm run prepare-s3-test
           sleep 3
@@ -57,6 +58,7 @@ jobs:
         run: pnpm run test
 
       - name: stop S3 Mock
+        working-directory: ./connector
         run: |
           docker rm -f minio
 
