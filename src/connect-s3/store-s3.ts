@@ -1,7 +1,9 @@
-import { ResolveOnce, Result } from "@adviser/cement";
+import { KeyedResolvOnce, Result } from "@adviser/cement";
 import {
+  CreateBucketCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   ListObjectsV2Command,
   NoSuchKey,
   PutObjectCommand,
@@ -32,9 +34,12 @@ function getFromUrlAndEnv(url: URL, paramKey: string, envKey: string, destKey: s
   return {};
 }
 
-const s3ClientOnce = new ResolveOnce<S3Client>();
+const s3ClientOnce = new KeyedResolvOnce<S3Client>();
 export async function s3Client(url: URL, logger: Logger) {
-  return s3ClientOnce.once(async () => {
+  const burl = new URL(url.toString());
+  burl.searchParams.set("key", "s3client"); // dummy for getBucket
+  const { bucket } = getBucket(burl, logger);
+  return s3ClientOnce.get(bucket).once(async (bucket) => {
     const cred: Partial<AwsCredentialIdentity> = {
       ...getFromUrlAndEnv(url, "accessKey", "AWS_ACCESS_KEY_ID", "accessKeyId"),
       ...getFromUrlAndEnv(url, "secretKey", "AWS_SECRET_ACCESS_KEY", "secretAccessKey"),
@@ -51,7 +56,26 @@ export async function s3Client(url: URL, logger: Logger) {
       ...optionalCred,
     };
     logger.Debug().Any("cfg", cfg).Msg("create S3Client");
-    return new S3Client(cfg);
+    const client = new S3Client(cfg);
+    if (url.searchParams.get("ensureBucket")) {
+      const command = new HeadBucketCommand({
+        Bucket: bucket,
+      });
+      const response = await client.send(command).catch((e) => {
+        logger.Error().Err(e).Any("cfg", cfg).Str("bucket", bucket).Msg("head Bucket");
+        return undefined;
+      });
+      if (!response) {
+        logger.Debug().Any("cfg", cfg).Str("bucket", bucket).Msg("create Bucket");
+        const command = new CreateBucketCommand({
+          Bucket: bucket,
+        });
+        await client.send(command);
+      } else {
+        logger.Debug().Any("cfg", cfg).Str("bucket", bucket).Msg("bucket exists");
+      }
+    }
+    return client;
   });
 }
 
@@ -67,19 +91,7 @@ function getBucketFromString(s: string) {
 }
 
 function getBucket(url: URL, logger: Logger): S3File {
-  // let path = url
-  //   .toString()
-  //   .replace(new RegExp(`^${url.protocol}//`), "")
-  //   .replace(/\?.*$/, "");
-
   const path = rt.SysContainer.join(rt.getPath(url, logger), rt.getFileName(url, logger));
-  //   await rt.getPath(baseUrl, this.logger),
-  //   rt.ensureIndexName(baseUrl, "wal"),
-
-  // const name = url.searchParams.get("name");
-  // if (name && !path.includes("/" + name)) {
-  //   path = rt.SysContainer.join(path, name);
-  // }
   return getBucketFromString(path);
 }
 
