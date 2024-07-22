@@ -34,7 +34,7 @@ jobs:
       - name: install
         working-directory: ./connector
         run: |
-          git config --global url."https://".insteadOf ssh://
+          git config --global url."https://".insteadOf git+ssh://
           git config --global -l
           pnpm install -f ../fireproof/dist/fireproof-core/fireproof-core-*.tgz
           pnpm install
