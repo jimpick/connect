@@ -17,5 +17,10 @@ export default tseslint.config(
       "**/examples/",
       "smoke/react/",
     ],
+  },
+  {
+    rules: {
+      "no-console": ["warn"],
+    },
   }
 );

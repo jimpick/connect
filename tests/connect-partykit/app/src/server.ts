@@ -1,3 +1,4 @@
+import { URI } from "@adviser/cement";
 import type * as Party from "partykit/server";
 
 export default class Server implements Party.Server {
@@ -5,11 +6,12 @@ export default class Server implements Party.Server {
 
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     // A websocket just connected!
+    // eslint-disable-next-line no-console
     console.log(
       `Connected:
   id: ${conn.id}
   room: ${this.room.id}
-  url: ${new URL(ctx.request.url).pathname}`
+  url: ${URI.from(ctx.request.url).pathname}`
     );
 
     // let's send a message to the connection
@@ -18,6 +20,7 @@ export default class Server implements Party.Server {
 
   onMessage(message: string, sender: Party.Connection) {
     // let's log the message
+    // eslint-disable-next-line no-console
     console.log(`connection ${sender.id} sent message: ${message}`);
     // as well as broadcast it to all the other connections in the room...
     this.room.broadcast(

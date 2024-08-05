@@ -1,51 +1,51 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
-import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureSqliteVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
+import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { ensureSqliteVersionx } from "./sqlite-ensure-version.js";
+import { ensureLogger, exception2Result, getStore } from "@fireproof/core";
 
-export class MetaSQLRecordBuilder {
-  readonly record: MetaRecord;
-  readonly textEncoder: TextEncoder;
+// export class MetaSQLRecordBuilder {
+//   readonly record: MetaRecord;
+//   readonly textEncoder: TextEncoder;
 
-  constructor(record: MetaRecord, textEncoder: TextEncoder) {
-    this.record = record;
-    this.textEncoder = textEncoder;
-  }
+//   constructor(record: MetaRecord, textEncoder: TextEncoder) {
+//     this.record = record;
+//     this.textEncoder = textEncoder;
+//   }
 
-  static fromUploadMetaFnParams(
-    data: Uint8Array,
-    params: bs.UploadMetaFnParams,
-    textEncoder: TextEncoder
-  ): MetaSQLRecordBuilder {
-    return new MetaSQLRecordBuilder(
-      {
-        name: params.name,
-        branch: params.branch,
-        meta: data,
-        updated_at: new Date(),
-      },
-      textEncoder
-    );
-  }
+//   static fromUploadMetaFnParams(
+//     data: Uint8Array,
+//     params: bs.UploadMetaFnParams,
+//     textEncoder: TextEncoder
+//   ): MetaSQLRecordBuilder {
+//     return new MetaSQLRecordBuilder(
+//       {
+//         name: params.name,
+//         branch: params.branch,
+//         meta: data,
+//         updated_at: new Date(),
+//       },
+//       textEncoder
+//     );
+//   }
 
-  static fromBytes(str: string, name: string, branch: string, textEncoder: TextEncoder): MetaSQLRecordBuilder {
-    return new MetaSQLRecordBuilder(
-      {
-        name: name,
-        branch: branch,
-        meta: textEncoder.encode(str),
-        updated_at: new Date(),
-      },
-      textEncoder
-    );
-  }
+//   static fromBytes(str: string, name: string, branch: string, textEncoder: TextEncoder): MetaSQLRecordBuilder {
+//     return new MetaSQLRecordBuilder(
+//       {
+//         name: name,
+//         branch: branch,
+//         meta: textEncoder.encode(str),
+//         updated_at: new Date(),
+//       },
+//       textEncoder
+//     );
+//   }
 
-  build(): MetaRecord {
-    return this.record;
-  }
-}
+//   build(): MetaRecord {
+//     return this.record;
+//   }
+// }
 
 interface SQLiteMetaRecord {
   name: string;
@@ -62,19 +62,20 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
     this.logger = ensureLogger(dbConn.opts, "V0_19_SqliteMetaStore");
     this.logger.Debug().Msg("constructor");
   }
-  async start(url: URL): Promise<void> {
+  async startx(url: URI): Promise<URI> {
     this.logger.Debug().Url(url).Msg("starting");
     await this.dbConn.connect();
-    await ensureSqliteVersion(url, this.dbConn);
-    this.logger.Debug().Url(url).Msg("started");
+    const ret = await ensureSqliteVersionx(url, this.dbConn);
+    this.logger.Debug().Url(ret).Msg("started");
+    return ret;
   }
 
-  table(url: URL): string {
+  table(url: URI): string {
     return getStore(url, this.logger, (...x: string[]) => x.join("_")).name;
   }
 
   readonly #createTable = new KeyedResolvOnce();
-  async createTable(url: URL) {
+  async createTable(url: URI) {
     return this.#createTable.get(this.table(url)).once(async (table) => {
       await this.dbConn.client
         .prepare(
@@ -91,7 +92,7 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
   }
 
   readonly #insertStmt = new KeyedResolvOnce<Statement>();
-  private async insertStmt(url: URL) {
+  private async insertStmt(url: URI) {
     return this.#insertStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`insert into ${table}
@@ -103,7 +104,7 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
   }
 
   readonly #selectStmt = new KeyedResolvOnce<Statement>();
-  private async selectStmt(url: URL) {
+  private async selectStmt(url: URI) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(
@@ -113,14 +114,14 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
   }
 
   readonly #deleteStmt = new KeyedResolvOnce<Statement>();
-  private async deleteStmt(url: URL) {
+  private async deleteStmt(url: URI) {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`delete from ${table} where name = @name and branch = @branch`);
     });
   }
 
-  async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
+  async insert(url: URI, ose: MetaRecord): Promise<RunResult> {
     this.logger.Debug().Url(url).Str("name", ose.name).Str("branch", ose.branch).Len(ose.meta).Msg("insert");
     const bufMeta = this.dbConn.taste.toBlob(ose.meta);
     const toInsert = this.dbConn.taste.quoteTemplate({
@@ -137,7 +138,7 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
       }
     });
   }
-  async select(url: URL, key: MetaRecordKey): Promise<MetaRecord[]> {
+  async select(url: URI, key: MetaRecordKey): Promise<MetaRecord[]> {
     const toKey = this.dbConn.taste.quoteTemplate(key);
     this.logger.Debug().Any("key", toKey).Msg("select");
     try {
@@ -157,17 +158,17 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
     }
   }
 
-  async delete(url: URL, key: MetaRecordKey): Promise<RunResult> {
+  async delete(url: URI, key: MetaRecordKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
     return this.deleteStmt(url).then((i) => i.run(this.dbConn.taste.quoteTemplate(key)));
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async close(url: URL): Promise<Result<void>> {
+  async close(url: URI): Promise<Result<void>> {
     this.logger.Debug().Msg("close");
     // await this.dbConn.close();
     return Result.Ok(undefined);
   }
-  async destroy(url: URL): Promise<Result<void>> {
+  async destroy(url: URI): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Msg("destroy");
       await this.dbConn.client.prepare(`delete from ${this.table(url)}`).run();

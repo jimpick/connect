@@ -1,29 +1,29 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, DataRecord, DataSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
-import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureSqliteVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore, bs } from "@fireproof/core";
+import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { ensureSqliteVersionx } from "./sqlite-ensure-version.js";
+import { ensureLogger, exception2Result, getStore } from "@fireproof/core";
 
-export class DataSQLRecordBuilder {
-  readonly dataRecord: DataRecord;
-  constructor(dataRecord: DataRecord) {
-    this.dataRecord = dataRecord;
-  }
+// export class DataSQLRecordBuilder {
+//   readonly dataRecord: DataRecord;
+//   constructor(dataRecord: DataRecord) {
+//     this.dataRecord = dataRecord;
+//   }
 
-  static fromUploadParams(data: Uint8Array, params: bs.UploadDataFnParams): DataSQLRecordBuilder {
-    return new DataSQLRecordBuilder({
-      name: params.name,
-      car: params.car,
-      data: data,
-      updated_at: new Date(),
-    });
-  }
+//   static fromUploadParams(data: Uint8Array, params: bs.UploadDataFnParams): DataSQLRecordBuilder {
+//     return new DataSQLRecordBuilder({
+//       name: params.name,
+//       car: params.car,
+//       data: data,
+//       updated_at: new Date(),
+//     });
+//   }
 
-  build(): DataRecord {
-    return this.dataRecord;
-  }
-}
+//   build(): DataRecord {
+//     return this.dataRecord;
+//   }
+// }
 
 interface SQLiteDataRecord {
   name: string;
@@ -40,12 +40,12 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
     this.logger = ensureLogger(dbConn.opts, "V0_19_SqliteDataStore");
   }
 
-  table(url: URL): string {
+  table(url: URI): string {
     return getStore(url, this.logger, (...x: string[]) => x.join("_")).name;
   }
 
   readonly #createTable = new KeyedResolvOnce();
-  async createTable(url: URL) {
+  async createTable(url: URI) {
     return this.#createTable.get(this.table(url)).once(async (table) => {
       await this.dbConn.client
         .prepare(
@@ -60,7 +60,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   readonly #insertStmt = new KeyedResolvOnce<Statement>();
-  private async insertStmt(url: URL) {
+  private async insertStmt(url: URI) {
     return this.#insertStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`
@@ -71,7 +71,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   readonly #selectStmt = new KeyedResolvOnce<Statement>();
-  private async selectStmt(url: URL) {
+  private async selectStmt(url: URI) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`select name, car, data, updated_at from ${table} where car = @car`);
@@ -79,22 +79,23 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   readonly #deleteStmt = new KeyedResolvOnce<Statement>();
-  private async deleteStmt(url: URL) {
+  private async deleteStmt(url: URI) {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`delete from ${table} where car = @car`);
     });
   }
 
-  async start(url: URL): Promise<void> {
+  async startx(url: URI): Promise<URI> {
     this.logger.Debug().Msg("start-connect");
     await this.dbConn.connect();
     this.logger.Debug().Msg("start-connected");
-    await ensureSqliteVersion(url, this.dbConn);
-    this.logger.Debug().Msg("start-set-version");
+    const ret = await ensureSqliteVersionx(url, this.dbConn);
+    this.logger.Debug().Url(ret).Msg("start-set-version");
+    return ret;
   }
 
-  async insert(url: URL, ose: DataRecord): Promise<RunResult> {
+  async insert(url: URI, ose: DataRecord): Promise<RunResult> {
     this.logger
       .Debug()
       .Url(url)
@@ -114,7 +115,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
     );
   }
 
-  async select(url: URL, car: string): Promise<DataRecord[]> {
+  async select(url: URI, car: string): Promise<DataRecord[]> {
     this.logger.Debug().Str("car", car).Msg("select");
     return (await this.selectStmt(url).then((i) => i.all(this.dbConn.taste.quoteTemplate({ car })))).map((irow) => {
       const row = irow as SQLiteDataRecord;
@@ -127,7 +128,7 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
     });
   }
 
-  async delete(url: URL, car: string): Promise<RunResult> {
+  async delete(url: URI, car: string): Promise<RunResult> {
     this.logger.Debug().Str("car", car).Msg("delete");
     const ret = await this.deleteStmt(url).then((i) => i.run(this.dbConn.taste.quoteTemplate({ car })));
     // await this.select(car);
@@ -135,13 +136,13 @@ export class V0_19_SqliteDataStore implements DataSQLStore {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async close(url: URL): Promise<Result<void>> {
+  async close(url: URI): Promise<Result<void>> {
     this.logger.Debug().Msg("close");
     return Result.Ok(undefined);
     // await this.dbConn.close();
   }
 
-  async destroy(url: URL): Promise<Result<void>> {
+  async destroy(url: URI): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Msg("destroy");
       await this.createTable(url);

@@ -1,5 +1,7 @@
 import { Logger } from "@fireproof/core";
 import { DataSQLStore, DBConnection, MetaSQLStore, SQLOpts, WalSQLStore } from "../types";
+import { URI } from "@adviser/cement";
+import { SQLConnectionResult } from "../sql-connection-factory";
 
 export async function v0_19sqliteWalFactory(db: DBConnection): Promise<WalSQLStore> {
   const { V0_19_Sqlite_WalStore } = await import("./sqlite/sqlite-wal-store.js");
@@ -39,9 +41,9 @@ export abstract class Sqlite3Connection implements DBConnection {
   readonly taste: TasteHandler;
   readonly logger: Logger;
   readonly opts: SQLOpts;
-  readonly url: URL;
+  readonly url: URI;
 
-  constructor(url: URL, opts: SQLOpts, taste: TasteHandler) {
+  constructor(url: URI, opts: SQLOpts, taste: TasteHandler) {
     this.url = url;
     this.logger = opts.logger;
     this.opts = opts;
@@ -50,17 +52,23 @@ export abstract class Sqlite3Connection implements DBConnection {
   abstract connect(): Promise<void>;
 }
 
-export async function v0_19sqliteConnectionFactory(url: URL, opts: Partial<SQLOpts>): Promise<Sqlite3Connection> {
-  url.searchParams.set("taste", url.searchParams.get("taste") || "better-sqlite3");
-  switch (url.searchParams.get("taste")) {
+export async function v0_19sqliteConnectionFactory(url: URI, opts: Partial<SQLOpts>): Promise<SQLConnectionResult> {
+  const upUrl = url.build().defParam("taste", "better-sqlite3").URI();
+  switch (upUrl.getParam("taste")) {
     case "node-sqlite3-wasm": {
       const { V0_19NSWConnection } = await import("./sqlite/node-sqlite3-wasm/sqlite-connection.js");
-      return new V0_19NSWConnection(url, opts);
+      return {
+        dbConn: new V0_19NSWConnection(upUrl, opts),
+        url: upUrl.build().setParam("taste", "node-sqlite3-wasm").URI(),
+      };
     }
     case "better-sqlite3":
     default: {
       const { V0_19BS3Connection } = await import("./sqlite/better-sqlite3/sqlite-connection.js");
-      return new V0_19BS3Connection(url, opts);
+      return {
+        dbConn: new V0_19BS3Connection(upUrl, opts),
+        url: upUrl.build().setParam("taste", "better-sqlite3").URI(),
+      };
     }
   }
 }

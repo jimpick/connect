@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: connector-fixes
           repository: fireproof-storage/fireproof
           path: ./fireproof
       - name: build-fireproof-package

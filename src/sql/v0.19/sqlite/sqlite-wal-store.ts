@@ -1,8 +1,8 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../../types.js";
 import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
-import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureSqliteVersion } from "./sqlite-ensure-version.js";
+import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { ensureSqliteVersionx } from "./sqlite-ensure-version.js";
 import { ensureLogger, exception2Result, getStore } from "@fireproof/core";
 
 export class WalSQLRecordBuilder {
@@ -38,24 +38,20 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
     this.logger = ensureLogger(dbConn.opts, "V0_19_Sqlite_WalStore");
     this.logger.Debug().Msg("constructor");
   }
-  async start(url: URL): Promise<void> {
+  async startx(url: URI): Promise<URI> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
-    await ensureSqliteVersion(url, this.dbConn);
-
-    // this._insertStmt =
-    // this._selectStmt = this.dbConn.client.prepare(
-    //   `select name, branch, state, updated_at from ${this.table} where name = ? and branch = ?`,
-    // );
-    // this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where name = ? and branch = ?`);
+    const ret = await ensureSqliteVersionx(url, this.dbConn);
+    this.logger.Debug().Url(ret).Msg("started");
+    return ret;
   }
 
-  table(url: URL): string {
+  table(url: URI): string {
     return getStore(url, this.logger, (...x: string[]) => x.join("_")).name;
   }
 
   readonly #createTable = new KeyedResolvOnce();
-  async createTable(url: URL) {
+  async createTable(url: URI) {
     return this.#createTable.get(this.table(url)).once(async (table) => {
       await this.dbConn.client
         .prepare(
@@ -72,7 +68,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
   }
 
   readonly #insertStmt = new KeyedResolvOnce<Statement>();
-  private async insertStmt(url: URL) {
+  private async insertStmt(url: URI) {
     return this.#insertStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(`insert into ${table}
@@ -84,7 +80,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
   }
 
   readonly #selectStmt = new KeyedResolvOnce<Statement>();
-  private async selectStmt(url: URL) {
+  private async selectStmt(url: URI) {
     return this.#selectStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(
@@ -95,7 +91,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
   }
 
   readonly #deleteStmt = new KeyedResolvOnce<Statement>();
-  private async deleteStmt(url: URL) {
+  private async deleteStmt(url: URI) {
     return this.#deleteStmt.get(this.table(url)).once(async (table) => {
       await this.createTable(url);
       return this.dbConn.client.prepare(
@@ -104,7 +100,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
     });
   }
 
-  async insert(url: URL, ose: WalRecord): Promise<RunResult> {
+  async insert(url: URI, ose: WalRecord): Promise<RunResult> {
     const wal = WalSQLRecordBuilder.fromRecord(ose).build();
     const bufState = this.dbConn.taste.toBlob(this.textEncoder.encode(JSON.stringify(wal.state)));
     return this.insertStmt(url).then((i) =>
@@ -119,7 +115,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
     );
   }
 
-  async select(url: URL, key: WalKey): Promise<WalRecord[]> {
+  async select(url: URI, key: WalKey): Promise<WalRecord[]> {
     const res = (await this.selectStmt(url).then((i) => i.all(this.dbConn.taste.quoteTemplate(key)))).map((irow) => {
       const row = irow as SQLiteWalRecord;
       return {
@@ -133,17 +129,17 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
     return res;
   }
 
-  async delete(url: URL, key: WalKey): Promise<RunResult> {
+  async delete(url: URI, key: WalKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
     return this.deleteStmt(url).then((i) => i.run(this.dbConn.taste.quoteTemplate(key)));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async close(url: URL): Promise<Result<void>> {
+  async close(url: URI): Promise<Result<void>> {
     this.logger.Debug().Msg("close");
     return Result.Ok(undefined);
   }
-  async destroy(url: URL): Promise<Result<void>> {
+  async destroy(url: URI): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Msg("destroy");
       await this.createTable(url);

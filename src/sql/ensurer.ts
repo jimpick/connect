@@ -1,5 +1,6 @@
 import { ensureLogger, type Logger } from "@fireproof/core";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames, SQLGestalt } from "./types";
+import { URI } from "@adviser/cement";
 
 function sqlTableName(...names: string[]): string {
   return names
@@ -8,10 +9,10 @@ function sqlTableName(...names: string[]): string {
     .join("_");
 }
 
-function ensureTableNames(url: URL, opts?: Partial<SQLOpts>): SQLTableNames {
+function ensureTableNames(url: URI, opts?: Partial<SQLOpts>): SQLTableNames {
   let isIndex = "";
-  if (url.searchParams.has("index")) {
-    isIndex = url.searchParams.get("index") || ".idx";
+  if (url.hasParam("index")) {
+    isIndex = url.getParam("index") || ".idx";
   }
   const ret = opts?.tableNames || DefaultSQLTableNames;
   // console.log("isIndex->", opts?.url, isIndex, sqlTableName(isIndex,  ret.data));
@@ -39,14 +40,14 @@ function ensureTextDecoder(opts?: Partial<SQLOpts>): TextDecoder {
   return opts?.textDecoder || textDecoder;
 }
 
-function url2sqlFlavor(url: URL, logger: Logger): SQLGestalt {
+function url2sqlFlavor(url: URI, logger: Logger): SQLGestalt {
   const flavor = url.protocol.replace(/:.*$/, "");
   switch (flavor) {
     case "sqlite":
       return {
         flavor: "sqlite",
-        version: url.searchParams.get("version") || undefined,
-        taste: url.searchParams.get("taste") || undefined,
+        version: url.getParam("version"),
+        taste: url.getParam("taste"),
       };
     default:
       throw logger.Error().Str("flavor", flavor).Msg("unsupported protocol").AsError();
@@ -54,7 +55,7 @@ function url2sqlFlavor(url: URL, logger: Logger): SQLGestalt {
 }
 
 export function ensureSQLOpts(
-  url: URL,
+  url: URI,
   opts: Partial<SQLOpts>,
   componentName: string,
   ctx?: Record<string, unknown>

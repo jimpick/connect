@@ -1,5 +1,5 @@
 // import { ConnectS3 } from "./connect-s3.js";
-import { bs } from "@fireproof/core";
+// import { bs } from "@fireproof/core";
 
 // export const connect = {
 //   s3free: ({ blockstore }: bs.Connectable) => {
@@ -29,23 +29,23 @@ import { bs } from "@fireproof/core";
 //   },
 // };
 
-export function validateDataParams(params: bs.DownloadDataFnParams | bs.UploadDataFnParams) {
-  const { type, name, car } = params;
-  if (!name) throw new Error("name is required");
-  if (!car) {
-    throw new Error("car is required");
-  }
-  if (type !== "file" && type !== "data") {
-    throw new Error("type must be file or data");
-  }
-}
+// export function validateDataParams(params: bs.DownloadDataFnParams | bs.UploadDataFnParams) {
+//   const { type, name, car } = params;
+//   if (!name) throw new Error("name is required");
+//   if (!car) {
+//     throw new Error("car is required");
+//   }
+//   if (type !== "file" && type !== "data") {
+//     throw new Error("type must be file or data");
+//   }
+// }
 
-export function validateMetaParams(params: bs.DownloadMetaFnParams | bs.UploadMetaFnParams) {
-  const { name, branch } = params;
-  if (!name) throw new Error("name is required");
-  if (!branch) {
-    throw new Error("branch is required");
-  }
-}
+// export function validateMetaParams(params: bs.DownloadMetaFnParams | bs.UploadMetaFnParams) {
+//   const { name, branch } = params;
+//   if (!name) throw new Error("name is required");
+//   if (!branch) {
+//     throw new Error("branch is required");
+//   }
+// }
 
 // export { ConnectS3 };

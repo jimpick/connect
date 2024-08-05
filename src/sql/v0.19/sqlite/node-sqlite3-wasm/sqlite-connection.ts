@@ -1,6 +1,6 @@
 // import type { Database } from "better-sqlite3";
 import type { Database } from "node-sqlite3-wasm";
-import { KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
+import { KeyedResolvOnce, ResolveOnce, URI } from "@adviser/cement";
 
 import { SQLOpts } from "../../../types.js";
 import { rt } from "@fireproof/core";
@@ -38,7 +38,7 @@ export class V0_19NSWConnection extends Sqlite3Connection {
     return this._client as Database;
   }
 
-  constructor(url: URL, opts: Partial<SQLOpts>) {
+  constructor(url: URI, opts: Partial<SQLOpts>) {
     super(url, ensureSQLOpts(url, opts, "V0_19NSWConnection", { url }), new NSWTaste());
   }
   async connect(): Promise<void> {
@@ -50,7 +50,7 @@ export class V0_19NSWConnection extends Sqlite3Connection {
     // if (!version) {
     //   throw this.logger.Error().Str("url", this.url.toString()).Msg("version not found").AsError();
     // }
-    const hasName = this.url.searchParams.get("name");
+    const hasName = this.url.getParam("name");
     if (hasName) {
       fName = rt.SysContainer.join(fName, hasName);
       if (!fName.endsWith(".sqlite")) {

@@ -1,3 +1,4 @@
+import { URI } from "@adviser/cement";
 import { getStore } from "@netlify/blobs";
 
 interface CRDTEntry {
@@ -7,9 +8,9 @@ interface CRDTEntry {
 }
 
 export default async (req: Request) => {
-  const url = new URL(req.url);
-  const carId = url.searchParams.get("car");
-  const metaDb = url.searchParams.get("meta");
+  const url = URI.from(req.url);
+  const carId = url.getParam("car");
+  const metaDb = url.getParam("meta");
   if (carId) {
     const carFiles = getStore("cars");
     if (req.method === "PUT") {

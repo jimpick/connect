@@ -1,5 +1,5 @@
-import { bs, ensureLogger, Falsy, LoggerOpts } from "@fireproof/core";
-import { CID } from "multiformats";
+import { CoerceURI, URI } from "@adviser/cement";
+import { bs, ensureLogger, LoggerOpts } from "@fireproof/core";
 
 export interface StoreOptions {
   readonly data: bs.DataStore;
@@ -7,96 +7,59 @@ export interface StoreOptions {
   readonly wal: bs.WALState;
 }
 
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
 export class ConnectionFromStore extends bs.ConnectionBase {
-  readonly storeRuntime: bs.StoreRuntime;
   stores?: {
     readonly data: bs.DataStore;
     readonly meta: bs.MetaStore;
   } = undefined;
 
-  constructor(store: bs.StoreRuntime, opts: LoggerOpts) {
-    super(ensureLogger(opts, "ConnectionFromStore"));
-    this.storeRuntime = store;
-  }
+  readonly urlData: URI;
+  readonly urlMeta: URI;
 
-  async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams) {
-    this.logger.Debug().Msg("dataUpload");
-    await this.stores?.data.save({
-      cid: CID.parse(params.car),
-      bytes: bytes,
+  constructor(url: URI, opts: LoggerOpts) {
+    const logger = ensureLogger(opts, "ConnectionFromStore", {
+      url: () => url.toString(),
     });
-    /*
-     * readonly type: FnParamTypes 'data' | 'file';
-     * readonly name: string;
-     * readonly car: string;
-     * readonly size: string;
-     */
-    return Promise.resolve();
+    super(url, logger);
+    this.urlData = url;
+    this.urlMeta = url;
   }
-
-  async dataDownload(params: bs.DownloadDataFnParams): Promise<Uint8Array | Falsy> {
-    this.logger.Debug().Msg("dataDownload");
-    /*
-      readonly type: FnParamTypes;
-      readonly name: string;
-      readonly car: string;
-     */
-    return this.stores?.data.load(CID.parse(params.car)).then((data) => data?.bytes || undefined);
-  }
-
-  async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams): Promise<Uint8Array[] | Falsy> {
-    this.logger.Debug().Msg("metaUpload");
-    const dbmeta: bs.DbMeta = JSON.parse(textDecoder.decode(bytes));
-    await this.stores?.meta.save(dbmeta, params.branch);
-    /*
-      readonly name: string;
-      readonly branch: string;
-     */
-    return [bytes];
-  }
-
-  async metaDownload(params: bs.DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
-    this.logger.Debug().Msg("metaDownload");
-
-    return this.stores?.meta.load(params.branch).then((dbmeta) => {
-      return [textEncoder.encode(JSON.stringify(dbmeta))];
-    });
-  }
-
   async onConnect(): Promise<void> {
-    this.logger.Debug().Msg("onConnect");
-    const loader = { name: "loader" } as bs.Loadable;
+    this.logger.Debug().Msg("onConnect-start");
+    const storeRuntime = bs.toStoreRuntime(
+      {
+        stores: {
+          base: this.url,
+        },
+      },
+      this.logger
+    );
+    const loader = {
+      name: this.url.toString(),
+      ebOpts: {
+        logger: this.logger,
+        store: {
+          stores: {
+            meta: this.urlMeta,
+            data: this.urlData,
+          },
+        },
+        storeRuntime,
+      },
+    } as bs.Loadable;
+
     this.stores = {
-      data: await this.storeRuntime.makeDataStore(loader),
-      meta: await this.storeRuntime.makeMetaStore(loader),
+      data: await storeRuntime.makeDataStore(loader),
+      meta: await storeRuntime.makeMetaStore(loader),
     };
-    // await this.store.data.start();
-    // await this.store.meta.start();
-    // await this.store.wal.start();
-    return Promise.resolve();
+    await this.stores.data.start();
+    await this.stores.meta.start();
+    this.logger.Debug().Msg("onConnect-done");
+    return;
   }
 }
 
-export async function connectionFactory(iurl: string | URL, opts: LoggerOpts = {}): Promise<bs.ConnectionBase> {
-  let url: URL;
-  if (typeof iurl === "string") {
-    url = new URL(iurl);
-  } else {
-    url = iurl;
-  }
+export async function connectionFactory(iurl: CoerceURI, opts: LoggerOpts = {}): Promise<bs.ConnectionBase> {
   const logger = ensureLogger(opts, "connectionFactory");
-  return new ConnectionFromStore(
-    bs.toStoreRuntime(
-      {
-        stores: {
-          base: url,
-        },
-      },
-      logger
-    ),
-    { logger }
-  );
+  return new ConnectionFromStore(URI.from(iurl), { logger });
 }

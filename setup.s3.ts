@@ -1,13 +1,14 @@
-import { registerS3StoreProtocol } from "./src/connect-s3/store-s3.js";
+import { registerS3StoreProtocol } from "./src/s3/s3-store.ts";
+import { URI } from "@adviser/cement";
 
 registerS3StoreProtocol();
 
-const url = new URL("s3://testbucket/fp-test");
-url.searchParams.set("region", "eu-central-1");
-url.searchParams.set("accessKey", "minioadmin");
-url.searchParams.set("secretKey", "minioadmin");
-url.searchParams.set("ensureBucket", "true");
-url.searchParams.set("endpoint", "http://127.0.0.1:9000");
+const url = URI.from("s3://testbucket/fp-test").build();
+url.setParam("region", "eu-central-1");
+url.setParam("accessKey", "minioadmin");
+url.setParam("secretKey", "minioadmin");
+url.setParam("ensureBucket", "true");
+url.setParam("endpoint", "http://127.0.0.1:9000");
 const toSet = {
   FP_STORAGE_URL: url.toString(),
   // AWS_REGION: "eu-central-1",

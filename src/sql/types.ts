@@ -1,4 +1,4 @@
-import { Logger, Result } from "@adviser/cement";
+import { Logger, Result, URI } from "@adviser/cement";
 
 export interface DBConnection {
   connect(): Promise<void>;
@@ -12,12 +12,12 @@ export interface SQLRunResult {
 
 export interface SQLStore<IType, KType, OType = IType[]> {
   readonly dbConn: DBConnection;
-  start(url: URL): Promise<void>;
-  insert(url: URL, ose: IType): Promise<SQLRunResult>;
-  select(url: URL, car: KType): Promise<OType>;
-  delete(url: URL, car: KType): Promise<SQLRunResult>;
-  close(url: URL): Promise<Result<void>>;
-  destroy(url: URL): Promise<Result<void>>;
+  startx(url: URI): Promise<URI>;
+  insert(url: URI, ose: IType): Promise<SQLRunResult>;
+  select(url: URI, car: KType): Promise<OType>;
+  delete(url: URI, car: KType): Promise<SQLRunResult>;
+  close(url: URI): Promise<Result<void>>;
+  destroy(url: URI): Promise<Result<void>>;
 }
 
 export interface SQLTableNames {
@@ -39,7 +39,7 @@ export interface SQLGestalt {
 }
 
 export interface SQLOpts {
-  readonly url: URL;
+  readonly url: URI;
   readonly sqlGestalt: SQLGestalt;
   readonly tableNames: SQLTableNames;
   readonly logger: Logger;

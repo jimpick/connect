@@ -1,12 +1,12 @@
 import { bs, ensureLogger } from "@fireproof/core";
 import { Client } from "@web3-storage/w3up-client";
-import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
-import { DID, Link, Proof } from "@ucanto/interface";
+import { DID, Proof } from "@ucanto/interface";
 import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
 import { Falsy, throwFalsy } from "@fireproof/core";
+import { URI } from "@adviser/cement";
 
 export interface ConnectUCANParams {
   name: string;
@@ -57,13 +57,16 @@ function parseEmail(email: string): Account.EmailAddress {
 }
 
 export class ConnectUCAN extends bs.ConnectionBase {
+  onConnect(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
   client?: Client;
   clockSpaceDID?: DID;
   readonly params: ConnectUCANParams;
   readonly pubsub: () => void;
 
   constructor(params: ConnectUCANParams) {
-    super(ensureLogger({}, "ConnectUCAN"));
+    super(URI.from("ucan://xxx"), ensureLogger({}, "ConnectUCAN"));
     this.params = params;
     this.pubsub = function () {
       return;
@@ -78,13 +81,16 @@ export class ConnectUCAN extends bs.ConnectionBase {
     Result.try(await account.save());
     const existingClockSpace = findClockSpace(client, this.params.name);
     if (existingClockSpace) {
+      // eslint-disable-next-line no-console
       console.log(`Found ${existingClockSpace}, joining.`);
       this.clockSpaceDID = existingClockSpace;
     } else {
       this.clockSpaceDID = await createSpace(client, account, this.params.name);
+      // eslint-disable-next-line no-console
       console.log("Could not find existing space, creating new one.");
     }
     await client.setCurrentSpace(throwFalsy(this.clockSpaceDID));
+    // eslint-disable-next-line no-console
     console.log("starting background sync");
     void this.startBackgroundSync();
   }
@@ -96,116 +102,119 @@ export class ConnectUCAN extends bs.ConnectionBase {
         setTimeout(resolve, 1500)
       );
       try {
+        // eslint-disable-next-line no-console
         console.log("refreshing");
         await this.refresh();
+        // eslint-disable-next-line no-console
         console.log("refreshed");
       } catch (e: unknown) {
+        // eslint-disable-next-line no-console
         console.log("refresh error", e);
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
   }
 
-  async dataDownload(params: bs.DownloadDataFnParams): Promise<Uint8Array | Falsy> {
-    const url = `https://${params.car}.ipfs.w3s.link/`;
-    const response = await fetch(url);
-    if (response.ok) {
-      return new Uint8Array(await response.arrayBuffer());
-    } else {
-      throw new Error(`Failed to download ${url}`);
-    }
-  }
+  // async dataDownload(params: bs.DownloadDataFnParams): Promise<Uint8Array | Falsy> {
+  //   const url = `https://${params.car}.ipfs.w3s.link/`;
+  //   const response = await fetch(url);
+  //   if (response.ok) {
+  //     return new Uint8Array(await response.arrayBuffer());
+  //   } else {
+  //     throw new Error(`Failed to download ${url}`);
+  //   }
+  // }
 
-  async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
-    const client = this.client;
-    if (!client) {
-      throw new Error("client not initialized, cannot dataUpload, please authorize first");
-    }
+  // async dataUpload(bytes: Uint8Array, params: bs.UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
+  //   const client = this.client;
+  //   if (!client) {
+  //     throw new Error("client not initialized, cannot dataUpload, please authorize first");
+  //   }
 
-    // uploadCar is processed so roots are reachable via CDN
-    // uploadFile makes the car itself available via CDN
-    // todo if params.type === 'file' and database is public also uploadCAR
-    if (params.type === "file" && opts?.public) {
-      await client.uploadCAR(new Blob([bytes]));
-    }
-    return await client.uploadFile(new Blob([bytes])).then(() => {
-      return;
-    });
-  }
+  //   // uploadCar is processed so roots are reachable via CDN
+  //   // uploadFile makes the car itself available via CDN
+  //   // todo if params.type === 'file' and database is public also uploadCAR
+  //   if (params.type === "file" && opts?.public) {
+  //     await client.uploadCAR(new Blob([bytes]));
+  //   }
+  //   return await client.uploadFile(new Blob([bytes])).then(() => {
+  //     return;
+  //   });
+  // }
 
-  async metaDownload(params: bs.DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
-    const client = this.client;
-    if (!client) {
-      throw new Error("client not initialized, cannot metaDownload, please authorize first");
-    }
-    const clockSpaceDID = this.clockSpaceDID;
-    if (!clockSpaceDID) {
-      throw new Error("clockSpaceDID not initialized, cannot metaDownload, please authorize first");
-    }
-    if (params.branch !== "main") {
-      throw new Error("todo, implement space per branch");
-    }
-    const clockProofs = await this.clockProofsForDb();
-    const head = await w3clock.head({
-      issuer: client.agent.issuer,
-      with: clockSpaceDID,
-      proofs: clockProofs,
-    });
-    if (head.out.ok) {
-      return this.fetchAndUpdateHead(head.out.ok.head as unknown as Link<bs.DbMetaEventBlock, number, number, 1>[]);
-    } else {
-      console.log("w3clock error", head.out.error);
-      throw new Error(`Failed to download ${params.name}`);
-    }
-  }
+  // async metaDownload(params: bs.DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
+  //   const client = this.client;
+  //   if (!client) {
+  //     throw new Error("client not initialized, cannot metaDownload, please authorize first");
+  //   }
+  //   const clockSpaceDID = this.clockSpaceDID;
+  //   if (!clockSpaceDID) {
+  //     throw new Error("clockSpaceDID not initialized, cannot metaDownload, please authorize first");
+  //   }
+  //   if (params.branch !== "main") {
+  //     throw new Error("todo, implement space per branch");
+  //   }
+  //   const clockProofs = await this.clockProofsForDb();
+  //   const head = await w3clock.head({
+  //     issuer: client.agent.issuer,
+  //     with: clockSpaceDID,
+  //     proofs: clockProofs,
+  //   });
+  //   if (head.out.ok) {
+  //     return this.fetchAndUpdateHead(head.out.ok.head as unknown as Link<bs.DbMetaEventBlock, number, number, 1>[]);
+  //   } else {
+  //     console.log("w3clock error", head.out.error);
+  //     throw new Error(`Failed to download ${params.name}`);
+  //   }
+  // }
 
-  async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
-    const client = this.client;
-    if (!client) {
-      throw new Error("client not initialized, cannot metaUpload, please authorize first");
-    }
-    const clockSpaceDID = this.clockSpaceDID;
-    if (!clockSpaceDID) {
-      throw new Error("clockSpaceDID not initialized, cannot metaUpload, please authorize first");
-    }
-    if (params.branch !== "main") {
-      throw new Error("todo, implement space per branch");
-    }
+  // async metaUpload(bytes: Uint8Array, params: bs.UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  //   const client = this.client;
+  //   if (!client) {
+  //     throw new Error("client not initialized, cannot metaUpload, please authorize first");
+  //   }
+  //   const clockSpaceDID = this.clockSpaceDID;
+  //   if (!clockSpaceDID) {
+  //     throw new Error("clockSpaceDID not initialized, cannot metaUpload, please authorize first");
+  //   }
+  //   if (params.branch !== "main") {
+  //     throw new Error("todo, implement space per branch");
+  //   }
 
-    const clockProofs = await this.clockProofsForDb();
+  //   const clockProofs = await this.clockProofsForDb();
 
-    const event = await this.createEventBlock(bytes);
+  //   const event = await this.createEventBlock(bytes);
 
-    // TODO: turn event into a CAR rather than a blob and use uploadCAR below
-    const blob = new Blob([event.bytes]);
+  //   // TODO: turn event into a CAR rather than a blob and use uploadCAR below
+  //   const blob = new Blob([event.bytes]);
 
-    await client.uploadFile(blob);
+  //   await client.uploadFile(blob);
 
-    const blocks = [];
-    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
-      blocks.push(await decodeEventBlock(eventBytes));
-    }
+  //   const blocks = [];
+  //   for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
+  //     blocks.push(await decodeEventBlock(eventBytes));
+  //   }
 
-    const advanced = await w3clock.advance(
-      {
-        issuer: client.agent.issuer,
-        with: clockSpaceDID,
+  //   const advanced = await w3clock.advance(
+  //     {
+  //       issuer: client.agent.issuer,
+  //       with: clockSpaceDID,
 
-        proofs: clockProofs,
-      },
-      event.cid,
-      { blocks }
-    );
+  //       proofs: clockProofs,
+  //     },
+  //     event.cid,
+  //     { blocks }
+  //   );
 
-    const { ok, error } = throwFalsy(advanced.root.data).ocm.out;
-    if (error) {
-      throw new Error(JSON.stringify(error));
-    }
-    this.parents = [event.cid];
+  //   const { ok, error } = throwFalsy(advanced.root.data).ocm.out;
+  //   if (error) {
+  //     throw new Error(JSON.stringify(error));
+  //   }
+  //   this.parents = [event.cid];
 
-    const head = ok.head as bs.CarClockHead;
-    return this.fetchAndUpdateHead(head);
-  }
+  //   const head = ok.head as bs.CarClockHead;
+  //   return this.fetchAndUpdateHead(head);
+  // }
 
   async fetchAndUpdateHead(remoteHead: bs.CarClockHead) {
     const outBytess = [];
