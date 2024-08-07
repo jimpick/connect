@@ -8,6 +8,6 @@ export default defineConfig({
     name: "connector",
     include: ["src/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    setupFiles: "./setup.s3.ts",
+    setupFiles: "./setup.connector.ts",
   },
 });
