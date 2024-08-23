@@ -1,5 +1,5 @@
 import { describe } from "vitest";
-import { fireproof, rt } from "@fireproof/core";
+import { ensureSuperThis, fireproof } from "@fireproof/core";
 import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI } from "@adviser/cement";
@@ -7,8 +7,9 @@ import { URI } from "@adviser/cement";
 describe("connector", () => {
   // let unreg: () => void;
   let url: URI;
+  const sthis = ensureSuperThis();
   beforeAll(async () => {
-    await rt.SysContainer.start();
+    await sthis.start();
     // unreg = registerS3StoreProtocol();
     // url = URI.from("s3://testbucket/connector")
     //   .build()
@@ -34,7 +35,7 @@ describe("connector", () => {
     });
     // db.connect("s3://testbucket/connector");
     console.log("--2")
-    const connection = await connectionFactory(url);
+    const connection = await connectionFactory(sthis, url);
     console.log("--3")
     await connection.connect_X(wdb.blockstore);
 
@@ -60,6 +61,7 @@ describe("connector", () => {
     console.log("--6")
     expect(docs.rows.length).toBeGreaterThanOrEqual(count);
     (await wdb.blockstore.loader?.WALStore())?.processQueue.waitIdle();
+    await new Promise((res) => setTimeout(res, 1000));
     // console.log("--7")
     await wdb.blockstore.destroy();
     // console.log("--8")
@@ -68,13 +70,12 @@ describe("connector", () => {
       store: {
         stores: {
           base: url,
-          useEncryptedBlockstore: true
         },
       },
     });
     console.log("--9")
     const rdocs = await rdb.allDocs();
-    // console.log("--10", rdocs)
+    // // console.log("--10", rdocs)
     expect(rdocs.rows.length).toBeGreaterThanOrEqual(count);
     for (let i = 0; i < count; i++) {
       expect(await rdb.get<{ hello: string }>(`key${i}:${ran}`)).toEqual({

@@ -7,9 +7,9 @@ import connector from "./vitest.connector.config.ts";
 // import cf_kv from "./vitest.cf-kv.config.ts";
 
 export default defineWorkspace([
-  // nodeSqlite3Wasm,
-  // betterSqlite3,
-  connector,
-  // s3,
+  nodeSqlite3Wasm,
+  betterSqlite3,
+  // connector,
+  s3,
   //cf_kv
 ]);

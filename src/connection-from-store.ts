@@ -1,5 +1,5 @@
 import { CoerceURI, URI } from "@adviser/cement";
-import { bs, ensureLogger, LoggerOpts } from "@fireproof/core";
+import { bs, ensureLogger, SuperThis } from "@fireproof/core";
 
 // export interface StoreOptions {
 //   readonly data: bs.DataStore;
@@ -16,11 +16,15 @@ export class ConnectionFromStore extends bs.ConnectionBase {
   // readonly urlData: URI;
   // readonly urlMeta: URI;
 
-  constructor(url: URI, opts: LoggerOpts) {
-    const logger = ensureLogger(opts, "ConnectionFromStore", {
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis, url: URI) {
+    const logger = ensureLogger(sthis, "ConnectionFromStore", {
       url: () => url.toString(),
+      "this": 1,
+      log: 1
     });
     super(url, logger);
+    this.sthis = sthis;
     // this.urlData = url;
     // this.urlMeta = url;
   }
@@ -31,7 +35,7 @@ export class ConnectionFromStore extends bs.ConnectionBase {
       // data: this.urlData,
       // meta: this.urlMeta,
     };
-    const storeRuntime = bs.toStoreRuntime({ stores }, this.logger);
+    const storeRuntime = bs.toStoreRuntime({ stores }, this.sthis);
     const loader = {
       // name: this.url.toString(),
       ebOpts: {
@@ -42,8 +46,8 @@ export class ConnectionFromStore extends bs.ConnectionBase {
     } as bs.Loadable;
 
     this.stores = {
-      data: await bs.ensureStart(await storeRuntime.makeDataStore(loader), this.logger),
-      meta: await bs.ensureStart(await storeRuntime.makeMetaStore(loader), this.logger),
+      data: await storeRuntime.makeDataStore(loader),
+      meta: await storeRuntime.makeMetaStore(loader)
     };
     // await this.stores.data.start();
     // await this.stores.meta.start();
@@ -52,7 +56,6 @@ export class ConnectionFromStore extends bs.ConnectionBase {
   }
 }
 
-export async function connectionFactory(iurl: CoerceURI, opts: LoggerOpts = {}): Promise<bs.ConnectionBase> {
-  const logger = ensureLogger(opts, "connectionFactory");
-  return new ConnectionFromStore(URI.from(iurl), { logger });
+export async function connectionFactory(sthis: SuperThis, iurl: CoerceURI): Promise<bs.ConnectionBase> {
+  return new ConnectionFromStore(sthis, URI.from(iurl));
 }
