@@ -1,6 +1,6 @@
 import { Result, URI } from "@adviser/cement";
 import { bs, rt, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
-import { Base64 } from 'js-base64';
+import { Base64 } from "js-base64";
 
 export const S3_VERSION = "v0.1-s3";
 
@@ -43,66 +43,61 @@ export class NetlifyGateway implements bs.Gateway {
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    
-    if (store === 'meta') {
-        const fetchUploadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
-        const base64String = Base64.fromUint8Array(body);
-        const crdtEntry = {
-            cid: "some-cid", // Replace with actual CID logic
-            data: base64String,
-            parents: this.parents.map((p) => p.toString()),
-        };
-        const done = await fetch(fetchUploadUrl, { method: 'PUT', body: JSON.stringify(crdtEntry) });
-        if (!done.ok) {
-            return Result.Err(new Error('failed to upload meta ' + done.statusText));
-        }
+    if (store === "meta") {
+      // const jsonBody = JSON.parse(new TextDecoder().decode(body));
+      // console.log({jsonBody});
+      const fetchUploadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
+      const done = await fetch(fetchUploadUrl, { method: "PUT", body });
+      if (!done.ok) {
+        return Result.Err(new Error("failed to upload meta " + done.statusText));
+      }
     } else {
-        const fetchUploadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
-        const base64String = Base64.fromUint8Array(body);
-        const done = await fetch(fetchUploadUrl, { method: 'PUT', body: base64String });
-        if (!done.ok) {
-            return Result.Err(new Error('failed to upload data ' + done.statusText));
-        }
+      const fetchUploadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
+      // const base64String = Base64.fromUint8Array(body);
+      const done = await fetch(fetchUploadUrl, { method: "PUT", body });
+      if (!done.ok) {
+        return Result.Err(new Error("failed to upload data " + done.statusText));
+      }
     }
     return Result.Ok(undefined);
-}
+  }
 
-async get(url: URI): Promise<bs.GetResult> {
+  async get(url: URI): Promise<bs.GetResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    
+
     let fetchDownloadUrl;
-    if (store === 'meta') {
-        fetchDownloadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
-        const response = await fetch(fetchDownloadUrl);
-        if (!response.ok) {
-            return Result.Err(new NotFoundError(`meta not found: ${url}`));
-        }
-        const crdtEntries = await response.json();
-        const events = await Promise.all(
-            crdtEntries.map(async (entry: any) => {
-                const base64String = entry.data;
-                const bytes = Base64.toUint8Array(base64String);
-                return { cid: entry.cid, bytes };
-            })
-        );
-        return Result.Ok(events.map(e => e.bytes));
+    if (store === "meta") {
+      fetchDownloadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
+      const response = await fetch(fetchDownloadUrl);
+      if (!response.ok) {
+        return Result.Err(new NotFoundError(`meta not found: ${url}`));
+      }
+      const crdtEntries = await response.json();
+      const events = await Promise.all(
+        crdtEntries.map(async (entry: any) => {
+          const base64String = entry.data;
+          const bytes = Base64.toUint8Array(base64String);
+          return { cid: entry.cid, bytes };
+        })
+      );
+      return Result.Ok(events.map((e) => e.bytes));
     } else {
-        fetchDownloadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
-        const response = await fetch(fetchDownloadUrl);
-        if (!response.ok) {
-            return Result.Err(new NotFoundError(`file not found: ${url}`));
-        }
-        const base64String = await response.text();
-        const data = Base64.toUint8Array(base64String);
-        return Result.Ok(data);
+      fetchDownloadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
+      const response = await fetch(fetchDownloadUrl);
+      if (!response.ok) {
+        return Result.Err(new NotFoundError(`file not found: ${url}`));
+      }
+      const base64String = await response.text();
+      const data = Base64.toUint8Array(base64String);
+      return Result.Ok(data);
     }
-}
+  }
 
   async delete(url: URI): Promise<bs.VoidResult> {
     const fetchDeleteUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
-    const done = await fetch(fetchDeleteUrl, { method: 'DELETE' });
+    const done = await fetch(fetchDeleteUrl, { method: "DELETE" });
     if (!done.ok) {
-      return Result.Err(new Error('failed to delete data ' + done.statusText));
+      return Result.Err(new Error("failed to delete data " + done.statusText));
     }
     return Result.Ok(undefined);
   }
