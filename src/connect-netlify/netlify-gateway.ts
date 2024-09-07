@@ -1,14 +1,5 @@
 import { Result, URI } from "@adviser/cement";
 import { bs, rt, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
-
-export const S3_VERSION = "v0.1-s3";
-
-export interface S3Opts {
-  readonly region: string;
-  readonly accessKeyId: string;
-  readonly secretAccessKey: string;
-}
-
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
@@ -42,34 +33,32 @@ export class NetlifyGateway implements bs.Gateway {
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const fetchUploadUrl = new URL(
-      store === "meta" ? `/fireproof?meta=${url.getParam("key")}` : `/fireproof?car=${url.getParam("key")}`,
-      document.location.origin
+    const done = await fetch(
+      new URL(`/fireproof?${store === "meta" ? "meta" : "car"}=${url.getParam("key")}`, document.location.origin),
+      { method: "PUT", body }
     );
-    const done = await fetch(fetchUploadUrl, { method: "PUT", body });
     if (!done.ok) {
-      return Result.Err(new Error(`failed to upload ${store === "meta" ? "meta" : "data"} ${done.statusText}`));
+      return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
     }
     return Result.Ok(undefined);
   }
 
   async get(url: URI): Promise<bs.GetResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const fetchDownloadUrl = new URL(
-      store === "meta" ? `/fireproof?meta=${url.getParam("key")}` : `/fireproof?car=${url.getParam("key")}`,
-      document.location.origin
+    const response = await fetch(
+      new URL(`/fireproof?${store === "meta" ? "meta" : "car"}=${url.getParam("key")}`, document.location.origin)
     );
-    const response = await fetch(fetchDownloadUrl);
     if (!response.ok) {
-      return Result.Err(new NotFoundError(`${store === "meta" ? "meta" : "file"} not found: ${url}`));
+      return Result.Err(new NotFoundError(`${store} not found: ${url}`));
     }
     const data = new Uint8Array(await response.arrayBuffer());
     return Result.Ok(data);
   }
 
   async delete(url: URI): Promise<bs.VoidResult> {
-    const fetchDeleteUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
-    const done = await fetch(fetchDeleteUrl, { method: "DELETE" });
+    const done = await fetch(new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin), {
+      method: "DELETE",
+    });
     if (!done.ok) {
       return Result.Err(new Error("failed to delete data " + done.statusText));
     }
