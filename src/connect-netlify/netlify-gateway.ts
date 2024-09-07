@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { bs, rt, ensureLogger, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import { bs, rt, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
 import { Base64 } from 'js-base64';
 
 export const S3_VERSION = "v0.1-s3";
@@ -43,23 +43,21 @@ export class NetlifyGateway implements bs.Gateway {
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const { bucket, prefix } = getBucket(this.sthis, url);
     
-    let fetchUploadUrl;
     if (store === 'meta') {
-        fetchUploadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
+        const fetchUploadUrl = new URL(`/fireproof?meta=${url.getParam("key")}`, document.location.origin);
         const base64String = Base64.fromUint8Array(body);
         const crdtEntry = {
             cid: "some-cid", // Replace with actual CID logic
             data: base64String,
-            parents: ["parent1", "parent2"] // Replace with actual parents logic
+            parents: this.parents.map((p) => p.toString()),
         };
         const done = await fetch(fetchUploadUrl, { method: 'PUT', body: JSON.stringify(crdtEntry) });
         if (!done.ok) {
             return Result.Err(new Error('failed to upload meta ' + done.statusText));
         }
     } else {
-        fetchUploadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
+        const fetchUploadUrl = new URL(`/fireproof?car=${url.getParam("key")}`, document.location.origin);
         const base64String = Base64.fromUint8Array(body);
         const done = await fetch(fetchUploadUrl, { method: 'PUT', body: base64String });
         if (!done.ok) {
