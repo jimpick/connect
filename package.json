@@ -78,7 +78,7 @@
     "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^15.0.0",
-    "better-sqlite3": "^11.1.2",
+    "better-sqlite3": "^11.2.1",
     "cross-fetch": "^4.0.0",
     "idb": "^8.0.0",
     "multiformats": "^13.2.2",
