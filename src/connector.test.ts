@@ -3,7 +3,7 @@ import { ensureSuperThis, fireproof, ConfigOpts, SuperThis } from "@fireproof/co
 import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
-import { registerPartyKitStoreProtocol } from "./partykit/register";
+import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 
 // describe("connector", () => {
 //   // let unreg: () => void;
