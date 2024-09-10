@@ -116,7 +116,7 @@ export class PartyKitGateway implements bs.Gateway {
         exposedResolve(true);
       };
 
-      return new Promise<boolean>((resolve) => {
+      return await new Promise<boolean>((resolve) => {
         exposedResolve = resolve;
         this.party?.addEventListener("open", openFn);
       });
