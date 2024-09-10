@@ -12,7 +12,6 @@ export class PartyKitGateway implements bs.Gateway {
   messageResolve?: (value: Uint8Array | PromiseLike<Uint8Array>) => void;
 
   constructor(sthis: SuperThis) {
-    console.log("fuckyou");
     this.sthis = sthis;
     this.id = sthis.nextId().str;
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
@@ -20,7 +19,7 @@ export class PartyKitGateway implements bs.Gateway {
       this: this.id,
     }).EnableLevel(Level.DEBUG);
     this.logger.Debug().Msg("constructor");
-    this.messagePromise = new Promise<Uint8Array>((resolve, reject) => {
+    this.messagePromise = new Promise<Uint8Array>((resolve) => {
       this.messageResolve = resolve;
     });
   }
@@ -32,19 +31,20 @@ export class PartyKitGateway implements bs.Gateway {
 
   pso?: PartySocketOptions;
   async start(uri: URI): Promise<Result<URI>> {
+    this.logger.Debug().Msg("Starting PartyKitGateway with URI: " + uri.toString());
+    // @ts-expect-error - calling a private method
     URI.protocolHasHostpart("partykit:");
     await this.sthis.start();
-    this.logger.Debug().Url(uri.asURL()).Msg("start");
+
     this.url = uri;
     const ret = uri.build().defParam("version", "v0.1-partykit").URI();
-    this.logger.Debug().Msg(`starting`);
 
-    const room = uri.getParam("room") || uri.getParam("name");
-    if (!room) {
-      console.error("room|name not found");
-      return Result.Err(this.logger.Error().Msg("room|name not found").AsError());
+    const dbName = uri.getParam("name");
+    if (!dbName) {
+      this.logger.Error().Msg("Database name (name) parameter is missing in the URI");
+      return Result.Err(this.logger.Error().Msg("name not found").AsError());
     }
-    const party = uri.getParam("party") || "main";
+    const party = uri.getParam("party") || "fireproof";
     const proto = uri.getParam("protocol") || "wss";
     let possibleUndef = {};
     if (proto) {
@@ -70,13 +70,16 @@ export class PartyKitGateway implements bs.Gateway {
 
     const partySockOpts: PartySocketOptions = {
       id: this.id,
+      // @ts-expect-error - host is a private property
       host: this.url.host,
-      room,
+      room: dbName,
       party,
       ...possibleUndef,
       query,
       path: this.url.pathname.replace(/^\//, ""),
     };
+
+    this.logger.Debug().Any("partySockOpts", partySockOpts).Msg("Party socket options");
 
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
@@ -91,32 +94,29 @@ export class PartyKitGateway implements bs.Gateway {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.party = new PartySocket(this.pso!);
       // // needed to have openFn to be a stable reference
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let exposedResolve = (b: boolean) => {
-        /* noop */
-      };
+       
+      let exposedResolve: (value: boolean) => void;
+
       const openFn = () => {
         this.logger.Debug().Msg("party open");
 
         // add our event listener
-        this.party?.addEventListener("message", (event: MessageEvent<string>) => {
+        this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
-          const afn = async () => {
-            const enc = new TextEncoder();
-            this.messageResolve?.(enc.encode(event.data));
-            setTimeout(() => {
-              this.messagePromise = new Promise<Uint8Array>((resolve, reject) => {
-                this.messageResolve = resolve;
-              });
-            }, 0);
-          };
-          void afn();
+          const enc = new TextEncoder();
+          this.logger.Debug().Msg(`We are getting resolved with message: ${event.data}`);
+          this.messageResolve?.(enc.encode(event.data));
+          setTimeout(() => {
+            this.messagePromise = new Promise<Uint8Array>((resolve) => {
+              this.messageResolve = resolve;
+            });
+          }, 0);
         });
-
+        this.logger.Debug().Msg("Resolving exposed resolve");
         exposedResolve(true);
       };
 
-      return await new Promise<boolean>((resolve) => {
+      return new Promise<boolean>((resolve) => {
         exposedResolve = resolve;
         this.party?.addEventListener("open", openFn);
       });
@@ -131,7 +131,9 @@ export class PartyKitGateway implements bs.Gateway {
   }
 
   async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
+    this.logger.Debug().Msg(`about to put: ${uri.toString()}`);
     await this.ready();
+    this.logger.Debug().Msg(`put ready: ${uri.toString()}`);
     return exception2Result(async () => {
       const store = uri.getParam("store");
       switch (store) {
@@ -155,11 +157,14 @@ export class PartyKitGateway implements bs.Gateway {
   }
 
   async get(uri: URI): Promise<bs.GetResult> {
+    this.logger.Debug().Msg(`about to get: ${uri.toString()}`);
     await this.ready();
+    this.logger.Debug().Msg(`get ready: ${uri.toString()}`);
     return exceptionWrapper(async () => {
       const store = uri.getParam("store");
       switch (store) {
         case "meta":
+          this.logger.Debug().Msg("Awaiting message promise resolution");
           return Result.Ok(await this.messagePromise);
           break;
         default:

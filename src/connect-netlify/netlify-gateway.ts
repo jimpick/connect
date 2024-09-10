@@ -9,10 +9,8 @@ export class NetlifyGateway implements bs.Gateway {
     this.logger = this.sthis.logger;
   }
 
-  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    const url = baseUrl.build();
-    url.setParam("key", key);
-    return Promise.resolve(Result.Ok(url.URI()));
+  async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+    return Result.Ok(baseUrl.build().setParam("key", key).URI());
   }
 
   async destroy(): Promise<Result<void>> {
@@ -24,6 +22,7 @@ export class NetlifyGateway implements bs.Gateway {
     await this.sthis.start();
     this.logger.Debug().Str("url", url.toString()).Msg("start");
     const ret = url.build().defParam("version", "v0.1-netlify").URI();
+    // return url.build().setParam("version", version).setParam("taste", dbConn.taste.taste).URI();
     return Result.Ok(ret);
   }
 
