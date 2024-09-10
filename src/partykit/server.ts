@@ -19,8 +19,11 @@ export default class Server implements Party.Server {
     constructor(public party: Party.Party) {}
 
     async onStart() {
+        console.log("starting");
         return this.party.storage.get('main').then(head => {
+            console.log("get main returned head", head);
             if (head) {
+                console.log("got an actual clock head");
                 this.clockHead = head as Map<string, string>
             }
         })
@@ -34,7 +37,7 @@ export default class Server implements Party.Server {
 
         const url = new URL(request.url)
         const carId = url.searchParams.get('car')
-
+        console.log("carid", carId);
         if (carId) {
             if (request.method === 'PUT') {
                 const carArrayBuffer = await request.arrayBuffer()
@@ -64,14 +67,17 @@ export default class Server implements Party.Server {
     }
 
     onMessage(message: string, sender: Party.Connection) {
-        const { data, cid, parents } = JSON.parse(message) as PartyMessage
+        console.log("got", message);
+        // const { data, cid, parents } = JSON.parse(message) as PartyMessage
+        const x = JSON.parse(message);
+        console.log("parsed", x);
 
-        this.clockHead.set(cid, data)
-        for (const p of parents) {
-            this.clockHead.delete(p)
-        }
+        // this.clockHead.set(cid, data)
+        // for (const p of parents) {
+        //     this.clockHead.delete(p)
+        // }
 
-        this.party.broadcast(data, [sender.id])
+        this.party.broadcast(message, [sender.id])
         // console.log('clockHead', sender.id, [...this.clockHead.keys()])
         void this.party.storage.put('main', this.clockHead)
     }

@@ -134,7 +134,7 @@ export class PartyKitGateway implements bs.Gateway {
             const store = uri.getParam("store");
             switch (store) {
                 case "meta":
-                    this.party?.send(body);
+                    this.party?.send(new TextDecoder().decode(body));
                     break;
                 default:
                     await this.dataUpload(uri, body);
@@ -143,10 +143,9 @@ export class PartyKitGateway implements bs.Gateway {
     }
 
     async dataUpload(uri: URI, bytes: Uint8Array) {
-        const uploadUrl = pkServerURL(this.party, uri);
         const key = uri.getParam("key");
         if (!key) throw new Error("key not found");
-        uploadUrl.build().setParam("car", key);
+        const uploadUrl = pkServerURL(this.party, uri, key);
         const response = await fetch(uploadUrl.toString(), { method: 'PUT', body: bytes })
         if (response.status === 404) {
             throw new Error('Failure in uploading data!')
@@ -168,10 +167,9 @@ export class PartyKitGateway implements bs.Gateway {
     }
 
     async dataDownload(uri: URI) {
-        const downloadUrl = pkServerURL(this.party, uri);
         const key = uri.getParam("key");
         if (!key) throw new Error("key not found");
-        downloadUrl.build().setParam("car", key);
+        const downloadUrl = pkServerURL(this.party, uri, key);
         const response = await fetch(downloadUrl.toString(), { method: 'GET' })
         if (response.status === 404) {
             throw new Error('Failure in downloading data!')
@@ -208,7 +206,7 @@ function pkKey(set?: PartySocketOptions): string {
     return ret;
 }
 
-function pkServerURL(party: PartySocket|undefined, uri: URI): URI {
+function pkServerURL(party: PartySocket|undefined, uri: URI, key: string): URI {
     if (!party) {
         throw new Error("party not found")
     }
@@ -217,7 +215,7 @@ function pkServerURL(party: PartySocket|undefined, uri: URI): URI {
     if (protocol === "ws") {
         proto = "http"
     }
-    return BuildURI.from(party.url).protocol(proto).delParam("_pk").URI()
+    return BuildURI.from(party.url).protocol(proto).delParam("_pk").setParam("car", key).URI()
 }
 
 export class PartyKitTestStore implements bs.TestGateway {
