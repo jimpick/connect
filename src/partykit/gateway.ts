@@ -1,7 +1,8 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
 import { Result, URI, BuildURI, Level, KeyedResolvOnce, runtimeFn } from "@adviser/cement";
-import { bs, ensureLogger, exception2Result, exceptionWrapper, Logger, rt, SuperThis } from "@fireproof/core";
-
+import { bs, ensureLogger, exception2Result, exceptionWrapper, getStore, Logger, rt, SuperThis } from "@fireproof/core";
+// @ts-ignore - calling a private method
+URI.protocolHasHostpart("partykit:");
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
@@ -25,24 +26,25 @@ export class PartyKitGateway implements bs.Gateway {
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    this.logger.Debug().Msg("build url");
     return Result.Ok(baseUrl.build().setParam("key", key).URI());
   }
 
   pso?: PartySocketOptions;
   async start(uri: URI): Promise<Result<URI>> {
     this.logger.Debug().Msg("Starting PartyKitGateway with URI: " + uri.toString());
-    // @ts-expect-error - calling a private method
-    URI.protocolHasHostpart("partykit:");
+    
     await this.sthis.start();
 
     this.url = uri;
     const ret = uri.build().defParam("version", "v0.1-partykit").URI();
 
-    const dbName = uri.getParam("name");
+    let dbName = uri.getParam("name");
     if (!dbName) {
       this.logger.Error().Msg("Database name (name) parameter is missing in the URI");
       return Result.Err(this.logger.Error().Msg("name not found").AsError());
+    }
+    if (this.url.hasParam("index")) {
+      dbName = dbName + "-idx";
     }
     const party = uri.getParam("party") || "fireproof";
     const proto = uri.getParam("protocol") || "wss";
@@ -70,7 +72,7 @@ export class PartyKitGateway implements bs.Gateway {
 
     const partySockOpts: PartySocketOptions = {
       id: this.id,
-      // @ts-expect-error - host is a private property
+      // @ts-ignore - calling a private method
       host: this.url.host,
       room: dbName,
       party,
@@ -79,7 +81,7 @@ export class PartyKitGateway implements bs.Gateway {
       path: this.url.pathname.replace(/^\//, ""),
     };
 
-    this.logger.Debug().Any("partySockOpts", partySockOpts).Msg("Party socket options");
+    // this.logger.Debug().Any("partySockOpts", partySockOpts).Msg("Party socket options");
 
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
@@ -94,7 +96,7 @@ export class PartyKitGateway implements bs.Gateway {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.party = new PartySocket(this.pso!);
       // // needed to have openFn to be a stable reference
-       
+
       let exposedResolve: (value: boolean) => void;
 
       const openFn = () => {
@@ -104,7 +106,6 @@ export class PartyKitGateway implements bs.Gateway {
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
           const enc = new TextEncoder();
-          this.logger.Debug().Msg(`We are getting resolved with message: ${event.data}`);
           this.messageResolve?.(enc.encode(event.data));
           setTimeout(() => {
             this.messagePromise = new Promise<Uint8Array>((resolve) => {
@@ -133,11 +134,11 @@ export class PartyKitGateway implements bs.Gateway {
   async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
     this.logger.Debug().Msg(`about to put: ${uri.toString()}`);
     await this.ready();
-    this.logger.Debug().Msg(`put ready: ${uri.toString()}`);
     return exception2Result(async () => {
-      const store = uri.getParam("store");
+      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
       switch (store) {
         case "meta":
+          this.logger.Debug().Msg(`meta store put operation with body: ${new TextDecoder().decode(body)}`);
           this.party?.send(new TextDecoder().decode(body));
           break;
         default:
@@ -149,11 +150,31 @@ export class PartyKitGateway implements bs.Gateway {
   async dataUpload(uri: URI, bytes: Uint8Array) {
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
-    const uploadUrl = pkServerURL(this.party, uri, key);
+    const uploadUrl = pkCarURL(this.party, uri, key);
     const response = await fetch(uploadUrl.toString(), { method: "PUT", body: bytes });
     if (response.status === 404) {
       throw new Error("Failure in uploading data!");
     }
+  }
+
+  async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
+    this.logger.Debug().Msg(`about to subscribe: ${uri.toString()}`);
+    await this.ready();
+    this.logger.Debug().Msg(`subscribe ready: ${uri.toString()}`);
+    return exception2Result(async () => {
+      const store = uri.getParam("store");
+      switch (store) {
+        case "meta":
+          this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
+            this.logger.Debug().Msg(`got message: ${event.data}`);
+            const enc = new TextEncoder();
+            callback(enc.encode(event.data));
+          });
+          break;
+        default:
+          throw new Error("store must be meta");
+      }
+    });
   }
 
   async get(uri: URI): Promise<bs.GetResult> {
@@ -164,8 +185,8 @@ export class PartyKitGateway implements bs.Gateway {
       const store = uri.getParam("store");
       switch (store) {
         case "meta":
-          this.logger.Debug().Msg("Awaiting message promise resolution");
-          return Result.Ok(await this.messagePromise);
+          this.logger.Debug().Msg("Get clock message promise resolution");
+          return Result.Ok(await this.metaDownload(uri));
           break;
         default:
           return Result.Ok(await this.dataDownload(uri));
@@ -173,10 +194,23 @@ export class PartyKitGateway implements bs.Gateway {
     });
   }
 
+  async metaDownload(uri: URI) {
+    const key = uri.getParam("key");
+    if (!key) throw new Error("key not found");
+    const downloadUrl = pkMetaURL(this.party, uri, key);
+    this.logger.Debug().Msg(`metaDownload URL: ${downloadUrl.toString()}`);
+    const response = await fetch(downloadUrl.toString(), { method: "GET" });
+    if (response.status === 404) {
+      throw new Error("Failure in downloading meta!");
+    }
+    const data = await response.arrayBuffer();
+    return new Uint8Array(data);
+  }
+
   async dataDownload(uri: URI) {
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
-    const downloadUrl = pkServerURL(this.party, uri, key);
+    const downloadUrl = pkCarURL(this.party, uri, key);
     const response = await fetch(downloadUrl.toString(), { method: "GET" });
     if (response.status === 404) {
       throw new Error("Failure in downloading data!");
@@ -215,7 +249,7 @@ function pkKey(set?: PartySocketOptions): string {
   return ret;
 }
 
-function pkServerURL(party: PartySocket | undefined, uri: URI, key: string): URI {
+function pkURL(party: PartySocket | undefined, uri: URI, key: string, type: "car" | "meta"): URI {
   if (!party) {
     throw new Error("party not found");
   }
@@ -224,7 +258,15 @@ function pkServerURL(party: PartySocket | undefined, uri: URI, key: string): URI
   if (protocol === "ws") {
     proto = "http";
   }
-  return BuildURI.from(party.url).protocol(proto).delParam("_pk").setParam("car", key).URI();
+  return BuildURI.from(party.url).protocol(proto).delParam("_pk").setParam(type, key).URI();
+}
+
+function pkCarURL(party: PartySocket | undefined, uri: URI, key: string): URI {
+  return pkURL(party, uri, key, "car");
+}
+
+function pkMetaURL(party: PartySocket | undefined, uri: URI, key: string): URI {
+  return pkURL(party, uri, key, "meta");
 }
 
 export class PartyKitTestStore implements bs.TestGateway {
