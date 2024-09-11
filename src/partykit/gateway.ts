@@ -94,7 +94,7 @@ export class PartyKitGateway implements bs.Gateway {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.party = new PartySocket(this.pso!);
       // // needed to have openFn to be a stable reference
-       
+
       let exposedResolve: (value: boolean) => void;
 
       const openFn = () => {
@@ -103,6 +103,7 @@ export class PartyKitGateway implements bs.Gateway {
         // add our event listener
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
+
           const enc = new TextEncoder();
           this.logger.Debug().Msg(`We are getting resolved with message: ${event.data}`);
           this.messageResolve?.(enc.encode(event.data));
@@ -154,6 +155,28 @@ export class PartyKitGateway implements bs.Gateway {
     if (response.status === 404) {
       throw new Error("Failure in uploading data!");
     }
+  }
+
+  async subscribe(uri: URI, callback: (data: Uint8Array) => void
+
+  ): Promise<bs.VoidResult> {
+    this.logger.Debug().Msg(`about to subscribe: ${uri.toString()}`);
+    await this.ready();
+    this.logger.Debug().Msg(`subscribe ready: ${uri.toString()}`);
+    return exception2Result(async () => {
+      const store = uri.getParam("store");
+      switch (store) {
+        case "meta":
+            this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
+                this.logger.Debug().Msg(`got message: ${event.data}`);
+                const enc = new TextEncoder();
+                callback(enc.encode(event.data));
+            });
+          break;
+        default:
+          throw new Error("store must be meta");
+      }
+    });
   }
 
   async get(uri: URI): Promise<bs.GetResult> {
