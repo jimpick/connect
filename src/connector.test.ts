@@ -110,7 +110,7 @@ describe("partykit", () => {
     };
 
     registerPartyKitStoreProtocol();
-    url = URI.from("partykit://localhost:1999").build().setParam("storkey", "zTvTPEPQRWij8rfb3FrFqBm").URI();
+    url = URI.from("partykit://localhost:1999").build().setParam("storekey", "zTvTPEPQRWij8rfb3FrFqBm").URI();
     //url = URI.from("file://./dist/connect_to?storekey=@bla@")
 
     aliceURL = url.build().setParam("logname", "alice").URI();

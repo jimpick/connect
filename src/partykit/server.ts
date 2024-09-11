@@ -56,11 +56,16 @@ export default class Server implements Party.Server {
         return json({ error: "Method not allowed" }, 405);
       }
     } else {
+      if (request.method === "GET") {
+        const metaValues = Array.from(this.clockHead.values());
+        return json(metaValues, 200);
+      }
       return json({ error: "Invalid URL path" }, 400);
     }
   }
 
   async onConnect(conn: Party.Connection) {
+    console.log("connected", this.party.id, conn.id, [...this.clockHead.values()].length);
     for (const value of this.clockHead.values()) {
       conn.send(value);
     }
