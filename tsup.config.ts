@@ -98,6 +98,47 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module '@fireproof/netlify'",
     },
   },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/s3",
+    entry: ["src/s3/index.ts"],
+    platform: "browser",
+    outDir: "dist/s3",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...stopFile,
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/s3'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/s3",
+    entry: ["src/s3/index.ts"],
+    platform: "browser",
+    outDir: "dist/s3",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/s3'",
+    },
+  },
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);

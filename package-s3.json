@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/netlify",
+  "name": "@fireproof/s3",
   "version": "0.18.0",
   "description": "",
   "main": "./dist/browser/index.cjs",
@@ -26,14 +26,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "^10.4.0",
-    "ts-loader": "^9.4.4",
-    "typescript": "^5.2.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@netlify/blobs": "^6.3.1",
-    "cross-fetch": "^4.0.0"
+    "@aws-sdk/client-s3": "^3.614.0"
   }
 }
