@@ -15,8 +15,8 @@ importers:
         specifier: ^3.614.0
         version: 3.614.0
       '@fireproof/core':
-        specifier: 0.19.9-dev-frag
-        version: 0.19.9-dev-frag(react@18.3.1)
+        specifier: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz
+        version: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)
       '@netlify/blobs':
         specifier: ^7.4.0
         version: 7.4.0
@@ -800,8 +800,9 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.19.9-dev-frag':
-    resolution: {integrity: sha512-OziQdEmS953RE+nWAnWm85cr5xiI0Fye2R7O55VXWrxTk2y2ULfXRFOMqfMfxSdy39vuA4jFIq4rgkNBDgVrHw==}
+  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
+    resolution: {integrity: sha512-3bGgiaj65nf7B5Kxlfahx7bNFBRcR7urselGHlB64oweoRQCQ4qN79rdfTjq8fp/exHt20BCXPP2FZN8fAiN4w==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
 
@@ -3877,7 +3878,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.19.9-dev-frag(react@18.3.1)':
+  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.24
       '@ipld/car': 5.3.2

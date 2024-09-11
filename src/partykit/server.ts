@@ -1,6 +1,6 @@
 import type * as Party from "partykit/server";
 
-interface PartyMessage {
+interface CRDTEntry {
   data: string;
   cid: string;
   parents: string[];
@@ -73,17 +73,15 @@ export default class Server implements Party.Server {
 
   onMessage(message: string, sender: Party.Connection) {
     console.log("got", message);
-    // const { data, cid, parents } = JSON.parse(message) as PartyMessage
-    const x = JSON.parse(message);
-    console.log("parsed", x);
+    const entries = JSON.parse(message) as CRDTEntry[]
+    const { data, cid, parents } = entries[0]
 
-    // this.clockHead.set(cid, data)
-    // for (const p of parents) {
-    //     this.clockHead.delete(p)
-    // }
+    this.clockHead.set(cid, data)
+    for (const p of parents) {
+        this.clockHead.delete(p)
+    }
 
-    this.party.broadcast(message, [sender.id]);
-    // console.log('clockHead', sender.id, [...this.clockHead.keys()])
+    this.party.broadcast(message[0], [sender.id]);
     void this.party.storage.put("main", this.clockHead);
   }
 }

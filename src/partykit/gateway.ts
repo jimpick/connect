@@ -1,6 +1,6 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
-import { Result, URI, BuildURI, Level, KeyedResolvOnce, runtimeFn } from "@adviser/cement";
-import { bs, ensureLogger, exception2Result, exceptionWrapper, getStore, Logger, rt, SuperThis } from "@fireproof/core";
+import { Result, URI, BuildURI, Level, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
+import { bs, ensureLogger, exceptionWrapper, getStore, Logger, rt, SuperThis } from "@fireproof/core";
 // @ts-ignore - calling a private method
 URI.protocolHasHostpart("partykit:");
 export class PartyKitGateway implements bs.Gateway {
