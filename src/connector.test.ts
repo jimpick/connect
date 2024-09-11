@@ -88,7 +88,6 @@ describe("partykit", () => {
   let messagePromise: Promise<void>;
   let messageResolve: (value: void | PromiseLike<void>) => void;
 
-
   const sthis = ensureSuperThis();
   beforeAll(async () => {
     await sthis.start();
@@ -135,22 +134,18 @@ describe("partykit", () => {
     const connectionBob = await connectionFactory(sthis, bobURL);
     await connectionBob.connect_X(bob.blockstore);
 
-
     messagePromise = new Promise<void>((resolve) => {
-      messageResolve = resolve
-    })
+      messageResolve = resolve;
+    });
 
-    bob.subscribe(docs => {
-      console.log("bob sees docs")
-      messageResolve()
-    }, true)
-
+    bob.subscribe((docs) => {
+      console.log("bob sees docs");
+      messageResolve();
+    }, true);
 
     await alice.put({ _id: `foo`, hello: `bar` });
 
     //console.log('waiting for alice to clear')
-
-
 
     // wait for alice WAL to clear
     await (await alice.blockstore.loader?.WALStore())?.processQueue.waitIdle();
@@ -158,21 +153,20 @@ describe("partykit", () => {
     // wait a while
     await new Promise((res) => setTimeout(res, 3000));
 
-    console.log('about to force refresh bob remote')
+    console.log("about to force refresh bob remote");
     //await bob.blockstore.loader?.remoteMetaStore?.load('main')
-    await connectionBob.loader?.remoteMetaStore?.load('main')
+    await connectionBob.loader?.remoteMetaStore?.load("main");
     //
     // console.log('about to force refresh bob remote');
     //
     // await (await bob.blockstore.loader?.WALStore())?.process()
 
-    const all = await bob.allDocs()
-    console.log("bob all rows len", all.rows.length)
+    const all = await bob.allDocs();
+    console.log("bob all rows len", all.rows.length);
 
-    console.log('waiting for bob to see')
+    console.log("waiting for bob to see");
     // wait for bob to see message
-    await messagePromise
-
+    await messagePromise;
 
     // wait a while
     //await new Promise((res) => setTimeout(res, 1000));

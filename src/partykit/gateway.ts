@@ -32,7 +32,7 @@ export class PartyKitGateway implements bs.Gateway {
   pso?: PartySocketOptions;
   async start(uri: URI): Promise<Result<URI>> {
     this.logger.Debug().Msg("Starting PartyKitGateway with URI: " + uri.toString());
-    
+
     await this.sthis.start();
 
     this.url = uri;
