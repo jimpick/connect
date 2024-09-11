@@ -10,7 +10,7 @@
     "build:tsc": "tsc",
     "build:tsup": "tsup",
     "pub:noop": "echo",
-    "pub:netlify": "tsx ./version-copy-package.ts ./dist/netlify/package-use-fireproof.json",
+    "pub:netlify": "tsx ./version-copy-package.ts ./dist/netlify/package-netlify.json",
     "presmoke": "pnpm run build",
     "xsmoke": "pnpm run '/smoke:/'",
     "presmoke:node": "cd dist/fireproof-core ; pnpm pack",
