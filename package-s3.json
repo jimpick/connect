@@ -14,19 +14,13 @@
   },
   "browser": "./dist/index.browser.iife.js",
   "types": "./dist/types/index.d.ts",
-  "files": [
-    "dist/node",
-    "dist/browser",
-    "dist/types",
-    "src/server.ts"
-  ],
+  "files": ["dist/node", "dist/browser", "dist/types", "src/server.ts"],
   "type": "module",
   "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
     "@aws-sdk/client-s3": "^3.614.0"
   }
