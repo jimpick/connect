@@ -78,6 +78,9 @@ importers:
       esbuild:
         specifier: ^0.23.1
         version: 0.23.1
+      esbuild-plugin-replace:
+        specifier: ^1.4.0
+        version: 1.4.0
       esbuild-plugin-resolve:
         specifier: ^2.0.0
         version: 2.0.0
@@ -114,6 +117,9 @@ importers:
       wrangler:
         specifier: ^3.65.1
         version: 3.65.1(@cloudflare/workers-types@4.20240718.0)
+      zx:
+        specifier: ^8.1.6
+        version: 8.1.6
 
 packages:
 
@@ -1228,8 +1234,8 @@ packages:
     resolution: {integrity: sha512-4pP0EV3iTsexDx+8PPGAKCQpd/6hsQBaQhqWzU4hqKPHN5epPsxKbvUTIiYIHTxaKt6/kEaqPBpu/ufvfbrRzw==}
     engines: {node: '>=16.0.0'}
 
-  '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6':
-    resolution: {commit: 9e029e2fd477bd95bb80abd3553bbac704ccc7a6, repo: git@github.com:web3-storage/one-webcrypto.git, type: git}
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6':
+    resolution: {tarball: https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6}
     version: 1.0.1
 
   '@types/better-sqlite3@7.6.11':
@@ -1244,8 +1250,14 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
+  '@types/fs-extra@11.0.4':
+    resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
+
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/jsonfile@6.1.4':
+    resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
 
   '@types/minimatch@3.0.5':
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
@@ -1717,6 +1729,9 @@ packages:
 
   es6-weak-map@2.0.3:
     resolution: {integrity: sha512-p5um32HOTO1kP+w7PRnB+5lQ43Z6muuMuIMffvDN8ZB4GcnjLBV6zGStpbASIMk4DCAvEaamhe2zhyCb/QXXsA==}
+
+  esbuild-plugin-replace@1.4.0:
+    resolution: {integrity: sha512-lP3ZAyzyRa5JXoOd59lJbRKNObtK8pJ/RO7o6vdjwLi71GfbL32NR22ZuS7/cLZkr10/L1lutoLma8E4DLngYg==}
 
   esbuild-plugin-resolve@2.0.0:
     resolution: {integrity: sha512-eJy9B8yDW5X/J48eWtR1uVmv+DKfHvYYnrrcqQoe/nUkVHVOTZlJnSevkYyGOz6hI90t036Y5QIPDrGzmppxfg==}
@@ -3087,6 +3102,11 @@ packages:
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
+  zx@8.1.6:
+    resolution: {integrity: sha512-SYAriWG+i2CFqMOJcF8QayI8wprlMYQsrmP6tFD7rSPnDLcImNSW7n/8crOYvNVrB2EFgz8LAQk23U1+Y7WrKA==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
 snapshots:
 
   '@adviser/cement@0.2.24': {}
@@ -4423,7 +4443,7 @@ snapshots:
       '@smithy/types': 3.3.0
       tslib: 2.6.3
 
-  '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6': {}
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6': {}
 
   '@types/better-sqlite3@7.6.11':
     dependencies:
@@ -4440,7 +4460,18 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
+  '@types/fs-extra@11.0.4':
+    dependencies:
+      '@types/jsonfile': 6.1.4
+      '@types/node': 22.5.4
+    optional: true
+
   '@types/json-schema@7.0.15': {}
+
+  '@types/jsonfile@6.1.4':
+    dependencies:
+      '@types/node': 22.5.4
+    optional: true
 
   '@types/minimatch@3.0.5': {}
 
@@ -4638,7 +4669,7 @@ snapshots:
       bigint-mod-arith: 3.3.1
       conf: 11.0.2
       multiformats: 12.1.3
-      one-webcrypto: '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
+      one-webcrypto: '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
       p-defer: 4.0.1
       type-fest: 4.22.1
       uint8arrays: 4.0.10
@@ -5077,6 +5108,10 @@ snapshots:
       es5-ext: 0.10.64
       es6-iterator: 2.0.3
       es6-symbol: 3.1.4
+
+  esbuild-plugin-replace@1.4.0:
+    dependencies:
+      magic-string: 0.25.9
 
   esbuild-plugin-resolve@2.0.0: {}
 
@@ -6530,3 +6565,8 @@ snapshots:
       stacktracey: 2.1.8
 
   zod@3.23.8: {}
+
+  zx@8.1.6:
+    optionalDependencies:
+      '@types/fs-extra': 11.0.4
+      '@types/node': 22.5.4

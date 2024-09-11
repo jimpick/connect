@@ -1,0 +1,40 @@
+{
+  "name": "@fireproof/netlify",
+  "version": "0.18.0",
+  "description": "",
+  "main": "./dist/browser/index.cjs",
+  "module": "./dist/browser/index.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/browser/index.esm.js",
+      "require": "./dist/browser/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "script": "./dist/browser/index.iife.js"
+    }
+  },
+  "browser": "./dist/index.browser.iife.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist/node",
+    "dist/browser",
+    "dist/types",
+    "src/server.ts"
+  ],
+  "type": "module",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^10.4.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^6.3.1",
+    "cross-fetch": "^4.0.0",
+    "js-base64": "^3.7.5"
+  }
+}
