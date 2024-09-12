@@ -148,51 +148,25 @@ export class PartyKitGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
-  async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
-    this.logger.Debug().Msg(`about to put: ${uri.toString()}`);
-    await this.ready();
-    return exception2Result(async () => {
-      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
-      switch (store) {
-        case "meta":
-          this.logger.Debug().Msg(`meta store put operation with body: ${new TextDecoder().decode(body)}`);
-          // this.party?.send(new TextDecoder().decode(body));
-          await this.metaUpload(uri, body);
-          break;
-        default:
-          await this.dataUpload(uri, body);
-      }
-    });
-  }
-
-  async metaUpload(uri: URI, bytes: Uint8Array) {
+async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
+  this.logger.Debug().Msg(`about to put: ${uri.toString()}`);
+  await this.ready();
+  return exception2Result(async () => {
+    const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
-    console.log("Meta upload", this.party?.url);
-    const uploadUrl = pkMetaURL(uri, key);
-    this.logger.Debug().Msg(`metaUpload URL: ${uploadUrl.toString()}`);
-    const response = await fetch(uploadUrl.toString(), { method: "PUT", body: bytes });
+    const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+    const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
     if (response.status === 404) {
-      throw new Error("Failure in uploading meta!");
+      throw new Error(`Failure in uploading ${store}!`);
     }
-  }
-
-  async dataUpload(uri: URI, bytes: Uint8Array) {
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    console.log("data upload", this.party?.url);
-
-    const uploadUrl = pkCarURL(uri, key);
-    const response = await fetch(uploadUrl.toString(), { method: "PUT", body: bytes });
-    if (response.status === 404) {
-      throw new Error("Failure in uploading data!");
-    }
-  }
+  });
+}
 
   async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
     this.logger.Debug().Msg(`about to subscribe: ${uri.toString()}`);
     await this.ready();
-    // await this.connectToParty();
+    await this.connectPartyKit();
     this.logger.Debug().Msg(`subscribe ready: ${uri.toString()}`);
     return exception2Result(async () => {
       const store = uri.getParam("store");
@@ -213,48 +187,19 @@ export class PartyKitGateway implements bs.Gateway {
   async get(uri: URI): Promise<bs.GetResult> {
     this.logger.Debug().Msg(`about to get: ${uri.toString()}`);
     await this.ready();
-    this.logger.Debug().Msg(`get ready: ${uri.toString()}`);
-    console.log("Get ready", this.party?.url);
-    return exceptionWrapper(async () => {
-      const store = uri.getParam("store");
-      switch (store) {
-        case "meta":
-          this.logger.Debug().Msg("Get clock message promise resolution");
-          return Result.Ok(await this.metaDownload(uri));
-          break;
-        default:
-          return Result.Ok(await this.dataDownload(uri));
+    return exception2Result(async () => {
+      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      const key = uri.getParam("key");
+      if (!key) throw new Error("key not found");
+      const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      this.logger.Debug().Msg(`download URL: ${downloadUrl.toString()}`);
+      const response = await fetch(downloadUrl.toString(), { method: "GET" });
+      if (response.status === 404) {
+        throw new Error(`Failure in downloading ${store}!`);
       }
+      const data = await response.arrayBuffer();
+      return new Uint8Array(data);
     });
-  }
-
-  async metaDownload(uri: URI) {
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    console.log("Meta download", this.party?.url);
-    const downloadUrl = pkMetaURL(uri, key);
-    console.log("Meta download URL", downloadUrl.toString());
-    this.logger.Debug().Msg(`metaDownload URL: ${downloadUrl.toString()}`);
-    const response = await fetch(downloadUrl.toString(), { method: "GET" });
-    if (response.status === 404) {
-      throw new Error("Failure in downloading meta!");
-    }
-    const data = await response.arrayBuffer();
-    return new Uint8Array(data);
-  }
-
-  async dataDownload(uri: URI) {
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    console.log("Data download", this.party?.url);
-    const downloadUrl = pkCarURL(uri, key);
-    const response = await fetch(downloadUrl.toString(), { method: "GET" });
-    if (response.status === 404) {
-      throw new Error("Failure in downloading data!");
-    }
-    const data = await response.arrayBuffer();
-    // const data = Base64.toUint8Array(base64String)
-    return new Uint8Array(data);
   }
 
   async delete(uri: URI): Promise<bs.VoidResult> {
@@ -308,7 +253,6 @@ function pkBaseURL(uri: URI): URI {
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
   const path = `/parties/fireproof/${name}`;
   return BuildURI.from(`${protocol}://${host}${path}`).URI();
-  // return BuildURI.from(party.url).protocol(proto).delParam("_pk").URI();
 }
 
 function pkCarURL(uri: URI, key: string): URI {
