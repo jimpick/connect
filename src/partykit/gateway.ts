@@ -1,7 +1,7 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
-import { Result, URI, BuildURI, Level, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
-import { bs, ensureLogger, exceptionWrapper, getStore, Logger, rt, SuperThis } from "@fireproof/core";
-// @ts-ignore - calling a private method
+import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
+import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/core";
+// @ts-expect-error - calling a private method
 URI.protocolHasHostpart("partykit:");
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -73,7 +73,7 @@ export class PartyKitGateway implements bs.Gateway {
     const partySockOpts: PartySocketOptions = {
       id: this.id,
 
-      // @ts-ignore - calling a private method
+      // @ts-expect-error - calling a private method
       host: this.url.host,
       room: dbName,
       party,

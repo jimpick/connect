@@ -138,7 +138,7 @@ describe("partykit", () => {
       messageResolve = resolve;
     });
 
-    bob.subscribe((docs) => {
+    bob.subscribe(() => {
       console.log("bob sees docs");
       messageResolve();
     }, true);

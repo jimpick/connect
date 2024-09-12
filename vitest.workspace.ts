@@ -9,7 +9,7 @@ import connector from "./vitest.connector.config.ts";
 
 export default defineWorkspace([
   //nodeSqlite3Wasm,
-  //betterSqlite3,
+  betterSqlite3,
   //connector,
   //s3,
   partykit,
