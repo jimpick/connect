@@ -37,8 +37,8 @@ export default class Server implements Party.Server {
 
     const url = new URL(request.url);
     const carId = url.searchParams.get("car");
-    console.log("carid", carId);
     if (carId) {
+      console.log("carid", request.method, carId, request.url);
       if (request.method === "PUT") {
         const carArrayBuffer = await request.arrayBuffer();
         if (carArrayBuffer) {
@@ -63,6 +63,10 @@ export default class Server implements Party.Server {
         await this.party.storage.deleteAll();
         this.clockHead.clear();
         await this.party.storage.put("main", this.clockHead);
+        return json({ ok: true }, 200);
+      } else if (request.method === "PUT") {
+        const requestBody = await request.text();
+        this.onMessage(requestBody, { id: "server" } as Party.Connection);
         return json({ ok: true }, 200);
       }
       return json({ error: "Invalid URL path" }, 400);
