@@ -51,6 +51,12 @@ export default class Server implements Party.Server {
           return new Response(carArrayBuffer, { status: 200, headers: CORS });
         }
         return json({ ok: false }, 404);
+      } else if (request.method === "DELETE") {
+        const deleted = await this.party.storage.delete(`car-${carId}`);
+        if (deleted) {
+          return json({ ok: true }, 200);
+        }
+        return json({ ok: false, error: "CAR not found" }, 404);
       } else {
         return json({ error: "Method not allowed" }, 405);
       }

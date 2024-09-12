@@ -18,7 +18,7 @@ export class PartyKitGateway implements bs.Gateway {
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
-    })//.EnableLevel(Level.DEBUG);
+    }); //.EnableLevel(Level.DEBUG);
     this.logger.Debug().Msg("constructor");
     this.messagePromise = new Promise<Uint8Array>((resolve) => {
       this.messageResolve = resolve;
@@ -87,7 +87,7 @@ export class PartyKitGateway implements bs.Gateway {
       partySockOpts.WebSocket = WebSocket;
     }
     this.pso = partySockOpts;
-    
+
     return Result.Ok(ret);
   }
 
@@ -97,27 +97,14 @@ export class PartyKitGateway implements bs.Gateway {
 
   async connectPartyKit() {
     const pkKeyThis = pkKey(this.pso);
-    console.log("Ready", this.id, pkKeyThis);
     return pkSockets.get(pkKeyThis).once(async () => {
-      // this.logger.Debug().Any("partySockOpts", this.pso).Str("this.id", this.id).Msg("Party socket options");
       if (!this.pso) {
         throw new Error("Party socket options not found");
       }
-      console.log("Party socket options2", this.id, this.pso);
-
       this.party = new PartySocket(this.pso);
-      console.log("Party socket created", this.id, this.party.url);
-
       let exposedResolve: (value: boolean) => void;
-
       const openFn = () => {
         this.logger.Debug().Msg("party open");
-
-        /// we shouldn't open the party socket until we have a subscriber
-
-        console.log("Party socket open", this.id, this.party?.url);
-
-        // add our event listener
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
           const enc = new TextEncoder();
@@ -128,51 +115,44 @@ export class PartyKitGateway implements bs.Gateway {
             });
           }, 0);
         });
-        
         exposedResolve(true);
       };
-
       return await new Promise<boolean>((resolve) => {
         exposedResolve = resolve;
-        console.log("Party socket wait", this.id, this.party?.url);
         this.party?.addEventListener("open", openFn);
       });
     });
   }
 
-  async close(url: URI): Promise<bs.VoidResult> {
+  async close(): Promise<bs.VoidResult> {
     await this.ready();
     this.logger.Debug().Msg("close");
-    // this.party?.close()
+    this.party?.close()
     return Result.Ok(undefined);
   }
 
-async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
-  this.logger.Debug().Msg(`about to put: ${uri.toString()}`);
-  await this.ready();
-  return exception2Result(async () => {
-    const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-    const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
-    if (response.status === 404) {
-      throw new Error(`Failure in uploading ${store}!`);
-    }
-  });
-}
+  async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
+    await this.ready();
+    return exception2Result(async () => {
+      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      const key = uri.getParam("key");
+      if (!key) throw new Error("key not found");
+      const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
+      if (response.status === 404) {
+        throw new Error(`Failure in uploading ${store}!`);
+      }
+    });
+  }
 
   async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
-    this.logger.Debug().Msg(`about to subscribe: ${uri.toString()}`);
     await this.ready();
     await this.connectPartyKit();
-    this.logger.Debug().Msg(`subscribe ready: ${uri.toString()}`);
     return exception2Result(async () => {
       const store = uri.getParam("store");
       switch (store) {
         case "meta":
           this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
-            this.logger.Debug().Msg(`got message: ${event.data}`);
             const enc = new TextEncoder();
             callback(enc.encode(event.data));
           });
@@ -184,14 +164,12 @@ async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
   }
 
   async get(uri: URI): Promise<bs.GetResult> {
-    this.logger.Debug().Msg(`about to get: ${uri.toString()}`);
     await this.ready();
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      this.logger.Debug().Msg(`download URL: ${downloadUrl.toString()}`);
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
@@ -204,16 +182,21 @@ async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
   async delete(uri: URI): Promise<bs.VoidResult> {
     await this.ready();
     return exception2Result(async () => {
-      // Implement the delete logic for Netlify
-      return Result.Ok(undefined);
+      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      const key = uri.getParam("key");
+      if (!key) throw new Error("key not found");
+      if (store === "meta") throw new Error("Cannot delete from meta store");
+      const deleteUrl = pkCarURL(uri, key);
+      const response = await fetch(deleteUrl.toString(), { method: "DELETE" });
+      if (response.status === 404) {
+        throw new Error(`Failure in deleting ${store}!`);
+      }
     });
   }
 
   async destroy(uri: URI): Promise<Result<void>> {
     await this.ready();
     return exception2Result(async () => {
-      // const key = uri.getParam("key");
-      // if (!key) throw new Error("key not found");
       const deleteUrl = pkBaseURL(uri);
       const response = await fetch(deleteUrl.toString(), { method: "DELETE" });
       if (response.status === 404) {
@@ -243,7 +226,6 @@ function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
   const path = `/parties/fireproof/${name}`;
   return BuildURI.from(`${protocol}://${host}${path}`).setParam(type, key).URI();
-
 }
 
 function pkBaseURL(uri: URI): URI {
