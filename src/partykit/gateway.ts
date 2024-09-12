@@ -14,7 +14,7 @@ export class PartyKitGateway implements bs.Gateway {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.id = sthis.nextId().str;
+    this.id = sthis.nextId().str.toString();
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
@@ -73,6 +73,8 @@ export class PartyKitGateway implements bs.Gateway {
     const partySockOpts: PartySocketOptions = {
       id: this.id,
       // @ts-ignore - calling a private method
+      // _pk: this.id,
+      // @ts-ignore - calling a private method
       host: this.url.host,
       room: dbName,
       party,
@@ -81,26 +83,36 @@ export class PartyKitGateway implements bs.Gateway {
       path: this.url.pathname.replace(/^\//, ""),
     };
 
-    // this.logger.Debug().Any("partySockOpts", partySockOpts).Msg("Party socket options");
-
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
       partySockOpts.WebSocket = WebSocket;
     }
     this.pso = partySockOpts;
+    console.log("Party socket options1", this.id, this.pso);
     return Result.Ok(ret);
   }
 
   async ready() {
     return pkSockets.get(pkKey(this.pso)).once(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.party = new PartySocket(this.pso!);
+      // this.logger.Debug().Any("partySockOpts", this.pso).Str("this.id", this.id).Msg("Party socket options");
+      if (!this.pso) {
+        throw new Error("Party socket options not found");
+      }
+      console.log("Party socket options2", this.id, this.pso);
+
+      this.party = new PartySocket(this.pso);
+
+      console.log("Party socket", this.party);
+
       // // needed to have openFn to be a stable reference
 
       let exposedResolve: (value: boolean) => void;
 
       const openFn = () => {
         this.logger.Debug().Msg("party open");
+
+
+        /// we shouldn't open the party socket until we have a subscriber
 
         // add our event listener
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
@@ -231,7 +243,13 @@ export class PartyKitGateway implements bs.Gateway {
   async destroy(uri: URI): Promise<Result<void>> {
     await this.ready();
     return exception2Result(async () => {
-      // Implement the destroy logic for Netlify
+      // const key = uri.getParam("key");
+      // if (!key) throw new Error("key not found");
+      const deleteUrl = pkBaseURL(this.party, uri);
+      const response = await fetch(deleteUrl.toString(), { method: "DELETE" });
+      if (response.status === 404) {
+        throw new Error("Failure in deleting data!");
+      }
       return Result.Ok(undefined);
     });
   }
@@ -259,6 +277,18 @@ function pkURL(party: PartySocket | undefined, uri: URI, key: string, type: "car
     proto = "http";
   }
   return BuildURI.from(party.url).protocol(proto).delParam("_pk").setParam(type, key).URI();
+}
+
+function pkBaseURL(party: PartySocket | undefined, uri: URI): URI {
+  if (!party) {
+    throw new Error("party not found");
+  }
+  let proto = "https";
+  const protocol = uri.getParam("protocol");
+  if (protocol === "ws") {
+    proto = "http";
+  }
+  return BuildURI.from(party.url).protocol(proto).delParam("_pk").URI();
 }
 
 function pkCarURL(party: PartySocket | undefined, uri: URI, key: string): URI {

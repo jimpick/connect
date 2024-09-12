@@ -218,26 +218,26 @@ export class ConnectUCAN extends bs.ConnectionBase {
 
   async fetchAndUpdateHead(remoteHead: bs.CarClockHead) {
     const outBytess = [];
-    const cache = this.eventBlocks;
+    // const cache = this.eventBlocks;
     for (const cid of remoteHead) {
-      const local = await cache.get(cid);
-      if (local) {
-        const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(local.bytes);
-        outBytess.push(event.value.data.dbMeta);
-      } else {
+      // const local = await cache.get(cid);
+      // if (false) {
+      //   const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(local.bytes);
+      //   outBytess.push(event.value.data.dbMeta);
+      // } else {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`;
         const response = await fetch(url, { redirect: "follow" });
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer());
-          await cache.put(cid, metaBlock);
+          // await cache.put(cid, metaBlock);
           const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(metaBlock);
           outBytess.push(event.value.data.dbMeta);
         } else {
           throw new Error(`Failed to download ${url}`);
         }
-      }
+      // }
     }
-    this.parents = remoteHead;
+    // this.parents = remoteHead;
     return outBytess;
   }
 

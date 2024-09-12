@@ -59,6 +59,11 @@ export default class Server implements Party.Server {
       if (request.method === "GET") {
         const metaValues = Array.from(this.clockHead.values());
         return json(metaValues, 200);
+      } else if (request.method === "DELETE") {
+        await this.party.storage.deleteAll();
+        this.clockHead.clear();
+        await this.party.storage.put("main", this.clockHead);
+        return json({ ok: true }, 200);
       }
       return json({ error: "Invalid URL path" }, 400);
     }
@@ -73,12 +78,12 @@ export default class Server implements Party.Server {
 
   onMessage(message: string, sender: Party.Connection) {
     console.log("got", message);
-    const entries = JSON.parse(message) as CRDTEntry[]
-    const { data, cid, parents } = entries[0]
+    const entries = JSON.parse(message) as CRDTEntry[];
+    const { data, cid, parents } = entries[0];
 
-    this.clockHead.set(cid, data)
+    this.clockHead.set(cid, data);
     for (const p of parents) {
-        this.clockHead.delete(p)
+      this.clockHead.delete(p);
     }
 
     this.party.broadcast(message[0], [sender.id]);
