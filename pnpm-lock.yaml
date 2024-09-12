@@ -15,8 +15,8 @@ importers:
         specifier: ^3.614.0
         version: 3.614.0
       '@fireproof/core':
-        specifier: 0.19.9-dev-frag
-        version: 0.19.9-dev-frag(react@18.3.1)
+        specifier: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz
+        version: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)
       '@netlify/blobs':
         specifier: ^7.4.0
         version: 7.4.0
@@ -35,6 +35,9 @@ importers:
       better-sqlite3:
         specifier: ^11.2.1
         version: 11.2.1
+      cborg:
+        specifier: ^4.2.3
+        version: 4.2.3
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -53,6 +56,9 @@ importers:
       partysocket:
         specifier: ^1.0.2
         version: 1.0.2
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.6.0
@@ -72,6 +78,9 @@ importers:
       '@types/node':
         specifier: ^22.5.4
         version: 22.5.4
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.5.12
       '@typescript-eslint/typescript-estree':
         specifier: ^8.4.0
         version: 8.4.0(typescript@5.5.4)
@@ -791,8 +800,9 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.19.9-dev-frag':
-    resolution: {integrity: sha512-OziQdEmS953RE+nWAnWm85cr5xiI0Fye2R7O55VXWrxTk2y2ULfXRFOMqfMfxSdy39vuA4jFIq4rgkNBDgVrHw==}
+  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
+    resolution: {integrity: sha512-Uv0BXs+WPlrOZAhbCXSQG0mB4TpFKsK7rkSpeJewgmZm4AltIaGUqmaBUv/cwoORzDc7yd6EGA4dyTc2CedvKQ==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
 
@@ -1228,8 +1238,8 @@ packages:
     resolution: {integrity: sha512-4pP0EV3iTsexDx+8PPGAKCQpd/6hsQBaQhqWzU4hqKPHN5epPsxKbvUTIiYIHTxaKt6/kEaqPBpu/ufvfbrRzw==}
     engines: {node: '>=16.0.0'}
 
-  '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6':
-    resolution: {commit: 9e029e2fd477bd95bb80abd3553bbac704ccc7a6, repo: git@github.com:web3-storage/one-webcrypto.git, type: git}
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6':
+    resolution: {tarball: https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6}
     version: 1.0.1
 
   '@types/better-sqlite3@7.6.11':
@@ -1264,6 +1274,9 @@ packages:
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
+
+  '@types/ws@8.5.12':
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
 
   '@typescript-eslint/eslint-plugin@8.4.0':
     resolution: {integrity: sha512-rg8LGdv7ri3oAlenMACk9e+AR4wUV0yrrG+XKsGKOK0EVgeEDqurkXMPILG2836fW4ibokTB5v4b6Z9+GYQDEw==}
@@ -1553,10 +1566,6 @@ packages:
 
   carstream@2.2.0:
     resolution: {integrity: sha512-/gHkK0lQjmGM45fhdx8JD+x7a1XS1qUk3T9xWWSt3oZiWPLq4u/lnDstp+N55K7hqTKKlb0CCr43EHTrlbmJSQ==}
-
-  cborg@4.2.2:
-    resolution: {integrity: sha512-A0z7WhnY4HDLrVdnQI4i/OLG3kANHotk5NzDpr2iauf4xrmQPwJCxlbCnIXkVrFtsr8G3omfvvr5oF50i1Zt8g==}
-    hasBin: true
 
   cborg@4.2.3:
     resolution: {integrity: sha512-XBFbEJ6WMfn9L7woc2t+EzOxF8vGqddoopKBbrhIvZBt2WIUgSlT8xLmM6Aq1xv8eWt4yOSjwxWjYeuHU3CpJA==}
@@ -3050,8 +3059,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  ws@8.17.1:
-    resolution: {integrity: sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==}
+  ws@8.18.0:
+    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -3869,7 +3878,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.19.9-dev-frag(react@18.3.1)':
+  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.24
       '@ipld/car': 5.3.2
@@ -3891,18 +3900,18 @@ snapshots:
   '@ipld/car@5.3.2':
     dependencies:
       '@ipld/dag-cbor': 9.2.1
-      cborg: 4.2.2
+      cborg: 4.2.3
       multiformats: 13.2.2
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.1':
     dependencies:
-      cborg: 4.2.2
+      cborg: 4.2.3
       multiformats: 13.2.2
 
   '@ipld/dag-json@10.2.2':
     dependencies:
-      cborg: 4.2.2
+      cborg: 4.2.3
       multiformats: 13.2.2
 
   '@ipld/dag-pb@4.1.2':
@@ -4423,7 +4432,7 @@ snapshots:
       '@smithy/types': 3.3.0
       tslib: 2.6.3
 
-  '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6': {}
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6': {}
 
   '@types/better-sqlite3@7.6.11':
     dependencies:
@@ -4459,6 +4468,10 @@ snapshots:
   '@types/retry@0.12.1': {}
 
   '@types/retry@0.12.2': {}
+
+  '@types/ws@8.5.12':
+    dependencies:
+      '@types/node': 22.5.4
 
   '@typescript-eslint/eslint-plugin@8.4.0(@typescript-eslint/parser@8.4.0(eslint@9.9.0)(typescript@5.5.4))(eslint@9.9.0)(typescript@5.5.4)':
     dependencies:
@@ -4638,7 +4651,7 @@ snapshots:
       bigint-mod-arith: 3.3.1
       conf: 11.0.2
       multiformats: 12.1.3
-      one-webcrypto: '@storacha/one-webcrypto@git+https://git@github.com:web3-storage/one-webcrypto.git#9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
+      one-webcrypto: '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
       p-defer: 4.0.1
       type-fest: 4.22.1
       uint8arrays: 4.0.10
@@ -4716,7 +4729,7 @@ snapshots:
       '@ipld/car': 5.3.2
       '@ipld/dag-cbor': 9.2.1
       archy: 1.0.0
-      cborg: 4.2.2
+      cborg: 4.2.3
       cli-color: 2.0.4
       multiformats: 12.1.3
       sade: 1.8.1
@@ -4905,8 +4918,6 @@ snapshots:
       '@ipld/dag-cbor': 9.2.1
       multiformats: 13.2.2
       uint8arraylist: 2.4.8
-
-  cborg@4.2.2: {}
 
   cborg@4.2.3: {}
 
@@ -5706,7 +5717,7 @@ snapshots:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240718.0
-      ws: 8.17.1
+      ws: 8.18.0
       youch: 3.3.3
       zod: 3.23.8
     transitivePeerDependencies:
@@ -6510,7 +6521,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.17.1: {}
+  ws@8.18.0: {}
 
   xxhash-wasm@1.0.2: {}
 
