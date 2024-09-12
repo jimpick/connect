@@ -111,7 +111,6 @@ export class PartyKitGateway implements bs.Gateway {
       const openFn = () => {
         this.logger.Debug().Msg("party open");
 
-
         /// we shouldn't open the party socket until we have a subscriber
 
         // add our event listener

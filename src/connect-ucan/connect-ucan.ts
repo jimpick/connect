@@ -225,16 +225,16 @@ export class ConnectUCAN extends bs.ConnectionBase {
       //   const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(local.bytes);
       //   outBytess.push(event.value.data.dbMeta);
       // } else {
-        const url = `https://${cid.toString()}.ipfs.w3s.link/`;
-        const response = await fetch(url, { redirect: "follow" });
-        if (response.ok) {
-          const metaBlock = new Uint8Array(await response.arrayBuffer());
-          // await cache.put(cid, metaBlock);
-          const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(metaBlock);
-          outBytess.push(event.value.data.dbMeta);
-        } else {
-          throw new Error(`Failed to download ${url}`);
-        }
+      const url = `https://${cid.toString()}.ipfs.w3s.link/`;
+      const response = await fetch(url, { redirect: "follow" });
+      if (response.ok) {
+        const metaBlock = new Uint8Array(await response.arrayBuffer());
+        // await cache.put(cid, metaBlock);
+        const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(metaBlock);
+        outBytess.push(event.value.data.dbMeta);
+      } else {
+        throw new Error(`Failed to download ${url}`);
+      }
       // }
     }
     // this.parents = remoteHead;
