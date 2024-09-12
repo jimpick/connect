@@ -4,6 +4,7 @@ import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
 import { registerPartyKitStoreProtocol } from "./partykit/gateway";
+import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
 
 // describe("connector", () => {
 //   // let unreg: () => void;
@@ -128,7 +129,21 @@ describe("partykit", () => {
   it("should", async () => {
     const alice = fireproof("alice", configA);
     const connection = await connectionFactory(sthis, aliceURL);
+
+    expect(alice.blockstore.loader).toBeDefined();
+    expect(alice.blockstore.loader?.sthis).toBeDefined();
+
     await connection.connect_X(alice.blockstore);
+
+
+    // Assert that the connection loader is defined
+    expect(connection.loader).toBeDefined();
+    if (connection.loader) {
+      // Assert that the loader has the expected properties
+      expect(connection.loader.ebOpts).toBeDefined();
+      expect(connection.loader.ebOpts.store).toBeDefined();
+      expect(connection.loader.ebOpts.store.stores).toBeDefined();
+    }
 
     const bob = fireproof("bob", configB);
     const connectionBob = await connectionFactory(sthis, bobURL);

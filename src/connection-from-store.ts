@@ -43,6 +43,7 @@ export class ConnectionFromStore extends bs.ConnectionBase {
         store: { stores },
         storeRuntime,
       },
+      sthis: this.sthis,
     } as bs.Loadable;
 
     this.stores = {
