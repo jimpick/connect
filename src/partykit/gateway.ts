@@ -92,7 +92,11 @@ export class PartyKitGateway implements bs.Gateway {
     return Result.Ok(ret);
   }
 
-  async ready() {
+  async ready(): Promise<void> {
+    this.logger.Debug().Msg("ready");
+  }
+
+  async connectPartyKit() {
     const pkKeyThis = pkKey(this.pso);
     console.log("Ready", this.id, pkKeyThis);
     return pkSockets.get(pkKeyThis).once(async () => {
@@ -165,7 +169,7 @@ export class PartyKitGateway implements bs.Gateway {
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
     console.log("Meta upload", this.party?.url);
-    const uploadUrl = pkMetaURL(this.party, uri, key);
+    const uploadUrl = pkMetaURL(uri, key);
     this.logger.Debug().Msg(`metaUpload URL: ${uploadUrl.toString()}`);
     const response = await fetch(uploadUrl.toString(), { method: "PUT", body: bytes });
     if (response.status === 404) {
@@ -178,7 +182,7 @@ export class PartyKitGateway implements bs.Gateway {
     if (!key) throw new Error("key not found");
     console.log("data upload", this.party?.url);
 
-    const uploadUrl = pkCarURL(this.party, uri, key);
+    const uploadUrl = pkCarURL(uri, key);
     const response = await fetch(uploadUrl.toString(), { method: "PUT", body: bytes });
     if (response.status === 404) {
       throw new Error("Failure in uploading data!");
@@ -228,7 +232,7 @@ export class PartyKitGateway implements bs.Gateway {
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
     console.log("Meta download", this.party?.url);
-    const downloadUrl = pkMetaURL(this.party, uri, key);
+    const downloadUrl = pkMetaURL(uri, key);
     console.log("Meta download URL", downloadUrl.toString());
     this.logger.Debug().Msg(`metaDownload URL: ${downloadUrl.toString()}`);
     const response = await fetch(downloadUrl.toString(), { method: "GET" });
@@ -243,7 +247,7 @@ export class PartyKitGateway implements bs.Gateway {
     const key = uri.getParam("key");
     if (!key) throw new Error("key not found");
     console.log("Data download", this.party?.url);
-    const downloadUrl = pkCarURL(this.party, uri, key);
+    const downloadUrl = pkCarURL(uri, key);
     const response = await fetch(downloadUrl.toString(), { method: "GET" });
     if (response.status === 404) {
       throw new Error("Failure in downloading data!");
@@ -266,7 +270,7 @@ export class PartyKitGateway implements bs.Gateway {
     return exception2Result(async () => {
       // const key = uri.getParam("key");
       // if (!key) throw new Error("key not found");
-      const deleteUrl = pkBaseURL(this.party, uri);
+      const deleteUrl = pkBaseURL(uri);
       const response = await fetch(deleteUrl.toString(), { method: "DELETE" });
       if (response.status === 404) {
         throw new Error("Failure in deleting data!");
@@ -289,38 +293,16 @@ function pkKey(set?: PartySocketOptions): string {
 }
 // ws://localhost:1999/parties/fireproof/test-public-api?_pk=zp9BXhS6u
 // partykit://localhost:1999/?name=test-public-api&protocol=ws&store=meta
-function pkURL(party: PartySocket | undefined, uri: URI, key: string, type: "car" | "meta"): URI {
-  // if (!party) {
-  //   throw new Error("party not found");
-  // }
-  console.log("pkURL", party?.url);
-  // let proto = "https";
-  // const protocol = uri.getParam("protocol");
-  // if (protocol === "ws") {
-  //   proto = "http";
-  // }
-  // return BuildURI.from(party.url).protocol(proto).delParam("_pk").setParam(type, key).URI();
-
-  // function pkURL(party: PartySocket | undefined, uri: URI, key: string, type: "car" | "meta"): URI {
-  // console.log("pkURL", party?.url);
+function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const host = uri.host;
   const name = uri.getParam("name");
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
   const path = `/parties/fireproof/${name}`;
   return BuildURI.from(`${protocol}://${host}${path}`).setParam(type, key).URI();
-  // }
+
 }
 
-function pkBaseURL(party: PartySocket | undefined, uri: URI): URI {
-  // if (!party) {
-  //   throw new Error("party not found");
-  // }
-  // let proto = "https";
-  // const protocol = uri.getParam("protocol");
-  // if (protocol === "ws") {
-  //   proto = "http";
-  // }
-  console.log("pkBaseURL", party?.url);
+function pkBaseURL(uri: URI): URI {
   const host = uri.host;
   const name = uri.getParam("name");
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
@@ -329,12 +311,12 @@ function pkBaseURL(party: PartySocket | undefined, uri: URI): URI {
   // return BuildURI.from(party.url).protocol(proto).delParam("_pk").URI();
 }
 
-function pkCarURL(party: PartySocket | undefined, uri: URI, key: string): URI {
-  return pkURL(party, uri, key, "car");
+function pkCarURL(uri: URI, key: string): URI {
+  return pkURL(uri, key, "car");
 }
 
-function pkMetaURL(party: PartySocket | undefined, uri: URI, key: string): URI {
-  return pkURL(party, uri, key, "meta");
+function pkMetaURL(uri: URI, key: string): URI {
+  return pkURL(uri, key, "meta");
 }
 
 export class PartyKitTestStore implements bs.TestGateway {

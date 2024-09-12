@@ -15,16 +15,15 @@ const json = <T>(data: T, status = 200) => Response.json(data, { status, headers
 
 const ok = () => json({ ok: true });
 export default class Server implements Party.Server {
-  clockHead = new Map<string, string>();
+  clockHead = new Map<string, CRDTEntry>();
   constructor(public party: Party.Party) {}
 
   async onStart() {
     console.log("starting");
     return this.party.storage.get("main").then((head) => {
-      console.log("get main returned head", head);
       if (head) {
-        console.log("got an actual clock head");
-        this.clockHead = head as Map<string, string>;
+        console.log("loaded existing clock head", head);
+        this.clockHead = head as Map<string, CRDTEntry>;
       }
     });
   }
@@ -56,8 +55,10 @@ export default class Server implements Party.Server {
         return json({ error: "Method not allowed" }, 405);
       }
     } else {
+      console.log("meta", request.method, request.url);
       if (request.method === "GET") {
         const metaValues = Array.from(this.clockHead.values());
+        console.log("meta GOT", metaValues);
         return json(metaValues, 200);
       } else if (request.method === "DELETE") {
         await this.party.storage.deleteAll();
@@ -66,6 +67,7 @@ export default class Server implements Party.Server {
         return json({ ok: true }, 200);
       } else if (request.method === "PUT") {
         const requestBody = await request.text();
+        console.log("meta PUT", requestBody);
         this.onMessage(requestBody, { id: "server" } as Party.Connection);
         return json({ ok: true }, 200);
       }
@@ -76,16 +78,16 @@ export default class Server implements Party.Server {
   async onConnect(conn: Party.Connection) {
     console.log("connected", this.party.id, conn.id, [...this.clockHead.values()].length);
     for (const value of this.clockHead.values()) {
-      conn.send(value);
+      conn.send(JSON.stringify(value));
     }
   }
 
   onMessage(message: string, sender: Party.Connection) {
-    console.log("got", message);
+    // console.log("got", message);
     const entries = JSON.parse(message) as CRDTEntry[];
-    const { data, cid, parents } = entries[0];
+    const { cid, parents } = entries[0];
 
-    this.clockHead.set(cid, data);
+    this.clockHead.set(cid, entries[0]);
     for (const p of parents) {
       this.clockHead.delete(p);
     }
