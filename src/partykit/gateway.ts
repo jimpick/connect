@@ -18,7 +18,7 @@ export class PartyKitGateway implements bs.Gateway {
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
-    }).EnableLevel(Level.DEBUG);
+    })//.EnableLevel(Level.DEBUG);
     this.logger.Debug().Msg("constructor");
     this.messagePromise = new Promise<Uint8Array>((resolve) => {
       this.messageResolve = resolve;
@@ -72,8 +72,7 @@ export class PartyKitGateway implements bs.Gateway {
 
     const partySockOpts: PartySocketOptions = {
       id: this.id,
-      // @ts-ignore - calling a private method
-      // _pk: this.id,
+
       // @ts-ignore - calling a private method
       host: this.url.host,
       room: dbName,
@@ -88,7 +87,7 @@ export class PartyKitGateway implements bs.Gateway {
       partySockOpts.WebSocket = WebSocket;
     }
     this.pso = partySockOpts;
-    console.log("Party socket config", this.id);
+    
     return Result.Ok(ret);
   }
 
@@ -129,7 +128,7 @@ export class PartyKitGateway implements bs.Gateway {
             });
           }, 0);
         });
-        this.logger.Debug().Msg("Resolving exposed resolve");
+        
         exposedResolve(true);
       };
 
