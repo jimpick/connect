@@ -127,7 +127,7 @@ export class PartyKitGateway implements bs.Gateway {
   async close(): Promise<bs.VoidResult> {
     await this.ready();
     this.logger.Debug().Msg("close");
-    this.party?.close()
+    this.party?.close();
     return Result.Ok(undefined);
   }
 
