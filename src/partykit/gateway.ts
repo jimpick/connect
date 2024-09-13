@@ -1,7 +1,7 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
 import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
 import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/core";
-URI.protocolHasHostpart("partykit:");
+
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;

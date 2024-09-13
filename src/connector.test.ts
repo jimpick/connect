@@ -135,7 +135,6 @@ describe("partykit", () => {
 
     await connection.connect_X(alice.blockstore);
 
-
     // Assert that the connection loader is defined
     expect(connection.loader).toBeDefined();
     if (connection.loader) {
