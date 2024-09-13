@@ -16,6 +16,9 @@ export default tseslint.config(
       "**/scripts/",
       "**/examples/",
       "smoke/react/",
+      "tests/connect-netlify/app/index.global.js",
+      "tests/connect-netlify/app/fireproof.iife.js",
+      "tests/connect-netlify/app/connect-netlify.iife.js"
     ],
   },
   {
