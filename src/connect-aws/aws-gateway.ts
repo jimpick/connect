@@ -1,109 +1,74 @@
 import { Result, URI } from "@adviser/cement";
-import { bs, SuperThis, Logger, ensureSuperLog, ensureLogger, getStore, StoreType } from "@fireproof/core";
-
-export interface UploadMetaFnParams {
-  type: "meta";
-  name?: string;
-  branch?: string;
-}
-
-export interface UploadDataFnParams {
-  type: "data" | "file";
-  name?: string;
-  car?: string;
-  size?: string;
-}
-
-function buildUploadAwsUrl(
-  store: StoreType,
-  _url: URI,
-  logger: Logger,
-  params: UploadDataFnParams | UploadMetaFnParams,
-  uploadUrl: string
-) {
-  if (!params) throw logger.Error().Msg("Cannot find parameters").AsError();
-  //The upload URL is hardcoded for now
-  if (store == "data") {
-    const { name, car, size } = params as UploadDataFnParams;
-    if (!name && !car && !size) {
-      throw logger.Error().Msg("Missing 1 or more data upload parameters").AsError();
-    }
-
-    return new URL(`?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`, uploadUrl);
-  } else if (store == "meta") {
-    const { name, branch } = params as UploadMetaFnParams;
-    if (!name && !branch) {
-      throw logger.Error().Msg("Missing 1 or more meta upload parameters").AsError();
-    }
-
-    return new URL(`?${new URLSearchParams({ ...params }).toString()}`, uploadUrl);
-  }
-
-  //Only written so that typescript doesn't complain
-  return new URL("");
-}
+import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import fetch from "cross-fetch";
 
 export class AWSGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
-  urlParams: UploadDataFnParams | UploadMetaFnParams = { type: "data" };
-  store: StoreType | undefined;
-  uploadUrl = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
-  downloadUrl = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
-  websocketUrl = "";
 
   constructor(sthis: SuperThis) {
     this.sthis = ensureSuperLog(sthis, "AWSGateway");
-    this.logger = ensureLogger(this.sthis, "AWSGateway");
+    this.logger = this.sthis.logger;
   }
 
-  buildUrl(baseUrl: URI, params: string): Promise<Result<URI>> {
-    const buildParams = JSON.parse(params);
-    if (buildParams.type == "data") {
-      const { key, ...other } = buildParams;
-      this.urlParams = { car: key, ...other };
-    }
-    if (buildParams.type == "meta") {
-      const { key, ...other } = buildParams;
-      this.urlParams = { branch: key, ...other };
-    }
-    const url = baseUrl.build().setParam("key", buildParams.key).URI();
-    return Promise.resolve(Result.Ok(url));
+  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+    const url = baseUrl.build();
+    url.setParam("key", key);
+    return Promise.resolve(Result.Ok(url.URI()));
+  }
+
+  async destroy(): Promise<Result<void>> {
+    // Implement the destroy logic for AWS
+    return Result.Ok(undefined);
   }
 
   async start(baseUrl: URI): Promise<Result<URI>> {
-    //This starts the connection with the gateway
     await this.sthis.start();
     this.logger.Debug().Str("url", baseUrl.toString()).Msg("start");
-    const ret = baseUrl.build().defParam("version", "v0.1-aws").URI();
+
+    const uploadUrl = baseUrl.getParam("uploadUrl");
+    const webSocketUrl = baseUrl.getParam("webSocketUrl");
+    const downloadUrl = baseUrl.getParam("downloadUrl");
+
+    if (!uploadUrl) {
+      throw new Error("uploadUrl is not defined");
+    }
+    if (!webSocketUrl) {
+      throw new Error("webSocketUrl is not defined");
+    }
+    if (!downloadUrl) {
+      throw new Error("downloadUrl is not defined");
+    }
+
+    const ret = baseUrl
+      .build()
+      .defParam("version", "v0.1-aws")
+      .defParam("region", baseUrl.getParam("region") || "us-east-2")
+      .defParam("uploadUrl", uploadUrl)
+      .defParam("webSocketUrl", webSocketUrl)
+      .defParam("downloadUrl", downloadUrl)
+      .URI();
+
     return Result.Ok(ret);
   }
 
-  close(): Promise<bs.VoidResult> {
-    //This terminates the connection with the gateway
-    //Implementation pending
-    return Promise.resolve(Result.Ok(undefined));
-  }
-
-  destroy(): Promise<bs.VoidResult> {
-    //Implementation pending
-    return Promise.resolve(Result.Ok(undefined));
+  async close(): Promise<bs.VoidResult> {
+    return Result.Ok(undefined);
   }
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const tosend = this.sthis.txt.decode(body);
-
-    //Now that we have the store name and body the next step is to upload
-    const requestoptions = {
-      method: "PUT",
-      body: tosend,
-    };
-
-    const fetchUploadUrl = buildUploadAwsUrl(store, url, this.logger, this.urlParams, this.uploadUrl);
-
-    const done = await fetch(fetchUploadUrl, requestoptions);
-
+    const uploadUrl = url.getParam("uploadUrl");
+    const key = url.getParam("key");
+    if (!uploadUrl) {
+      return Result.Err(new Error("Upload URL not found in the URI"));
+    }
+    if (!key) {
+      return Result.Err(new Error("Key not found in the URI"));
+    }
+    const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
+    console.log("Upload URL:", url.toString());
+    const done = await fetch(fetchUrl, { method: "PUT", body });
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
     }
@@ -112,22 +77,67 @@ export class AWSGateway implements bs.Gateway {
 
   async get(url: URI): Promise<bs.GetResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const fetchUploadUrl = buildUploadAwsUrl(store, url, this.logger, this.urlParams, this.uploadUrl);
-    let result;
-    if (store == "meta") {
-      result = await fetch(fetchUploadUrl, { method: "GET" });
-    } else {
-      result = await fetch(this.downloadUrl);
+    const downloadUrl = url.getParam("downloadUrl");
+    const key = url.getParam("key");
+    if (!downloadUrl) {
+      return Result.Err(new Error("Download URL not found in the URI"));
     }
-
-    if (!(result.status == 200)) {
-      return Result.Err(new Error(`failed to download ${store} ${result.statusText}`));
+    if (!key) {
+      return Result.Err(new Error("Key not found in the URI"));
     }
-    const bytes = new Uint8Array(await result.arrayBuffer());
-    return Result.Ok(new Uint8Array(bytes));
+    const fetchUrl = new URL(`${downloadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
+    console.log("Download URL:", fetchUrl.toString());
+    const response = await fetch(fetchUrl);
+    if (!response.ok) {
+      return Result.Err(new NotFoundError(`${store} not found: ${url}`));
+    }
+    const data = new Uint8Array(await response.arrayBuffer());
+    return Result.Ok(data);
   }
 
-  delete(_url: URI): Promise<bs.VoidResult> {
-    return Promise.resolve(Result.Ok(undefined));
+  async delete(url: URI): Promise<bs.VoidResult> {
+    const done = await fetch(url.toString(), { method: "DELETE" });
+    if (!done.ok) {
+      return Result.Err(new Error("failed to delete data " + done.statusText));
+    }
+    return Result.Ok(undefined);
   }
+
+  async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
+    // Implementation pending
+    return Result.Ok(undefined);
+  }
+}
+
+export class AWSTestStore implements bs.TestGateway {
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  readonly gateway: bs.Gateway;
+
+  constructor(sthis: SuperThis, gw: bs.Gateway) {
+    this.sthis = ensureSuperLog(sthis, "AWSTestStore");
+    this.logger = this.sthis.logger;
+    this.gateway = gw;
+  }
+
+  async get(iurl: URI, key: string): Promise<Uint8Array> {
+    const url = iurl.build().setParam("key", key).URI();
+    const buffer = await this.gateway.get(url);
+    return buffer.Ok();
+  }
+}
+
+export function registerAWSStoreProtocol(protocol = "aws:", overrideBaseURL?: string) {
+  URI.protocolHasHostpart(protocol);
+  return bs.registerStoreProtocol({
+    protocol,
+    overrideBaseURL,
+    gateway: async (sthis) => {
+      return new AWSGateway(sthis);
+    },
+    test: async (sthis: SuperThis) => {
+      const gateway = new AWSGateway(sthis);
+      return new AWSTestStore(sthis, gateway);
+    },
+  });
 }

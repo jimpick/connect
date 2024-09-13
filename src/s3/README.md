@@ -48,7 +48,7 @@ const { database } = useFireproof("my-app-database-name");
 const connection = connect.aws(database, {
   uploadUrl,
   downloadUrl,
-  websocketUrl,
+  webSocketUrl,
 });
 ```
 
