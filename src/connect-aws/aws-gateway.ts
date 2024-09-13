@@ -14,10 +14,9 @@ export class AWSGateway implements bs.Gateway {
     this.logger = this.sthis.logger;
   }
 
-  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    const url = baseUrl.build();
-    url.setParam("key", key);
-    return Promise.resolve(Result.Ok(url.URI()));
+  async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+    console.log("Entering buildUrl method with base URL:", baseUrl.toString());
+    return Result.Ok(baseUrl.build().setParam("key", key).URI());
   }
 
   async destroy(): Promise<Result<void>> {
@@ -29,27 +28,26 @@ export class AWSGateway implements bs.Gateway {
     await this.sthis.start();
     this.logger.Debug().Str("url", baseUrl.toString()).Msg("start");
 
+    console.log("Entering start method with URL:", baseUrl.toString());
+
     const uploadUrl = baseUrl.getParam("uploadUrl");
     const webSocketUrl = baseUrl.getParam("webSocketUrl");
-    const downloadUrl = baseUrl.getParam("downloadUrl");
+    const dataUrl = baseUrl.getParam("dataUrl");
 
     if (!uploadUrl) {
-      throw new Error("uploadUrl is not defined");
+      throw new Error("uploadUrl is not configured");
     }
     if (!webSocketUrl) {
-      throw new Error("webSocketUrl is not defined");
+      throw new Error("webSocketUrl is not configured");
     }
-    if (!downloadUrl) {
-      throw new Error("downloadUrl is not defined");
+    if (!dataUrl) {
+      throw new Error("dataUrl is not configured");
     }
 
     const ret = baseUrl
       .build()
       .defParam("version", "v0.1-aws")
       .defParam("region", baseUrl.getParam("region") || "us-east-2")
-      .defParam("uploadUrl", uploadUrl)
-      .defParam("webSocketUrl", webSocketUrl)
-      .defParam("downloadUrl", downloadUrl)
       .URI();
 
     return Result.Ok(ret);
@@ -86,15 +84,15 @@ export class AWSGateway implements bs.Gateway {
   async get(url: URI): Promise<bs.GetResult> {
     console.log("Entering get method with URI:", url.toString());
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const downloadUrl = url.getParam("downloadUrl");
+    const dataUrl = url.getParam("dataUrl");
     const key = url.getParam("key");
-    if (!downloadUrl) {
+    if (!dataUrl) {
       return Result.Err(new Error("Download URL not found in the URI"));
     }
     if (!key) {
       return Result.Err(new Error("Key not found in the URI"));
     }
-    const fetchUrl = new URL(`${downloadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
+    const fetchUrl = new URL(`${dataUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
     console.log("Download URL:", fetchUrl.toString());
     console.log("Store:", store);
     console.log("Key:", key);
@@ -145,11 +143,12 @@ export class AWSTestStore implements bs.TestGateway {
   }
 }
 
-export function registerAWSStoreProtocol(protocol = "aws:", overrideBaseURL?: string) {
+export function registerAWSStoreProtocol(protocol = "aws:", overrideBaseURL = "aws://aws") {
   URI.protocolHasHostpart(protocol);
   return bs.registerStoreProtocol({
     protocol,
     overrideBaseURL,
+    overrideRegistration: true, // Add this line
     gateway: async (sthis) => {
       return new AWSGateway(sthis);
     },
