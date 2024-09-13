@@ -21,10 +21,15 @@ export class NetlifyGateway implements bs.Gateway {
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
+    const metaDb = uri.getParam("meta");
+    if (!metaDb) {
+      return Result.Err(new Error("Meta database not specified for destroy operation"));
+    }
     const fetchUrl = new URL(remoteBaseUrl);
+    fetchUrl.searchParams.set("meta", metaDb);
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
-      return Result.Err(new Error("Failure in deleting data!"));
+      return Result.Err(new Error(`Failed to destroy meta database: ${response.statusText}`));
     }
     return Result.Ok(undefined);
   }
@@ -32,7 +37,7 @@ export class NetlifyGateway implements bs.Gateway {
   async start(uri: URI): Promise<Result<URI>> {
     // Convert netlify: to https: or http: based on the environment
     console.log("uri.host", uri.host);
-    const protocol = uri.host.startsWith("localhost") ? "http" : "htt";
+    const protocol = uri.host.startsWith("localhost") ? "http" : "https";
     const host = uri.host;
     const path = "/fireproof";
     const urlString = `${protocol}://${host}${path}`;
@@ -98,20 +103,19 @@ export class NetlifyGateway implements bs.Gateway {
   }
   
   async delete(url: URI): Promise<bs.VoidResult> {
-    const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const key = url.getParam("key");
-    if (!key) {
-      return Result.Err(new Error("Key not found in the URI"));
-    }
     const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
+    const carId = url.getParam("car");
+    if (!carId) {
+      return Result.Err(new Error("Car ID not specified for delete operation"));
+    }
     const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.pathname = `/${store}/${key}`;
-    const done = await fetch(fetchUrl.toString(), { method: "DELETE" });
-    if (!done.ok) {
-      return Result.Err(new Error("failed to delete data " + done.statusText));
+    fetchUrl.searchParams.set("car", carId);
+    const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
+    if (!response.ok) {
+      return Result.Err(new Error(`Failed to delete car: ${response.statusText}`));
     }
     return Result.Ok(undefined);
   }

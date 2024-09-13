@@ -10,25 +10,28 @@ export default async (req: Request) => {
   const url = new URL(req.url);
   const carId = url.searchParams.get("car");
   const metaDb = url.searchParams.get("meta");
-  if (carId) {
-    const carFiles = getStore("cars");
-    if (req.method === "PUT") {
+
+  if (req.method === "PUT") {
+    if (carId) {
+      const carFiles = getStore("cars");
       const carArrayBuffer = new Uint8Array(await req.arrayBuffer());
       await carFiles.set(carId, carArrayBuffer);
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
-    } else if (req.method === "GET") {
-      const carArrayBuffer = await carFiles.get(carId);
-      return new Response(carArrayBuffer, { status: 200 });
-    }
-  } else if (metaDb) {
-    // Problem: Deletion operations are faster than write operations, leading to an empty list most of the time if deletes happen at PUT time.
-    // Solution: Delay deletes until GET operation. Utilize the parents list during read operation to mask and delete outdated entries.
-    const meta = getStore("meta");
-    if (req.method === "PUT") {
+    } else if (metaDb) {
+      const meta = getStore("meta");
       const { data, cid, parents } = (await req.json()) as CRDTEntry;
       await meta.setJSON(`${metaDb}/${cid}`, { data, parents });
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
-    } else if (req.method === "GET") {
+    }
+  } else if (req.method === "GET") {
+    if (carId) {
+      const carFiles = getStore("cars");
+      const carArrayBuffer = await carFiles.get(carId);
+      return new Response(carArrayBuffer, { status: 200 });
+    } else if (metaDb) {
+      // Problem: Deletion operations are faster than write operations, leading to an empty list most of the time if deletes happen at PUT time.
+      // Solution: Delay deletes until GET operation. Utilize the parents list during read operation to mask and delete outdated entries.
+      const meta = getStore("meta");
       const { blobs } = await meta.list({ prefix: `${metaDb}/` });
       const allParents = [] as string[];
       const entries = (
@@ -47,11 +50,25 @@ export default async (req: Request) => {
       ).filter((entry) => entry.data !== null && !allParents.includes(entry.cid));
       return new Response(JSON.stringify(entries), { status: 200 });
     }
-  } else {
-    return new Response(JSON.stringify({ error: "Invalid path" }), {
-      status: 400,
-    });
+  } else if (req.method === "DELETE") {
+    if (carId) {
+      const carFiles = getStore("cars");
+      await carFiles.delete(carId);
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    } else if (metaDb) {
+      const meta = getStore("meta");
+      const { blobs } = await meta.list({ prefix: `${metaDb}/` });
+      await Promise.all(blobs.map(blob => meta.delete(blob.key)));
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    } else {
+      // Do nothing if neither carId nor metaDb is present
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
   }
+
+  return new Response(JSON.stringify({ error: "Invalid path" }), {
+    status: 400,
+  });
 };
 
 export const config = { path: "/fireproof" };
