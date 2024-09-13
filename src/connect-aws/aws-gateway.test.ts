@@ -30,11 +30,13 @@ describe("AWSGateway", () => {
   });
 
   it("should initialize and perform basic operations", async () => {
+
+    console.log("FP_STORAGE_URL:", process.env.FP_STORAGE_URL);
     // Initialize the database with AWS configuration
     const config = {
       store: {
         stores: {
-          base: process.env.FP_STORAGE_URL || "aws://test-bucket/test-prefix",
+          base: process.env.FP_STORAGE_URL || "aws://aws",
         },
       },
     };
@@ -69,7 +71,7 @@ describe("AWSGateway", () => {
     const db1 = fireproof("aws-test-db1", {
       store: {
         stores: {
-          base: process.env.FP_STORAGE_URL || "aws://test-bucket/test-prefix1",
+          base: process.env.FP_STORAGE_URL || "aws://aws",
         },
       },
     });
@@ -77,7 +79,7 @@ describe("AWSGateway", () => {
     const db2 = fireproof("aws-test-db2", {
       store: {
         stores: {
-          base: process.env.FP_STORAGE_URL || "aws://test-bucket/test-prefix2",
+          base: process.env.FP_STORAGE_URL || "aws://aws",
         },
       },
     });
@@ -99,7 +101,7 @@ describe("AWSGateway", () => {
     const largeDb = fireproof("aws-large-test-db", {
       store: {
         stores: {
-          base: process.env.FP_STORAGE_URL || "aws://test-bucket/large-test",
+          base: process.env.FP_STORAGE_URL || "aws://aws",
         },
       },
     });
