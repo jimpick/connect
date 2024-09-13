@@ -58,7 +58,7 @@ export default async (req: Request) => {
     } else if (metaDb) {
       const meta = getStore("meta");
       const { blobs } = await meta.list({ prefix: `${metaDb}/` });
-      await Promise.all(blobs.map(blob => meta.delete(blob.key)));
+      await Promise.all(blobs.map((blob) => meta.delete(blob.key)));
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     } else {
       // Do nothing if neither carId nor metaDb is present
