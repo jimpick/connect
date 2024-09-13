@@ -7,6 +7,7 @@ interface CRDTEntry {
 }
 
 export default async (req: Request) => {
+  console.log("req.url", req).url;
   const url = new URL(req.url);
   const carId = url.searchParams.get("car");
   const metaDb = url.searchParams.get("meta");

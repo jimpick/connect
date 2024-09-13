@@ -6,6 +6,7 @@ import s3 from "./vitest.s3.config.ts";
 import partykit from "./vitest.partykit.config.ts";
 import aws from "./vitest.aws.config.ts";
 import connector from "./vitest.connector.config.ts";
+import netlify from "./vitest.netlify.config.ts";
 // import cf_kv from "./vitest.cf-kv.config.ts";
 
 export default defineWorkspace([
@@ -13,7 +14,8 @@ export default defineWorkspace([
   // betterSqlite3,
   // connector,
   // s3,
-  aws,
+  // aws,
+  netlify,
   // partykit,
   //cf_kv
 ]);
