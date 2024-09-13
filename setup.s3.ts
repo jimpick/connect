@@ -1,4 +1,4 @@
-import { registerS3StoreProtocol } from "./src/s3/s3-store.ts";
+import { registerS3StoreProtocol } from "./src/s3/s3-gateway.ts";
 import { URI } from "@adviser/cement";
 
 const unreg = registerS3StoreProtocol();

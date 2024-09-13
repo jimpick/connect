@@ -2,11 +2,14 @@ import { Result, URI } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
 import fetch from "cross-fetch";
 
+console.log("aws-gateway.ts");
+
 export class AWSGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
 
   constructor(sthis: SuperThis) {
+    console.log("Entering AWSGateway constructor");
     this.sthis = ensureSuperLog(sthis, "AWSGateway");
     this.logger = this.sthis.logger;
   }
@@ -57,6 +60,8 @@ export class AWSGateway implements bs.Gateway {
   }
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
+    console.log("Entering put method with URI:", url.toString());
+    console.log("Body (first 100 bytes):", new TextDecoder().decode(body.slice(0, 100)));
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const uploadUrl = url.getParam("uploadUrl");
     const key = url.getParam("key");
@@ -67,8 +72,11 @@ export class AWSGateway implements bs.Gateway {
       return Result.Err(new Error("Key not found in the URI"));
     }
     const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
-    console.log("Upload URL:", url.toString());
+    console.log("Upload URL:", fetchUrl.toString());
+    console.log("Store:", store);
+    console.log("Key:", key);
     const done = await fetch(fetchUrl, { method: "PUT", body });
+    console.log("Upload response status:", done.status);
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
     }
@@ -76,6 +84,7 @@ export class AWSGateway implements bs.Gateway {
   }
 
   async get(url: URI): Promise<bs.GetResult> {
+    console.log("Entering get method with URI:", url.toString());
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const downloadUrl = url.getParam("downloadUrl");
     const key = url.getParam("key");
@@ -87,11 +96,20 @@ export class AWSGateway implements bs.Gateway {
     }
     const fetchUrl = new URL(`${downloadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
     console.log("Download URL:", fetchUrl.toString());
+    console.log("Store:", store);
+    console.log("Key:", key);
+    
     const response = await fetch(fetchUrl);
+    console.log("Download response status:", response.status);
+    
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
     }
+    
     const data = new Uint8Array(await response.arrayBuffer());
+    console.log("Downloaded data length:", data.length);
+    console.log("First 100 bytes:", new TextDecoder().decode(data.slice(0, 100)));
+    
     return Result.Ok(data);
   }
 

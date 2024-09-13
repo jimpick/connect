@@ -12,7 +12,7 @@ export default defineWorkspace([
   //nodeSqlite3Wasm,
   // betterSqlite3,
   // connector,
-  //s3,
+  // s3,
   aws,
   // partykit,
   //cf_kv

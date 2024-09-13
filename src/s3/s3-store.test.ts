@@ -1,5 +1,5 @@
 import { fireproof, Database } from "@fireproof/core";
-import { registerS3StoreProtocol } from "./s3-store";
+import { registerS3StoreProtocol } from "./s3-gateway";
 import { describe, it, expect } from "vitest";
 
 async function smokeDB(db: Database) {
