@@ -18,7 +18,7 @@ export default tseslint.config(
       "smoke/react/",
       "tests/connect-netlify/app/index.global.js",
       "tests/connect-netlify/app/fireproof.iife.js",
-      "tests/connect-netlify/app/connect-netlify.iife.js"
+      "tests/connect-netlify/app/connect-netlify.iife.js",
     ],
   },
   {
