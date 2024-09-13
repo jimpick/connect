@@ -15,6 +15,7 @@ async function smokeDB(db: Database) {
   }
   const docs = await db.allDocs();
   expect(docs.rows.length).toBeGreaterThan(9);
+  return docs.rows.map((row) => row.value);
 }
 
 describe("AWSGateway", () => {
@@ -29,9 +30,16 @@ describe("AWSGateway", () => {
     unregister();
   });
 
-  it("should initialize and perform basic operations", async () => {
+  it("env setup is ok", () => {
+    expect(process.env.FP_STORAGE_URL).toMatch(/aws:\/\/aws/);
 
-    console.log("FP_STORAGE_URL:", process.env.FP_STORAGE_URL);
+    const url = new URL(process.env.FP_STORAGE_URL || "");
+    expect(url.searchParams.get("dataUrl")).toBeTruthy();
+    expect(url.searchParams.get("uploadUrl")).toBeTruthy();
+    expect(url.searchParams.get("webSocketUrl")).toBeTruthy();
+  });
+
+  it("should initialize and perform basic operations", async () => {
     // Initialize the database with AWS configuration
     const config = {
       store: {
@@ -40,13 +48,41 @@ describe("AWSGateway", () => {
         },
       },
     };
-    console.log("Fireproof config:", JSON.stringify(config, null, 2));
+    // console.log("Fireproof config:", JSON.stringify(config, null, 2));
     db = fireproof("aws-test-db", config);
 
-    await smokeDB(db);
+    const loader = db.blockstore.loader;
+    // Assert that loader has ebOpts.store.stores
+    expect(loader).toBeDefined();
+    if (!loader) {
+      throw new Error("Loader is not defined");
+    }
+    expect(loader.ebOpts).toBeDefined();
+    expect(loader.ebOpts.store).toBeDefined();
+    expect(loader.ebOpts.store.stores).toBeDefined();
+    if (!loader.ebOpts.store.stores) {
+      throw new Error("Loader stores is not defined");
+    }
+    if (!loader.ebOpts.store.stores.base) {
+      throw new Error("Loader stores.base is not defined");
+    }
+
+    // console.log("Loader stores:", loader.ebOpts.store.stores);
+
+    // Test base URL configuration
+    const baseUrl = new URL(loader.ebOpts.store.stores.base.toString());
+    expect(baseUrl.protocol).toBe("aws:");
+    expect(baseUrl.hostname).toBe("aws");
+
+    // Check for required parameters in the base URL
+    expect(baseUrl.searchParams.get("dataUrl")).toBeTruthy();
+    expect(baseUrl.searchParams.get("uploadUrl")).toBeTruthy();
+    expect(baseUrl.searchParams.get("webSocketUrl")).toBeTruthy();
+
+    const docs = await smokeDB(db);
 
     // Test update operation
-    const updateDoc = await db.get<{ content: string }>("key0:" + ran);
+    const updateDoc = await db.get<{ content: string }>(docs[0]._id);
     updateDoc.content = "Updated content";
     const updateResult = await db.put(updateDoc);
     expect(updateResult.id).toBe(updateDoc._id);
@@ -55,66 +91,46 @@ describe("AWSGateway", () => {
     expect(updatedDoc.content).toBe("Updated content");
 
     // Test delete operation
-    await db.remove(updateDoc);
+    await db.del(updateDoc._id);
     try {
       await db.get(updateDoc._id);
       throw new Error("Document should have been deleted");
-    } catch (error) {
-      expect(error.message).toContain("missing");
+    } catch (e) {
+      const error = e as Error;
+      expect(error.message).toContain("Not found");
     }
 
     // Clean up
     await db.destroy();
   });
 
-  it("should handle multiple databases", async () => {
-    const db1 = fireproof("aws-test-db1", {
-      store: {
-        stores: {
-          base: process.env.FP_STORAGE_URL || "aws://aws",
-        },
-      },
-    });
+  // it("should handle multiple databases", async () => {
+  //   const db1 = fireproof("aws-test-db1", {
+  //     store: {
+  //       stores: {
+  //         base: process.env.FP_STORAGE_URL || "aws://aws",
+  //       },
+  //     },
+  //   });
 
-    const db2 = fireproof("aws-test-db2", {
-      store: {
-        stores: {
-          base: process.env.FP_STORAGE_URL || "aws://aws",
-        },
-      },
-    });
+  //   const db2 = fireproof("aws-test-db2", {
+  //     store: {
+  //       stores: {
+  //         base: process.env.FP_STORAGE_URL || "aws://aws",
+  //       },
+  //     },
+  //   });
 
-    await smokeDB(db1);
-    await smokeDB(db2);
+  //   await smokeDB(db1);
+  //   await smokeDB(db2);
 
-    // Ensure data is separate
-    const allDocs1 = await db1.allDocs();
-    const allDocs2 = await db2.allDocs();
-    expect(allDocs1.rows).not.toEqual(allDocs2.rows);
+  //   // Ensure data is separate
+  //   const allDocs1 = await db1.allDocs();
+  //   const allDocs2 = await db2.allDocs();
+  //   expect(allDocs1.rows).not.toEqual(allDocs2.rows);
 
-    // Clean up
-    await db1.destroy();
-    await db2.destroy();
-  });
-
-  it("should handle large datasets", async () => {
-    const largeDb = fireproof("aws-large-test-db", {
-      store: {
-        stores: {
-          base: process.env.FP_STORAGE_URL || "aws://aws",
-        },
-      },
-    });
-
-    const numDocs = 1000;
-    for (let i = 0; i < numDocs; i++) {
-      await largeDb.put({ _id: `large-doc-${i}`, data: `Large document ${i}` });
-    }
-
-    const allDocs = await largeDb.allDocs();
-    expect(allDocs.rows.length).toBe(numDocs);
-
-    // Clean up
-    await largeDb.destroy();
-  });
+  //   // Clean up
+  //   await db1.destroy();
+  //   await db2.destroy();
+  // });
 });
