@@ -1,0 +1,23 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@netlify/blobs':
+        specifier: ^6.3.1
+        version: 6.5.0
+
+packages:
+
+  '@netlify/blobs@6.5.0':
+    resolution: {integrity: sha512-wRFlNnL/Qv3WNLZd3OT/YYqF1zb6iPSo8T31sl9ccL1ahBxW1fBqKgF4b1XL7Z+6mRIkatvcsVPkWBcO+oJMNA==}
+    engines: {node: ^14.16.0 || >=16.0.0}
+
+snapshots:
+
+  '@netlify/blobs@6.5.0': {}
