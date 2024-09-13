@@ -8,8 +8,10 @@
     "prebuild": "rm -rf dist",
     "build": "pnpm run '/^build:/' && pnpm run '/^pub:/'",
     "build:tsc": "tsc",
-    "xbuild:tsup": "tsup",
+    "build:tsup": "tsup",
     "pub:noop": "echo",
+    "pub:netlify": "tsx ./version-copy-package.ts ./dist/netlify/package-netlify.json",
+    "pub:s3": "tsx ./version-copy-package.ts ./dist/s3/package-s3.json",
     "presmoke": "pnpm run build",
     "xsmoke": "pnpm run '/smoke:/'",
     "presmoke:node": "cd dist/fireproof-core ; pnpm pack",
@@ -49,6 +51,7 @@
     "@types/ws": "^8.5.12",
     "@typescript-eslint/typescript-estree": "^8.4.0",
     "esbuild": "^0.23.1",
+    "esbuild-plugin-replace": "^1.4.0",
     "esbuild-plugin-resolve": "^2.0.0",
     "eslint": "^9.9.0",
     "prettier": "^3.3.3",
@@ -60,7 +63,8 @@
     "vite": "^5.4.2",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^2.0.5",
-    "wrangler": "^3.65.1"
+    "wrangler": "^3.65.1",
+    "zx": "^8.1.6"
   },
   "repository": {
     "type": "git",

@@ -260,17 +260,20 @@ export class PartyKitTestStore implements bs.TestGateway {
   }
 }
 
+const onceRegisterPartyKitStoreProtocol = new KeyedResolvOnce<() => void>();
 export function registerPartyKitStoreProtocol(protocol = "partykit:", overrideBaseURL?: string) {
-  URI.protocolHasHostpart(protocol);
-  return bs.registerStoreProtocol({
-    protocol,
-    overrideBaseURL,
-    gateway: async (logger) => {
-      return new PartyKitGateway(logger);
-    },
-    test: async (sthis: SuperThis) => {
-      const gateway = new PartyKitGateway(sthis);
-      return new PartyKitTestStore(gateway, sthis);
-    },
+ return onceRegisterPartyKitStoreProtocol.get(protocol).once(() => {
+    URI.protocolHasHostpart(protocol);
+    return bs.registerStoreProtocol({
+      protocol,
+      overrideBaseURL,
+      gateway: async (sthis) => {
+        return new PartyKitGateway(sthis);
+      },
+      test: async (sthis: SuperThis) => {
+        const gateway = new PartyKitGateway(sthis);
+        return new PartyKitTestStore(gateway, sthis);
+      },
+    });
   });
 }
