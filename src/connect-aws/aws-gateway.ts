@@ -1,30 +1,42 @@
 import { Result, URI } from "@adviser/cement";
-import { bs, SuperThis, Logger, ensureSuperLog, ensureLogger, getStore, StoreType, Store } from "@fireproof/core";
-import {
-  UploadMetaFnParams,
-  UploadDataFnParams,
-  DownloadFnParamTypes,
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-} from "./types";
+import { bs, SuperThis, Logger, ensureSuperLog, ensureLogger, getStore, StoreType } from "@fireproof/core";
 
-function builduploadawsurl(store: StoreType, url: URI, logger: Logger, params: any, uploadurl: string) {
+export interface UploadMetaFnParams {
+  type: "meta";
+  name?: string;
+  branch?: string;
+}
+
+export interface UploadDataFnParams {
+  type: "data" | "file";
+  name?: string;
+  car?: string;
+  size?: string;
+}
+
+function buildUploadAwsUrl(
+  store: StoreType,
+  _url: URI,
+  logger: Logger,
+  params: UploadDataFnParams | UploadMetaFnParams,
+  uploadUrl: string
+) {
   if (!params) throw logger.Error().Msg("Cannot find parameters").AsError();
   //The upload URL is hardcoded for now
   if (store == "data") {
-    const { name, car, size } = params;
+    const { name, car, size } = params as UploadDataFnParams;
     if (!name && !car && !size) {
       throw logger.Error().Msg("Missing 1 or more data upload parameters").AsError();
     }
 
-    return new URL(`?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`, uploadurl);
+    return new URL(`?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`, uploadUrl);
   } else if (store == "meta") {
-    const { name, branch } = params;
+    const { name, branch } = params as UploadMetaFnParams;
     if (!name && !branch) {
       throw logger.Error().Msg("Missing 1 or more meta upload parameters").AsError();
     }
 
-    return new URL(`?${new URLSearchParams({ ...params }).toString()}`, uploadurl);
+    return new URL(`?${new URLSearchParams({ ...params }).toString()}`, uploadUrl);
   }
 
   //Only written so that typescript doesn't complain
@@ -34,11 +46,11 @@ function builduploadawsurl(store: StoreType, url: URI, logger: Logger, params: a
 export class AWSGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
-  urlparams: UploadDataFnParams | UploadMetaFnParams | undefined;
+  urlParams: UploadDataFnParams | UploadMetaFnParams = { type: "data" };
   store: StoreType | undefined;
   uploadUrl = "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
   downloadUrl = "https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com";
-  websocketurl = "";
+  websocketUrl = "";
 
   constructor(sthis: SuperThis) {
     this.sthis = ensureSuperLog(sthis, "AWSGateway");
@@ -46,16 +58,16 @@ export class AWSGateway implements bs.Gateway {
   }
 
   buildUrl(baseUrl: URI, params: string): Promise<Result<URI>> {
-    const buildparams = JSON.parse(params);
-    if (buildparams.type == "data") {
-      const { key, ...other } = buildparams;
-      this.urlparams = { car: key, ...other };
+    const buildParams = JSON.parse(params);
+    if (buildParams.type == "data") {
+      const { key, ...other } = buildParams;
+      this.urlParams = { car: key, ...other };
     }
-    if (buildparams.type == "meta") {
-      const { key, ...other } = buildparams;
-      this.urlparams = { branch: key, ...other };
+    if (buildParams.type == "meta") {
+      const { key, ...other } = buildParams;
+      this.urlParams = { branch: key, ...other };
     }
-    const url = baseUrl.build().setParam("key", buildparams.key).URI();
+    const url = baseUrl.build().setParam("key", buildParams.key).URI();
     return Promise.resolve(Result.Ok(url));
   }
 
@@ -73,7 +85,7 @@ export class AWSGateway implements bs.Gateway {
     return Promise.resolve(Result.Ok(undefined));
   }
 
-  destroy(baseUrl: URI): Promise<bs.VoidResult> {
+  destroy(): Promise<bs.VoidResult> {
     //Implementation pending
     return Promise.resolve(Result.Ok(undefined));
   }
@@ -88,7 +100,7 @@ export class AWSGateway implements bs.Gateway {
       body: tosend,
     };
 
-    const fetchUploadUrl = builduploadawsurl(store, url, this.logger, this.urlparams, this.uploadUrl);
+    const fetchUploadUrl = buildUploadAwsUrl(store, url, this.logger, this.urlParams, this.uploadUrl);
 
     const done = await fetch(fetchUploadUrl, requestoptions);
 
@@ -100,7 +112,7 @@ export class AWSGateway implements bs.Gateway {
 
   async get(url: URI): Promise<bs.GetResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const fetchUploadUrl = builduploadawsurl(store, url, this.logger, this.urlparams, this.uploadUrl);
+    const fetchUploadUrl = buildUploadAwsUrl(store, url, this.logger, this.urlParams, this.uploadUrl);
     let result;
     if (store == "meta") {
       result = await fetch(fetchUploadUrl, { method: "GET" });
@@ -115,7 +127,7 @@ export class AWSGateway implements bs.Gateway {
     return Result.Ok(new Uint8Array(bytes));
   }
 
-  delete(url: URI): Promise<bs.VoidResult> {
+  delete(_url: URI): Promise<bs.VoidResult> {
     return Promise.resolve(Result.Ok(undefined));
   }
 }
