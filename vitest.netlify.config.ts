@@ -11,7 +11,7 @@ export default defineConfig({
     ],
     include: [
       "src/connect-netlify/*test.?(c|m)[jt]s?(x)", 
-      // "node_modules/@fireproof/core/tests/**/*test.?(c|m)[jt]s?(x)"
+      "node_modules/@fireproof/core/tests/**/*test.?(c|m)[jt]s?(x)"
     ],
     globals: true,
     setupFiles: "./setup.netlify.ts",
