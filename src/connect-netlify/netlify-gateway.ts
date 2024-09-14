@@ -101,7 +101,7 @@ export class NetlifyGateway implements bs.Gateway {
 
     return Result.Ok(data);
   }
-  
+
   async delete(url: URI): Promise<bs.VoidResult> {
     const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
