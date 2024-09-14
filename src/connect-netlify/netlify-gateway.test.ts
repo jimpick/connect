@@ -66,6 +66,9 @@ describe("NetlifyGateway", () => {
 
     const docs = await smokeDB(db);
 
+    // get a new db instance
+    db = new Database("netlify-test-db", config);
+
     // Test update operation
     const updateDoc = await db.get<{ content: string }>(docs[0]._id);
     updateDoc.content = "Updated content";

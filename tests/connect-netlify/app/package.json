@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-server": "cp ../../../src/connect-netlify/server.ts netlify/edge-functions/fireproof.ts",
     "watch-server": "chokidar \"../../../src/connect-netlify/server.ts\" -c \"npm run copy-server\"",
-    "xpredev": "npm run copy-server && npm run watch-server &",
+    "predev": "npm run copy-server && npm run watch-server &",
     "dev": "npx netlify dev"
   },
   "author": "",
