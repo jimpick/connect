@@ -55,29 +55,75 @@ export class AWSGateway implements bs.Gateway {
   }
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
-    console.log("Entering put method with URI:", url.toString());
-
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const uploadUrl = url.getParam("uploadUrl");
     const key = url.getParam("key");
-    if (!uploadUrl) {
-      return Result.Err(new Error("Upload URL not found in the URI"));
+    const name = url.getParam("name");
+
+    if (!uploadUrl || !key || !name) {
+      return Result.Err(
+        new Error(
+          !uploadUrl
+            ? "Upload URL not found in the URI"
+            : !key
+              ? "Key not found in the URI"
+              : "Name not found in the URI"
+        )
+      );
     }
-    if (!key) {
-      return Result.Err(new Error("Key not found in the URI"));
-    }
-    const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: store, key }).toString()}`);
-    console.log("Upload URL:", fetchUrl.toString());
+
+    return store === "meta"
+      ? this.putMeta(uploadUrl, key, name, body)
+      : this.putData(uploadUrl, store, key, name, body);
+  }
+  private async putMeta(uploadUrl: string, key: string, name: string, body: Uint8Array): Promise<bs.VoidResult> {
+    const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: "meta", key, name }).toString()}`);
+    console.log("Upload Meta URL:", fetchUrl.toString());
+
     const done = await fetch(fetchUrl, { method: "PUT", body });
     console.log("Upload response status:", done.status);
+
     if (!done.ok) {
+      return Result.Err(new Error(`failed to upload meta ${done.statusText}`));
+    }
+
+    return Result.Ok(undefined);
+  }
+
+  private async putData(
+    uploadUrl: string,
+    store: string,
+    key: string,
+    name: string,
+    body: Uint8Array
+  ): Promise<bs.VoidResult> {
+    const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: store, car: key, name }).toString()}`);
+    console.log("Upload Data URL:", fetchUrl.toString());
+
+    const done = await fetch(fetchUrl, { method: "GET" });
+    if (!done.ok) {
+      return Result.Err(new Error(`failed to get upload URL ${done.statusText}`));
+    }
+
+    const doneJson = await done.json();
+
+    if (!doneJson.uploadURL) {
+      console.log("Upload URL not found in the response", doneJson);
+      return Result.Err(new Error("Upload URL not found in the response"));
+    }
+
+    console.log("Upload Data URL:", doneJson.uploadURL);
+
+    const uploadDone = await fetch(doneJson.uploadURL, { method: "PUT", body });
+
+    if (!uploadDone.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
     }
+
     return Result.Ok(undefined);
   }
 
   async get(url: URI): Promise<bs.GetResult> {
-    console.log("Entering get method with URI:", url.toString());
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const dataUrl = url.getParam("dataUrl");
     const key = url.getParam("key");
@@ -91,14 +137,13 @@ export class AWSGateway implements bs.Gateway {
     console.log("Download URL:", fetchUrl.toString());
 
     const response = await fetch(fetchUrl);
-    console.log("Download response status:", response.status);
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
     }
 
     const data = new Uint8Array(await response.arrayBuffer());
-
+    console.log("Download response status:", response.status, "data.length", data.length);
     return Result.Ok(data);
   }
 

@@ -6,21 +6,28 @@ interface CRDTEntry {
   readonly parents: string[];
 }
 
+console.log("Fireproof edge function loaded");
+
 export default async (req: Request) => {
+  console.log("Fireproof edge function got request");
+
   const url = new URL(req.url);
   const carId = url.searchParams.get("car");
   const metaDb = url.searchParams.get("meta");
+  console.log("req", req.url.toString());
 
   if (req.method === "PUT") {
     if (carId) {
       const carFiles = getStore("cars");
       const carArrayBuffer = new Uint8Array(await req.arrayBuffer());
-      await carFiles.set(carId, carArrayBuffer);
+      const didSet = await carFiles.set(carId, carArrayBuffer);
+      console.log("didSet", didSet);
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
     } else if (metaDb) {
       const meta = getStore("meta");
       const { data, cid, parents } = (await req.json()) as CRDTEntry;
-      await meta.setJSON(`${metaDb}/${cid}`, { data, parents });
+      const didSet = await meta.setJSON(`${metaDb}/${cid}`, { data, parents });
+      console.log("didSet", didSet);
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
     }
   } else if (req.method === "GET") {

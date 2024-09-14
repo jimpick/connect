@@ -4,11 +4,18 @@
   "description": "test app",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "copy-server": "cp ../../../src/connect-netlify/server.ts netlify/edge-functions/fireproof.ts",
+    "watch-server": "chokidar \"../../../src/connect-netlify/server.ts\" -c \"npm run copy-server\"",
+    "predev": "npm run copy-server && npm run watch-server &",
+    "dev": "npx netlify dev"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@netlify/blobs": "^6.3.1"
+  },
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0"
   }
 }
