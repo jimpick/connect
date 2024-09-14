@@ -4,7 +4,9 @@
   "description": "test app",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "predev": "ln -sf ../../../src/connect-netlify/server.ts netlify/edge-functions/fireproof.ts",
+    "dev": "npx netlify dev"
   },
   "author": "",
   "license": "ISC",
