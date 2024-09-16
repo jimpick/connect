@@ -101,7 +101,7 @@ export class V0_19_Sqlite_WalStore implements WalSQLStore {
 
   async insert(url: URI, ose: WalRecord): Promise<RunResult> {
     const wal = WalSQLRecordBuilder.fromRecord(ose).build();
-    const bufState = this.dbConn.taste.toBlob(this.sthis.txt.encode(JSON.stringify(wal.state)));
+    const bufState = this.dbConn.taste.toBlob(wal.state);
     return this.insertStmt(url).then((i) =>
       i.run(
         this.dbConn.taste.quoteTemplate({
