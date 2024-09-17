@@ -155,7 +155,7 @@ export class AWSGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
-  async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
+  async subscribe(_uri: URI, _callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
     // Implementation pending
     return Result.Ok(undefined);
   }
