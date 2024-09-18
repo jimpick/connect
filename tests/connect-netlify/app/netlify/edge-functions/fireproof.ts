@@ -31,7 +31,7 @@ export default async (req: Request) => {
   } else if (req.method === "GET") {
     if (carId) {
       const carFiles = getStore("cars");
-      const carArrayBuffer = await carFiles.get(carId, { type: 'arrayBuffer' });
+      const carArrayBuffer = await carFiles.get(carId, { type: "arrayBuffer" });
       return new Response(carArrayBuffer, { status: 200 });
     } else if (metaDb) {
       // Problem: Deletion operations are faster than write operations, leading to an empty list most of the time if deletes happen at PUT time.

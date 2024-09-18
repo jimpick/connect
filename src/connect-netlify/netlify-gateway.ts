@@ -45,7 +45,6 @@ export class NetlifyGateway implements bs.Gateway {
   }
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
-
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const key = url.getParam("key");
     if (!key) {
@@ -58,10 +57,10 @@ export class NetlifyGateway implements bs.Gateway {
     const fetchUrl = new URL(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set('meta', key);
+        fetchUrl.searchParams.set("meta", key);
         break;
       default:
-        fetchUrl.searchParams.set('car', key);
+        fetchUrl.searchParams.set("car", key);
         break;
     }
     const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
@@ -84,10 +83,10 @@ export class NetlifyGateway implements bs.Gateway {
     const fetchUrl = new URL(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set('meta', key);
+        fetchUrl.searchParams.set("meta", key);
         break;
       default:
-        fetchUrl.searchParams.set('car', key);
+        fetchUrl.searchParams.set("car", key);
         break;
     }
 
