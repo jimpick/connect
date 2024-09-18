@@ -9,31 +9,29 @@ interface CRDTEntry {
 console.log("Fireproof edge function loaded");
 
 export default async (req: Request) => {
-  console.log("Fireproof edge function got request");
-
   const url = new URL(req.url);
   const carId = url.searchParams.get("car");
   const metaDb = url.searchParams.get("meta");
-  console.log("req", req.url.toString());
+  console.log("request ", req.method, req.url);
 
   if (req.method === "PUT") {
     if (carId) {
       const carFiles = getStore("cars");
       const carArrayBuffer = new Uint8Array(await req.arrayBuffer());
-      const didSet = await carFiles.set(carId, carArrayBuffer);
-      console.log("didSet", didSet);
+      await carFiles.set(carId, carArrayBuffer);
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
     } else if (metaDb) {
       const meta = getStore("meta");
-      const { data, cid, parents } = (await req.json()) as CRDTEntry;
-      const didSet = await meta.setJSON(`${metaDb}/${cid}`, { data, parents });
-      console.log("didSet", didSet);
+      const x = await req.json();
+      // fixme, marty changed to [0] as it is a slice of the structure we expected
+      const { data, cid, parents } = x[0] as CRDTEntry;
+      await meta.setJSON(`${metaDb}/${cid}`, { data, parents });
       return new Response(JSON.stringify({ ok: true }), { status: 201 });
     }
   } else if (req.method === "GET") {
     if (carId) {
       const carFiles = getStore("cars");
-      const carArrayBuffer = await carFiles.get(carId);
+      const carArrayBuffer = await carFiles.get(carId, { type: 'arrayBuffer' });
       return new Response(carArrayBuffer, { status: 200 });
     } else if (metaDb) {
       // Problem: Deletion operations are faster than write operations, leading to an empty list most of the time if deletes happen at PUT time.
@@ -47,11 +45,13 @@ export default async (req: Request) => {
             const { data, parents } = await meta.get(blob.key, {
               type: "json",
             });
-            for (const p of parents) {
-              allParents.push(p.toString());
-              void meta.delete(`${metaDb}/${p}`);
+            if (parents) {
+              for (const p of parents) {
+                allParents.push(p.toString());
+                void meta.delete(`${metaDb}/${p}`);
+              }
             }
-            return { cid: blob.key.split("/")[1], data };
+            return { cid: blob.key.split("/")[1], data, parents: [] };
           })
         )
       ).filter((entry) => entry.data !== null && !allParents.includes(entry.cid));
@@ -68,7 +68,11 @@ export default async (req: Request) => {
       await Promise.all(blobs.map((blob) => meta.delete(blob.key)));
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     } else {
-      // Do nothing if neither carId nor metaDb is present
+      const meta = getStore("meta");
+      const { blobs } = await meta.list({ prefix: `main/` });
+      for (const blob of blobs) {
+        await meta.delete(blob.key);
+      }
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
   }
