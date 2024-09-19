@@ -26,6 +26,18 @@ describe("PartyKitGateway", () => {
     unregister = registerPartyKitStoreProtocol("partykit:");
   });
 
+  beforeEach(() => {
+    const config = {
+      store: {
+        stores: {
+          base: process.env.FP_STORAGE_URL || "partykit://localhost:1999",
+        },
+      },
+    };
+    const name = "partykit-test-db-" + Math.random().toString(36).substring(7);
+    db = fireproof(name, config);
+  });
+
   afterEach(() => {
     // Clear the database before each test
     if (db) {
@@ -41,17 +53,7 @@ describe("PartyKitGateway", () => {
     expect(process.env.FP_STORAGE_URL).toMatch(/partykit:\/\/localhost:1999/);
   });
 
-  it("should initialize and perform basic operations", async () => {
-    const config = {
-      store: {
-        stores: {
-          base: process.env.FP_STORAGE_URL || "partykit://localhost:1999",
-        },
-      },
-    };
-    const name = "partykit-test-db-" + Math.random().toString(36).substring(7)
-    db = fireproof(name, config);
-
+  it("should have loader and options", () => {
     const loader = db.blockstore.loader;
     expect(loader).toBeDefined();
     if (!loader) {
@@ -71,7 +73,9 @@ describe("PartyKitGateway", () => {
     expect(baseUrl.protocol).toBe("partykit:");
     expect(baseUrl.hostname).toBe("localhost");
     expect(baseUrl.port || "").toBe("1999");
+  });
 
+  it("should initialize and perform basic operations", async () => {
     const docs = await smokeDB(db);
 
     // // get a new db instance
