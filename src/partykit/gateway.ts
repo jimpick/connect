@@ -99,6 +99,7 @@ export class PartyKitGateway implements bs.Gateway {
         this.logger.Debug().Msg("party open");
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
+          console.log("got message: ", event.data);
           const enc = new TextEncoder();
           const mbin = enc.encode(event.data);
           this.notifySubscribers(mbin);

@@ -49,7 +49,7 @@ describe("AWSGateway", () => {
       },
     };
     // console.log("Fireproof config:", JSON.stringify(config, null, 2));
-    db = fireproof("aws-test-db", config);
+    db = fireproof("aws-test-db" + Math.random().toString(36).substring(7), config);
 
     const loader = db.blockstore.loader;
     // Assert that loader has ebOpts.store.stores

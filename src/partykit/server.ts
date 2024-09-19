@@ -98,7 +98,7 @@ export default class Server implements Party.Server {
       this.clockHead.delete(p);
     }
 
-    this.party.broadcast(message[0], [sender.id]);
+    this.party.broadcast(message, [sender.id]);
     void this.party.storage.put("main", this.clockHead);
   }
 }

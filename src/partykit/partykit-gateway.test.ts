@@ -103,4 +103,36 @@ describe("PartyKitGateway", () => {
     // Clean up
     await db.destroy();
   });
+
+  it("should subscribe to changes", async () => {
+    // Extract stores from the loader
+    const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+
+    const metaGateway = metaStore?.gateway;
+
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+
+    let didCall = false
+
+    if (metaGateway.subscribe) {
+      let resolve: () => void;
+      const p = new Promise<void>((r) => {
+        resolve = r;
+      });
+
+      const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
+        const decodedData = new TextDecoder().decode(data);
+        expect(decodedData).toContain("parents");
+        didCall = true
+        resolve();
+      });
+      expect(metaSubscribeResult?.Ok()).toBeTruthy();
+      const ok = await db.put({ _id: "key1", hello: "world1" });
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBe("key1");
+      await p
+      expect(didCall).toBeTruthy();
+    }
+  });
 });
