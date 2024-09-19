@@ -7,7 +7,6 @@ export class NetlifyGateway implements bs.Gateway {
   readonly logger: Logger;
 
   constructor(sthis: SuperThis) {
-    console.log("Entering NetlifyGateway constructor");
     this.sthis = ensureSuperLog(sthis, "NetlifyGateway");
     this.logger = this.sthis.logger;
   }
@@ -21,12 +20,7 @@ export class NetlifyGateway implements bs.Gateway {
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
-    const metaDb = uri.getParam("meta");
-    if (!metaDb) {
-      return Result.Err(new Error("Meta database not specified for destroy operation"));
-    }
     const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.searchParams.set("meta", metaDb);
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to destroy meta database: ${response.statusText}`));
@@ -36,7 +30,6 @@ export class NetlifyGateway implements bs.Gateway {
 
   async start(uri: URI): Promise<Result<URI>> {
     // Convert netlify: to https: or http: based on the environment
-    console.log("uri.host", uri.host);
     const protocol = uri.host.startsWith("localhost") ? "http" : "https";
     const host = uri.host;
     const path = "/fireproof";
@@ -53,8 +46,6 @@ export class NetlifyGateway implements bs.Gateway {
   }
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
-    console.log("Entering put method with URI:", url.toString());
-
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const key = url.getParam("key");
     if (!key) {
@@ -65,10 +56,15 @@ export class NetlifyGateway implements bs.Gateway {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
     const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.pathname = `/${store}/${key}`;
-    console.log("Upload URL:", fetchUrl.toString());
+    switch (store) {
+      case "meta":
+        fetchUrl.searchParams.set("meta", key);
+        break;
+      default:
+        fetchUrl.searchParams.set("car", key);
+        break;
+    }
     const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
-    console.log("Upload response status:", done.status);
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
     }
@@ -76,7 +72,6 @@ export class NetlifyGateway implements bs.Gateway {
   }
 
   async get(url: URI): Promise<bs.GetResult> {
-    console.log("Entering get method with URI:", url.toString());
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const key = url.getParam("key");
     if (!key) {
@@ -87,11 +82,16 @@ export class NetlifyGateway implements bs.Gateway {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
     const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.pathname = `/${store}/${key}`;
-    console.log("Download URL:", fetchUrl.toString());
+    switch (store) {
+      case "meta":
+        fetchUrl.searchParams.set("meta", key);
+        break;
+      default:
+        fetchUrl.searchParams.set("car", key);
+        break;
+    }
 
     const response = await fetch(fetchUrl.toString());
-    console.log("Download response status:", response.status);
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
