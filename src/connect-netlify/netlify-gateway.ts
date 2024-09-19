@@ -35,6 +35,7 @@ export class NetlifyGateway implements bs.Gateway {
     const path = "/fireproof";
     const urlString = `${protocol}://${host}${path}`;
     const baseUrl = BuildURI.from(urlString).URI();
+    console.log("baseUrl", urlString, baseUrl.toString());
     const ret = uri.build().defParam("version", "v0.1-netlify").defParam("remoteBaseUrl", baseUrl.toString()).URI();
 
     return Result.Ok(ret);
