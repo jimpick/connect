@@ -20,7 +20,7 @@ export default defineWorkspace([
   nodeSqlite3Wasm,
   betterSqlite3,
   // connector,
-  s3,
+  // s3,
   aws,
   // netlify,
   // partykit,
