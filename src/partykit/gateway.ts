@@ -172,11 +172,11 @@ export class PartyKitGateway implements bs.Gateway {
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
       }
-      const data = new Uint8Array(await response.arrayBuffer());
+      const body = new Uint8Array(await response.arrayBuffer());
       if (store === "meta") {
-        bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, data);
+        bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
       }
-      return data;
+      return body;
     });
   }
 
