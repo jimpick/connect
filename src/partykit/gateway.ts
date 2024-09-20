@@ -1,46 +1,9 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
 import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
-import { bs, ensureLogger, getStore, Logger, rt, SuperThis, DbMeta } from "@fireproof/core";
-import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
-import { format, parse, ToString } from "@ipld/dag-json";
-import { EventView } from "@web3-storage/pail/clock/api";
-import { Link } from "multiformats";
+import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/core";
 
 const pkSockets = new KeyedResolvOnce<PartySocket>();
 
-interface KeyedDbMeta extends DbMeta {
-  key?: string;
-}
-
-interface KeyMaterial {
-  readonly key: Uint8Array;
-  readonly keyStr: string;
-}
-
-async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMaterial, Error>> {
-  const storeKeyName = [url.getParam("name")];
-  const idx = url.getParam("index");
-  if (idx) {
-    storeKeyName.push(idx);
-  }
-  storeKeyName.push("meta");
-  const keyName = `@${storeKeyName.join(":")}@`;
-
-  const kb = await rt.kb.getKeyBag(sthis);
-  const res = await kb.getNamedExtractableKey(keyName, true);
-  if (res.isErr()) {
-    return Result.Err(new Error(`Failed to get named extractable key: ${keyName}`));
-  }
-  return Result.Ok(await res.Ok().extract());
-}
-
-async function createKeyedDbMeta(sthis: SuperThis, body: Uint8Array, keyData: KeyMaterial): Promise<KeyedDbMeta> {
-  const dbMetas = await bs.decodeGatewayMetaBytesToDbMeta(sthis, body);
-  const { dbMeta } = dbMetas[0] as { dbMeta: KeyedDbMeta };
-  dbMeta.key = keyData.keyStr;
-  console.log("createKeyedDbMeta", dbMeta);
-  return dbMeta;
-}
 
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -159,6 +122,43 @@ export class PartyKitGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
+  async get(uri: URI): Promise<bs.GetResult> {
+    await this.ready();
+    return exception2Result(async () => {
+      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      if (store === "meta") {
+        return this.getMeta(uri);
+      } else {
+        return this.getData(uri);
+      }
+    });
+  }
+
+  private async getMeta(uri: URI): Promise<Uint8Array> {
+    const key = uri.getParam("key");
+    if (!key) throw new Error("key not found");
+    const downloadUrl = pkMetaURL(uri, key);
+    const response = await fetch(downloadUrl.toString(), { method: "GET" });
+    if (response.status === 404) {
+      throw new Error(`Failure in downloading meta!`);
+    }
+    const data = new Uint8Array(await response.arrayBuffer());
+    bs.setCryptoKeyFromGatewayMetaPayload(this.sthis, data, uri);
+    return data;
+  }
+
+  private async getData(uri: URI): Promise<Uint8Array> {
+    const key = uri.getParam("key");
+    if (!key) throw new Error("key not found");
+    const downloadUrl = pkCarURL(uri, key);
+    const response = await fetch(downloadUrl.toString(), { method: "GET" });
+    if (response.status === 404) {
+      throw new Error(`Failure in downloading data!`);
+    }
+    const data = await response.arrayBuffer();
+    return new Uint8Array(data);
+  }
+
   async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
     await this.ready();
     const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
@@ -171,12 +171,7 @@ export class PartyKitGateway implements bs.Gateway {
 
   private async putMeta(uri: URI, body: Uint8Array): Promise<Result<void>> {
     return exception2Result(async () => {
-      const keyData = await extractKey(uri, this.sthis);
-      if (keyData.isErr()) {
-        throw keyData.Err();
-      }
-      const dbMeta = await createKeyedDbMeta(this.sthis, body, keyData.Ok());
-      const newBody = await bs.encodeGatewayDbMetaToBytes(this.sthis, [dbMeta]);
+      const newBody = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = pkMetaURL(uri, key);
@@ -221,53 +216,6 @@ export class PartyKitGateway implements bs.Gateway {
           throw new Error("store must be meta");
       }
     });
-  }
-
-  async get(uri: URI): Promise<bs.GetResult> {
-    await this.ready();
-    return exception2Result(async () => {
-      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
-      if (store === "meta") {
-        return this.getMeta(uri);
-      } else {
-        return this.getData(uri);
-      }
-    });
-  }
-
-  private async getMeta(uri: URI): Promise<Uint8Array> {
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    const downloadUrl = pkMetaURL(uri, key);
-    const response = await fetch(downloadUrl.toString(), { method: "GET" });
-
-    if (response.status === 404) {
-      throw new Error(`Failure in downloading meta!`);
-    }
-    const data = new Uint8Array(await response.arrayBuffer());
-    // unwrap and apply the key from the dbMeta
-    const keyInfo = await bs.decodeGatewayMetaBytesToDbMeta(this.sthis, data);
-    console.log("keyInfo", keyInfo);
-    if (keyInfo.length) {
-      const dbMeta = keyInfo[0].dbMeta as KeyedDbMeta;
-
-      if (dbMeta.key) {
-        console.log("key found in dbMeta", dbMeta.key);
-      }
-    }
-    return data;
-  }
-
-  private async getData(uri: URI): Promise<Uint8Array> {
-    const key = uri.getParam("key");
-    if (!key) throw new Error("key not found");
-    const downloadUrl = pkCarURL(uri, key);
-    const response = await fetch(downloadUrl.toString(), { method: "GET" });
-    if (response.status === 404) {
-      throw new Error(`Failure in downloading data!`);
-    }
-    const data = await response.arrayBuffer();
-    return new Uint8Array(data);
   }
 
   async delete(uri: URI): Promise<bs.VoidResult> {
