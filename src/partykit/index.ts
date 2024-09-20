@@ -1,5 +1,4 @@
 import { connectionFactory } from "../connection-from-store";
-import { CoerceURI } from "@adviser/cement";
 import { type Connectable } from "@fireproof/core";
 
 // Usage:
@@ -9,17 +8,24 @@ import { type Connectable } from "@fireproof/core";
 //
 // const { db } = useFireproof('test')
 //
-// const url = URI.from("partykit://localhost:1999).build();
-// url.setParam("protocol", "ws");
-//
-// const cx = connect.partykit(db, url);
+// const cx = connect.partykit(db);
 
-// needs to set the keybag url
+// TODO need to set the keybag url automatically
+
+// if (!process.env.FP_KEYBAG_URL) {
+//   process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-partykit?fs=mem";
+// }
+
+if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")) {
+  const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-partykit?fs=mem");
+  url.searchParams.set("extractKey", "_deprecated_internal_api");
+  process.env.FP_KEYBAG_URL = url.toString();
+}
+
 
 export const connect = {
-  partykit: async ({ sthis, blockstore }: Connectable, url?: CoerceURI) => {
-    const connection = await connectionFactory(sthis, url);
+  partykit: async ({ sthis, blockstore }: Connectable, url = "http://localhost:1999?protocol=ws") => {
+    const connection = await connectionFactory(sthis, url.replace("http", "partykit"));
     await connection.connect_X(blockstore);
-    //return connection;
   },
 };

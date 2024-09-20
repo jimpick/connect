@@ -3,7 +3,7 @@ import { ensureSuperThis, fireproof, ConfigOpts, SuperThis } from "@fireproof/co
 import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
-import { registerPartyKitStoreProtocol } from "./partykit/gateway";
+// import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 // import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
 
 // describe("connector", () => {
@@ -78,7 +78,7 @@ import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 //   });
 // });
 
-describe("partykit", () => {
+describe("connect function", () => {
   let url: URI;
   let aliceURL: URI;
   let bobURL: URI;
@@ -109,9 +109,10 @@ describe("partykit", () => {
       },
     };
 
-    registerPartyKitStoreProtocol();
-    url = URI.from("partykit://localhost:1999").build().setParam("storekey", "zTvTPEPQRWij8rfb3FrFqBm").URI();
+    // registerPartyKitStoreProtocol();
+    // url = URI.from("partykit://localhost:1999").build().setParam("storekey", "zTvTPEPQRWij8rfb3FrFqBm").URI();
     //url = URI.from("file://./dist/connect_to?storekey=@bla@")
+    url = URI.from(process.env.FP_STORAGE_URL)
 
     aliceURL = url.build().setParam("logname", "alice").URI();
     bobURL = url.build().setParam("logname", "bob").URI();
