@@ -113,7 +113,7 @@ describe("PartyKitGateway", () => {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
 
-    let didCall = false
+    let didCall = false;
 
     if (metaGateway.subscribe) {
       let resolve: () => void;
@@ -124,14 +124,14 @@ describe("PartyKitGateway", () => {
       const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
         const decodedData = new TextDecoder().decode(data);
         expect(decodedData).toContain("parents");
-        didCall = true
+        didCall = true;
         resolve();
       });
       expect(metaSubscribeResult?.Ok()).toBeTruthy();
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();
       expect(ok.id).toBe("key1");
-      await p
+      await p;
       expect(didCall).toBeTruthy();
     }
   });

@@ -80,9 +80,9 @@ export class AWSGateway implements bs.Gateway {
     const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: "meta", key, name }).toString()}`);
     // console.log("Upload Meta URL:", fetchUrl.toString());
 
-    console.log("Body as string:", new TextDecoder().decode(body) );
+    // console.log("Body as string:", new TextDecoder().decode(body));
 
-    const done = await fetch(fetchUrl, { method: "PUT", body : new TextDecoder().decode(body) });
+    const done = await fetch(fetchUrl, { method: "PUT", body: new TextDecoder().decode(body) });
     // console.log("Upload Meta response status:", done.status);
 
     if (!done.ok) {
@@ -164,7 +164,7 @@ export class AWSGateway implements bs.Gateway {
     const data = new Uint8Array(await response.arrayBuffer());
     return Result.Ok(data);
   }
-  
+
   private async getMeta(url: URI): Promise<bs.GetResult> {
     const dataUrl = url.getParam("uploadUrl");
     const key = url.getParam("key");
@@ -190,7 +190,13 @@ export class AWSGateway implements bs.Gateway {
     }
 
     const data = new Uint8Array(await response.arrayBuffer());
-    console.log("Download Meta response status:", response.status, "data.length", data.length, new TextDecoder().decode(data));
+    console.log(
+      "Download Meta response status:",
+      response.status,
+      "data.length",
+      data.length,
+      new TextDecoder().decode(data)
+    );
     return Result.Ok(data);
   }
 
