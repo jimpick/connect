@@ -4,7 +4,6 @@ import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/co
 
 const pkSockets = new KeyedResolvOnce<PartySocket>();
 
-
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
