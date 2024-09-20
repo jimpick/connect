@@ -15,7 +15,8 @@ export class PartyKitGateway implements bs.Gateway {
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
-    });
+    }); //.EnableLevel(Level.DEBUG);
+    this.logger.Debug().Msg("constructor");
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
