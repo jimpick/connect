@@ -3,6 +3,8 @@ import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } f
 import { bs, ensureLogger, getStore, Logger, rt, SuperThis, DbMeta } from "@fireproof/core";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { format, parse, ToString } from "@ipld/dag-json";
+import { EventView } from "@web3-storage/pail/clock/api";
+import { Link } from "multiformats";
 
 const pkSockets = new KeyedResolvOnce<PartySocket>();
 
@@ -25,11 +27,9 @@ async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMateria
   const keyName = `@${storeKeyName.join(":")}@`;
   console.log("keyName: ", keyName);
 
-
-
   console.log("extractKey: ", url.toString());
 
-  const kb = await rt.kb.getKeyBag(sthis); 
+  const kb = await rt.kb.getKeyBag(sthis);
   const res = await kb.getNamedExtractableKey(keyName, true);
   console.log("keyres: ", res);
   if (res.isErr()) {
@@ -37,7 +37,7 @@ async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMateria
   }
   const keyGetter = res.Ok();
   console.log("keyGetter: ", keyGetter);
-  
+
   let keyData;
   try {
     console.log("extracting key data");
@@ -50,6 +50,51 @@ async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMateria
   console.log("keyData: ", keyData);
   return Result.Ok(keyData);
 }
+
+async function createKeyedDbMeta(sthis: SuperThis, body: Uint8Array, keyData: KeyMaterial): Promise<KeyedDbMeta> {
+  const decodedBody = sthis.txt.decode(body);
+  console.log("decodedBody: ", decodedBody);
+  const dataBody = JSON.parse(decodedBody) as { cid: string; data: string; parents: string[] }[];
+  const metaData = dataBody[0];
+  const eventData = decodeFromBase64(metaData.data);
+  const eventBlock = (await decodeEventBlock<{ dbMeta: Uint8Array }>(eventData)) as EventBlock<{ dbMeta: Uint8Array }>;
+  const dbMeta = parse<KeyedDbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+  dbMeta.key = keyData.keyStr;
+  console.log("new dbMeta: ", dbMeta);
+  return dbMeta;
+}
+
+async function encodeKeyedDbMeta(sthis: SuperThis, dbMeta: KeyedDbMeta): Promise<Uint8Array> {
+  // Convert the KeyedDbMeta object to a JSON string
+  const metaDataStr = JSON.stringify([dbMeta]);
+  console.log("metaDataStr: ", metaDataStr);
+
+  // Encode the JSON string to a Uint8Array
+  const encodedMetaData = sthis.txt.encode(metaDataStr);
+  console.log("encodedMetaData: ", encodedMetaData);
+
+  const data = {
+    dbMeta: encodedMetaData,
+  };
+  const eventBlock = await EventBlock.create(
+    data,
+    [] as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
+  );
+  console.log("eventBlock: ", eventBlock);
+  const base64String = encodeToBase64(eventBlock.bytes);
+  const crdtEntry = {
+    cid: eventBlock.cid.toString(),
+    data: base64String,
+    parents: [], // Replace with actual parents if available
+  };
+  const finalEncodedBody = sthis.txt.encode(JSON.stringify([crdtEntry]));
+  console.log("finalEncodedBody: ", finalEncodedBody);
+
+  return finalEncodedBody;
+}
+
+
+
 
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -185,24 +230,13 @@ export class PartyKitGateway implements bs.Gateway {
         throw keyData.Err();
       }
 
-      const decodedBody = this.sthis.txt.decode(body);
-      console.log("decodedBody: ", decodedBody);
-      const dataBody = JSON.parse(decodedBody) as { cid: string; data: string; parents: string[] }[];
-      const metaData = dataBody[0];
-      const eventData = decodeFromBase64(metaData.data);
-      // console.log("eventData: ", eventData);
-      const eventBlock = (await decodeEventBlock<{ dbMeta: Uint8Array }>(eventData)) as EventBlock<{
-        dbMeta: Uint8Array;
-      }>;
-      // return event
-      const dbMeta = parse<KeyedDbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta));
-      dbMeta.key = keyData.Ok().keyStr;
-      console.log("new dbMeta: ", dbMeta);
+      const dbMeta = await createKeyedDbMeta(this.sthis, body, keyData.Ok());
+      const newBody = await encodeKeyedDbMeta(this.sthis, dbMeta);
 
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = pkMetaURL(uri, key);
-      const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
+      const response = await fetch(uploadUrl.toString(), { method: "PUT", body: newBody });
       if (response.status === 404) {
         throw new Error(`Failure in uploading meta!`);
       }
@@ -249,16 +283,39 @@ export class PartyKitGateway implements bs.Gateway {
     await this.ready();
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
-      const key = uri.getParam("key");
-      if (!key) throw new Error("key not found");
-      const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      const response = await fetch(downloadUrl.toString(), { method: "GET" });
-      if (response.status === 404) {
-        throw new Error(`Failure in downloading ${store}!`);
+      if (store === "meta") {
+        return this.getMeta(uri);
+      } else {
+        return this.getData(uri);
       }
-      const data = await response.arrayBuffer();
-      return new Uint8Array(data);
     });
+  }
+
+  private async getMeta(uri: URI): Promise<Uint8Array> {
+    const key = uri.getParam("key");
+    if (!key) throw new Error("key not found");
+    const downloadUrl = pkMetaURL(uri, key);
+    const response = await fetch(downloadUrl.toString(), { method: "GET" });
+
+
+
+    if (response.status === 404) {
+      throw new Error(`Failure in downloading meta!`);
+    }
+    const data = await response.arrayBuffer();
+    return new Uint8Array(data);
+  }
+
+  private async getData(uri: URI): Promise<Uint8Array> {
+    const key = uri.getParam("key");
+    if (!key) throw new Error("key not found");
+    const downloadUrl = pkCarURL(uri, key);
+    const response = await fetch(downloadUrl.toString(), { method: "GET" });
+    if (response.status === 404) {
+      throw new Error(`Failure in downloading data!`);
+    }
+    const data = await response.arrayBuffer();
+    return new Uint8Array(data);
   }
 
   async delete(uri: URI): Promise<bs.VoidResult> {
