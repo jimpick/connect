@@ -1,6 +1,20 @@
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof, Database, bs } from "@fireproof/core";
 import { registerPartyKitStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { URI } from "@adviser/cement";
+
+
+interface ExtendedGateway extends bs.Gateway {
+  logger: { _attributes: { module: string; url?: string } };
+  headerSize: number;
+  fidLength: number;
+}
+
+interface ExtendedStore {
+  gateway: ExtendedGateway;
+  _url: URI;
+  name: string;
+}
 
 async function smokeDB(db: Database) {
   const ran = Math.random().toString();
