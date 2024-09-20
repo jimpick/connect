@@ -1,5 +1,5 @@
 import { connectionFactory } from "../connection-from-store";
-import { type Connectable } from "@fireproof/core";
+import { bs } from "@fireproof/core";
 
 // Usage:
 //
@@ -22,10 +22,16 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
   process.env.FP_KEYBAG_URL = url.toString();
 }
 
-
 export const connect = {
-  partykit: async ({ sthis, blockstore }: Connectable, url = "http://localhost:1999?protocol=ws") => {
-    const connection = await connectionFactory(sthis, url.replace("http", "partykit"));
-    await connection.connect_X(blockstore);
+  partykit: ({ sthis, blockstore, name }: bs.Connectable, url = "http://localhost:1999?protocol=ws") => {
+    const urlObj = new URL(url);
+    urlObj.searchParams.set("name", name || "default");
+    console.log("Connecting to partykit", urlObj.toString());
+    return connectionFactory(sthis, urlObj.toString().replace("http", "partykit")).then(async (connection) =>
+      connection.connect_X(blockstore).then(() => {
+        console.log("Connected to partykit");
+        return connection;
+      })
+    );
   },
 };

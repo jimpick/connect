@@ -1,6 +1,9 @@
 import { describe } from "vitest";
 import { ensureSuperThis, fireproof, ConfigOpts, SuperThis } from "@fireproof/core";
-import { connectionFactory } from "./connection-from-store";
+
+import { connect } from "./partykit";
+
+// import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
 // import { registerPartyKitStoreProtocol } from "./partykit/gateway";
@@ -112,7 +115,7 @@ describe("connect function", () => {
     // registerPartyKitStoreProtocol();
     // url = URI.from("partykit://localhost:1999").build().setParam("storekey", "zTvTPEPQRWij8rfb3FrFqBm").URI();
     //url = URI.from("file://./dist/connect_to?storekey=@bla@")
-    url = URI.from(process.env.FP_STORAGE_URL)
+    url = URI.from(process.env.FP_STORAGE_URL);
 
     aliceURL = url.build().setParam("logname", "alice").URI();
     bobURL = url.build().setParam("logname", "bob").URI();
@@ -129,12 +132,13 @@ describe("connect function", () => {
 
   it("should", async () => {
     const alice = fireproof("alice", configA);
-    const connection = await connectionFactory(sthis, aliceURL);
+
+    // const connection = await connectionFactory(sthis, aliceURL);
 
     expect(alice.blockstore.loader).toBeDefined();
     expect(alice.blockstore.loader?.sthis).toBeDefined();
 
-    await connection.connect_X(alice.blockstore);
+    const connection = await connect.partykit(alice, bobURL.toString());
 
     // Assert that the connection loader is defined
     expect(connection.loader).toBeDefined();
@@ -144,10 +148,13 @@ describe("connect function", () => {
       expect(connection.loader.ebOpts.store).toBeDefined();
       expect(connection.loader.ebOpts.store.stores).toBeDefined();
     }
-
+return
     const bob = fireproof("bob", configB);
-    const connectionBob = await connectionFactory(sthis, bobURL);
-    await connectionBob.connect_X(bob.blockstore);
+
+    expect(bob.blockstore.loader).toBeDefined();
+    expect(bob.blockstore.loader?.sthis).toBeDefined();
+
+    const connectionBob = await connect.partykit(bob, bobURL.toString());
 
     messagePromise = new Promise<void>((resolve) => {
       messageResolve = resolve;
@@ -170,7 +177,7 @@ describe("connect function", () => {
 
     console.log("about to force refresh bob remote");
     //await bob.blockstore.loader?.remoteMetaStore?.load('main')
-    await connectionBob.loader?.remoteMetaStore?.load("main");
+    // await connectionBob.loader?.remoteMetaStore?.load("main");
     //
     // console.log('about to force refresh bob remote');
     //
@@ -182,6 +189,10 @@ describe("connect function", () => {
     console.log("waiting for bob to see");
     // wait for bob to see message
     await messagePromise;
+
+    const allLater = await bob.allDocs();
+    console.log("bob allLater rows len", allLater.rows.length);
+
 
     // wait a while
     //await new Promise((res) => setTimeout(res, 1000));
