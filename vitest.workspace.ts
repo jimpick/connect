@@ -9,6 +9,7 @@ import aws from "./vitest.aws.config.ts";
 import netlify from "./vitest.netlify.config.ts";
 // import cf_kv from "./vitest.cf-kv.config.ts";
 
+void nodeSqlite3Wasm;
 void betterSqlite3;
 void netlify;
 void aws;
