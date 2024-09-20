@@ -9,6 +9,7 @@ import aws from "./vitest.aws.config.ts";
 import netlify from "./vitest.netlify.config.ts";
 // import cf_kv from "./vitest.cf-kv.config.ts";
 
+void nodeSqlite3Wasm;
 void betterSqlite3;
 void netlify;
 void aws;
@@ -16,12 +17,12 @@ void partykit;
 void s3;
 
 export default defineWorkspace([
-  // nodeSqlite3Wasm,
+  nodeSqlite3Wasm,
   betterSqlite3,
   // connector,
   // s3,
-  aws,
+  // aws,
   // netlify,
-  partykit,
+  // partykit,
   //cf_kv
 ]);

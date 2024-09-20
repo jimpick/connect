@@ -1,6 +1,19 @@
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof, Database, bs } from "@fireproof/core";
 import { registerPartyKitStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { URI } from "@adviser/cement";
+
+interface ExtendedGateway extends bs.Gateway {
+  logger: { _attributes: { module: string; url?: string } };
+  headerSize: number;
+  subscribe?: (url: URI, callback: (meta: Uint8Array) => void) => Promise<bs.VoidResult>;
+}
+
+interface ExtendedStore {
+  gateway: ExtendedGateway;
+  _url: URI;
+  name: string;
+}
 
 async function smokeDB(db: Database) {
   const ran = Math.random().toString();
@@ -113,7 +126,7 @@ describe("PartyKitGateway", () => {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
 
-    let didCall = false
+    let didCall = false;
 
     if (metaGateway.subscribe) {
       let resolve: () => void;
@@ -124,14 +137,14 @@ describe("PartyKitGateway", () => {
       const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
         const decodedData = new TextDecoder().decode(data);
         expect(decodedData).toContain("parents");
-        didCall = true
+        didCall = true;
         resolve();
       });
       expect(metaSubscribeResult?.Ok()).toBeTruthy();
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();
       expect(ok.id).toBe("key1");
-      await p
+      await p;
       expect(didCall).toBeTruthy();
     }
   });

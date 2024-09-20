@@ -119,11 +119,6 @@ export class NetlifyGateway implements bs.Gateway {
     }
     return Result.Ok(undefined);
   }
-
-  async subscribe(_uri: URI, _callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
-    // Implementation pending
-    return Result.Ok(undefined);
-  }
 }
 
 export class NetlifyTestStore implements bs.TestGateway {
