@@ -34,7 +34,7 @@ const ourMultiformat = {
 };
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
-  format: ["esm", "cjs", "iife"],
+  format: ["esm", "cjs"],
   target: ["esnext", "node18"],
   globalName: "Connect",
   external,
@@ -57,50 +57,71 @@ function packageVersion() {
 }
 
 const LIBRARY_BUNDLES: readonly Options[] = [
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["iife"],
-    name: "@fireproof/netlify",
-    entry: ["src/connect-netlify/index.ts"],
-    platform: "browser",
-    outDir: "dist/netlify",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...stopFile,
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/netlify'",
-    },
-  },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["iife"],
+  //   name: "@fireproof/netlify",
+  //   entry: ["src/connect-netlify/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/netlify",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     resolve({
+  //       ...stopFile,
+  //       ...ourMultiformat,
+  //     }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/netlify'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["esm", "cjs"],
+  //   name: "@fireproof/netlify",
+  //   entry: ["src/connect-netlify/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/netlify",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     resolve({
+  //       ...ourMultiformat,
+  //     }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/netlify'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["iife"],
+  //   name: "@fireproof/partykit",
+  //   entry: ["src/partykit/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/partykit",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     resolve({
+  //       ...stopFile,
+  //       ...ourMultiformat,
+  //     }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/partykit'",
+  //   },
+  // },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
-    name: "@fireproof/netlify",
-    entry: ["src/connect-netlify/index.ts"],
-    platform: "browser",
-    outDir: "dist/netlify",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/netlify'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["iife"],
     name: "@fireproof/partykit",
     entry: ["src/partykit/index.ts"],
     platform: "browser",
@@ -111,7 +132,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        ...stopFile,
         ...ourMultiformat,
       }),
     ],
@@ -119,29 +139,30 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module '@fireproof/partykit'",
     },
   },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["iife"],
+  //   name: "@fireproof/s3",
+  //   entry: ["src/s3/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/s3",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     resolve({
+  //       ...stopFile,
+  //       ...ourMultiformat,
+  //     }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/s3'",
+  //   },
+  // },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
-    name: "@fireproof/partykit",
-    entry: ["src/partykit/index.ts"],
-    platform: "browser",
-    outDir: "dist/partykit",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/partykit'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["iife"],
     name: "@fireproof/s3",
     entry: ["src/s3/index.ts"],
     platform: "browser",
@@ -152,7 +173,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        ...stopFile,
         ...ourMultiformat,
       }),
     ],
@@ -160,47 +180,27 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module '@fireproof/s3'",
     },
   },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/s3",
-    entry: ["src/s3/index.ts"],
-    platform: "browser",
-    outDir: "dist/s3",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/s3'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["iife"],
-    name: "@fireproof/partykit",
-    entry: ["src/partykit/index.ts"],
-    platform: "browser",
-    outDir: "dist/partykit",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...stopFile,
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/partykit'",
-    },
-  },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["iife"],
+  //   name: "@fireproof/partykit",
+  //   entry: ["src/partykit/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/partykit",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     resolve({
+  //       ...stopFile,
+  //       ...ourMultiformat,
+  //     }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/partykit'",
+  //   },
+  // },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],

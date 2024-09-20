@@ -14,6 +14,8 @@ import { type Connectable } from "@fireproof/core";
 //
 // const cx = connect.partykit(db, url);
 
+// needs to set the keybag url
+
 export const connect = {
   partykit: async ({ sthis, blockstore }: Connectable, url?: CoerceURI) => {
     const connection = await connectionFactory(sthis, url);
