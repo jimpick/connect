@@ -124,6 +124,9 @@ export class PartyKitGateway implements bs.Gateway {
     await this.ready();
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      if (store === "meta") {
+        bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+      }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
@@ -169,8 +172,11 @@ export class PartyKitGateway implements bs.Gateway {
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
       }
-      const data = await response.arrayBuffer();
-      return new Uint8Array(data);
+      const body = new Uint8Array(await response.arrayBuffer());
+      if (store === "meta") {
+        bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
+      }
+      return body;
     });
   }
 
