@@ -1,6 +1,7 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
 import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
 import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/core";
+const pkSockets = new KeyedResolvOnce<PartySocket>();
 
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -15,12 +16,11 @@ export class PartyKitGateway implements bs.Gateway {
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
-    }); //.EnableLevel(Level.DEBUG);
-    this.logger.Debug().Msg("constructor");
+    });
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Result.Ok(baseUrl.build().setParam("key", key).URI());
+    return Result.Ok(baseUrl.build().setParam("key", key).setParam("extractKey", "_deprecated_internal_api").URI());
   }
 
   pso?: PartySocketOptions;
@@ -201,8 +201,6 @@ export class PartyKitGateway implements bs.Gateway {
     });
   }
 }
-
-const pkSockets = new KeyedResolvOnce<PartySocket>();
 
 function pkKey(set?: PartySocketOptions): string {
   const ret = JSON.stringify(
