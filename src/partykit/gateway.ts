@@ -1,7 +1,55 @@
 import PartySocket, { PartySocketOptions } from "partysocket";
 import { Result, URI, BuildURI, KeyedResolvOnce, runtimeFn, exception2Result } from "@adviser/cement";
-import { bs, ensureLogger, getStore, Logger, rt, SuperThis } from "@fireproof/core";
+import { bs, ensureLogger, getStore, Logger, rt, SuperThis, DbMeta } from "@fireproof/core";
+import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
+import { format, parse, ToString } from "@ipld/dag-json";
+
 const pkSockets = new KeyedResolvOnce<PartySocket>();
+
+interface KeyedDbMeta extends DbMeta {
+  key?: string;
+}
+
+interface KeyMaterial {
+  readonly key: Uint8Array;
+  readonly keyStr: string;
+}
+
+async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMaterial, Error>> {
+  const storeKeyName = [url.getParam("name")];
+  const idx = url.getParam("index");
+  if (idx) {
+    storeKeyName.push(idx);
+  }
+  storeKeyName.push("meta");
+  const keyName = `@${storeKeyName.join(":")}@`;
+  console.log("keyName: ", keyName);
+
+
+
+  console.log("extractKey: ", url.toString());
+
+  const kb = await rt.kb.getKeyBag(sthis); 
+  const res = await kb.getNamedExtractableKey(keyName, true);
+  console.log("keyres: ", res);
+  if (res.isErr()) {
+    return Result.Err(new Error(`Failed to get named extractable key: ${keyName}`));
+  }
+  const keyGetter = res.Ok();
+  console.log("keyGetter: ", keyGetter);
+  
+  let keyData;
+  try {
+    console.log("extracting key data");
+    keyData = await keyGetter.extract();
+    console.log("got keyData: ", keyData);
+  } catch (error) {
+    console.error("Error extracting key data:", error);
+    return Result.Err(new Error("Failed to extract key data"));
+  }
+  console.log("keyData: ", keyData);
+  return Result.Ok(keyData);
+}
 
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -122,14 +170,53 @@ export class PartyKitGateway implements bs.Gateway {
 
   async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
     await this.ready();
+    const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+    if (store === "meta") {
+      return this.putMeta(uri, body);
+    } else {
+      return this.putData(uri, body);
+    }
+  }
+
+  private async putMeta(uri: URI, body: Uint8Array): Promise<Result<void>> {
     return exception2Result(async () => {
-      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      const keyData = await extractKey(uri, this.sthis);
+      if (keyData.isErr()) {
+        throw keyData.Err();
+      }
+
+      const decodedBody = this.sthis.txt.decode(body);
+      console.log("decodedBody: ", decodedBody);
+      const dataBody = JSON.parse(decodedBody) as { cid: string; data: string; parents: string[] }[];
+      const metaData = dataBody[0];
+      const eventData = decodeFromBase64(metaData.data);
+      // console.log("eventData: ", eventData);
+      const eventBlock = (await decodeEventBlock<{ dbMeta: Uint8Array }>(eventData)) as EventBlock<{
+        dbMeta: Uint8Array;
+      }>;
+      // return event
+      const dbMeta = parse<KeyedDbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta));
+      dbMeta.key = keyData.Ok().keyStr;
+      console.log("new dbMeta: ", dbMeta);
+
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
-      const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      const uploadUrl = pkMetaURL(uri, key);
       const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
       if (response.status === 404) {
-        throw new Error(`Failure in uploading ${store}!`);
+        throw new Error(`Failure in uploading meta!`);
+      }
+    });
+  }
+
+  private async putData(uri: URI, body: Uint8Array): Promise<Result<void>> {
+    return exception2Result(async () => {
+      const key = uri.getParam("key");
+      if (!key) throw new Error("key not found");
+      const uploadUrl = pkCarURL(uri, key);
+      const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
+      if (response.status === 404) {
+        throw new Error(`Failure in uploading data!`);
       }
     });
   }
@@ -272,4 +359,49 @@ export function registerPartyKitStoreProtocol(protocol = "partykit:", overrideBa
       },
     });
   });
+}
+
+function encodeToBase64(bytes: Uint8Array): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let base64 = "";
+  let i;
+  for (i = 0; i < bytes.length - 2; i += 3) {
+    base64 += chars[bytes[i] >> 2];
+    base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+    base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+    base64 += chars[bytes[i + 2] & 63];
+  }
+  if (i < bytes.length) {
+    base64 += chars[bytes[i] >> 2];
+    if (i === bytes.length - 1) {
+      base64 += chars[(bytes[i] & 3) << 4];
+      base64 += "==";
+    } else {
+      base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+      base64 += chars[(bytes[i + 1] & 15) << 2];
+      base64 += "=";
+    }
+  }
+  return base64;
+}
+
+function decodeFromBase64(base64: string): Uint8Array {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const bytes = new Uint8Array((base64.length * 3) / 4);
+  let i;
+  let j = 0;
+  for (i = 0; i < base64.length; i += 4) {
+    const a = chars.indexOf(base64[i]);
+    const b = chars.indexOf(base64[i + 1]);
+    const c = chars.indexOf(base64[i + 2]);
+    const d = chars.indexOf(base64[i + 3]);
+    bytes[j++] = (a << 2) | (b >> 4);
+    if (base64[i + 2] !== "=") {
+      bytes[j++] = ((b & 15) << 4) | (c >> 2);
+    }
+    if (base64[i + 3] !== "=") {
+      bytes[j++] = ((c & 3) << 6) | d;
+    }
+  }
+  return bytes.slice(0, j);
 }
