@@ -8,8 +8,6 @@ export class PartyKitGateway implements bs.Gateway {
   readonly id: string;
   party?: PartySocket;
   url?: URI;
-  messagePromise: Promise<Uint8Array>;
-  messageResolve?: (value: Uint8Array | PromiseLike<Uint8Array>) => void;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -19,9 +17,6 @@ export class PartyKitGateway implements bs.Gateway {
       this: this.id,
     }); //.EnableLevel(Level.DEBUG);
     this.logger.Debug().Msg("constructor");
-    this.messagePromise = new Promise<Uint8Array>((resolve) => {
-      this.messageResolve = resolve;
-    });
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
@@ -104,13 +99,10 @@ export class PartyKitGateway implements bs.Gateway {
         this.logger.Debug().Msg("party open");
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
+          console.log("got message: ", event.data);
           const enc = new TextEncoder();
-          this.messageResolve?.(enc.encode(event.data));
-          setTimeout(() => {
-            this.messagePromise = new Promise<Uint8Array>((resolve) => {
-              this.messageResolve = resolve;
-            });
-          }, 0);
+          const mbin = enc.encode(event.data);
+          this.notifySubscribers(mbin);
         });
         exposedResolve(true);
       };
@@ -142,6 +134,13 @@ export class PartyKitGateway implements bs.Gateway {
     });
   }
 
+  private readonly subscriberCallbacks = new Set<(data: Uint8Array) => void>();
+
+  private notifySubscribers(data: Uint8Array): void {
+    for (const callback of this.subscriberCallbacks) {
+      callback(data);
+    }
+  }
   async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
     await this.ready();
     await this.connectPartyKit();
@@ -149,11 +148,10 @@ export class PartyKitGateway implements bs.Gateway {
       const store = uri.getParam("store");
       switch (store) {
         case "meta":
-          this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
-            const enc = new TextEncoder();
-            callback(enc.encode(event.data));
+          this.subscriberCallbacks.add(callback);
+          return Result.Ok(() => {
+            this.subscriberCallbacks.delete(callback);
           });
-          break;
         default:
           throw new Error("store must be meta");
       }
