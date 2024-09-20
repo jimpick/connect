@@ -25,76 +25,22 @@ async function extractKey(url: URI, sthis: SuperThis): Promise<Result<KeyMateria
   }
   storeKeyName.push("meta");
   const keyName = `@${storeKeyName.join(":")}@`;
-  console.log("keyName: ", keyName);
-
-  console.log("extractKey: ", url.toString());
 
   const kb = await rt.kb.getKeyBag(sthis);
   const res = await kb.getNamedExtractableKey(keyName, true);
-  console.log("keyres: ", res);
   if (res.isErr()) {
     return Result.Err(new Error(`Failed to get named extractable key: ${keyName}`));
   }
-  const keyGetter = res.Ok();
-  console.log("keyGetter: ", keyGetter);
-
-  let keyData;
-  try {
-    console.log("extracting key data");
-    keyData = await keyGetter.extract();
-    console.log("got keyData: ", keyData);
-  } catch (error) {
-    console.error("Error extracting key data:", error);
-    return Result.Err(new Error("Failed to extract key data"));
-  }
-  console.log("keyData: ", keyData);
-  return Result.Ok(keyData);
+  return Result.Ok(await res.Ok().extract());
 }
 
 async function createKeyedDbMeta(sthis: SuperThis, body: Uint8Array, keyData: KeyMaterial): Promise<KeyedDbMeta> {
-  const decodedBody = sthis.txt.decode(body);
-  console.log("decodedBody: ", decodedBody);
-  const dataBody = JSON.parse(decodedBody) as { cid: string; data: string; parents: string[] }[];
-  const metaData = dataBody[0];
-  const eventData = decodeFromBase64(metaData.data);
-  const eventBlock = (await decodeEventBlock<{ dbMeta: Uint8Array }>(eventData)) as EventBlock<{ dbMeta: Uint8Array }>;
-  const dbMeta = parse<KeyedDbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+  const dbMetas = await bs.decodeGatewayMetaBytesToDbMeta(sthis, body);
+  const { dbMeta } = dbMetas[0] as { dbMeta: KeyedDbMeta };
   dbMeta.key = keyData.keyStr;
-  console.log("new dbMeta: ", dbMeta);
+  console.log("createKeyedDbMeta", dbMeta);
   return dbMeta;
 }
-
-async function encodeKeyedDbMeta(sthis: SuperThis, dbMeta: KeyedDbMeta): Promise<Uint8Array> {
-  // Convert the KeyedDbMeta object to a JSON string
-  const metaDataStr = JSON.stringify([dbMeta]);
-  console.log("metaDataStr: ", metaDataStr);
-
-  // Encode the JSON string to a Uint8Array
-  const encodedMetaData = sthis.txt.encode(metaDataStr);
-  console.log("encodedMetaData: ", encodedMetaData);
-
-  const data = {
-    dbMeta: encodedMetaData,
-  };
-  const eventBlock = await EventBlock.create(
-    data,
-    [] as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
-  );
-  console.log("eventBlock: ", eventBlock);
-  const base64String = encodeToBase64(eventBlock.bytes);
-  const crdtEntry = {
-    cid: eventBlock.cid.toString(),
-    data: base64String,
-    parents: [], // Replace with actual parents if available
-  };
-  const finalEncodedBody = sthis.txt.encode(JSON.stringify([crdtEntry]));
-  console.log("finalEncodedBody: ", finalEncodedBody);
-
-  return finalEncodedBody;
-}
-
-
-
 
 export class PartyKitGateway implements bs.Gateway {
   readonly logger: Logger;
@@ -229,10 +175,8 @@ export class PartyKitGateway implements bs.Gateway {
       if (keyData.isErr()) {
         throw keyData.Err();
       }
-
       const dbMeta = await createKeyedDbMeta(this.sthis, body, keyData.Ok());
-      const newBody = await encodeKeyedDbMeta(this.sthis, dbMeta);
-
+      const newBody = await bs.encodeGatewayDbMetaToBytes(this.sthis, [dbMeta]);
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = pkMetaURL(uri, key);
@@ -297,13 +241,21 @@ export class PartyKitGateway implements bs.Gateway {
     const downloadUrl = pkMetaURL(uri, key);
     const response = await fetch(downloadUrl.toString(), { method: "GET" });
 
-
-
     if (response.status === 404) {
       throw new Error(`Failure in downloading meta!`);
     }
-    const data = await response.arrayBuffer();
-    return new Uint8Array(data);
+    const data = new Uint8Array(await response.arrayBuffer());
+    // unwrap and apply the key from the dbMeta
+    const keyInfo = await bs.decodeGatewayMetaBytesToDbMeta(this.sthis, data);
+    console.log("keyInfo", keyInfo);
+    if (keyInfo.length) {
+      const dbMeta = keyInfo[0].dbMeta as KeyedDbMeta;
+
+      if (dbMeta.key) {
+        console.log("key found in dbMeta", dbMeta.key);
+      }
+    }
+    return data;
   }
 
   private async getData(uri: URI): Promise<Uint8Array> {
@@ -416,49 +368,4 @@ export function registerPartyKitStoreProtocol(protocol = "partykit:", overrideBa
       },
     });
   });
-}
-
-function encodeToBase64(bytes: Uint8Array): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  let base64 = "";
-  let i;
-  for (i = 0; i < bytes.length - 2; i += 3) {
-    base64 += chars[bytes[i] >> 2];
-    base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
-    base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
-    base64 += chars[bytes[i + 2] & 63];
-  }
-  if (i < bytes.length) {
-    base64 += chars[bytes[i] >> 2];
-    if (i === bytes.length - 1) {
-      base64 += chars[(bytes[i] & 3) << 4];
-      base64 += "==";
-    } else {
-      base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
-      base64 += chars[(bytes[i + 1] & 15) << 2];
-      base64 += "=";
-    }
-  }
-  return base64;
-}
-
-function decodeFromBase64(base64: string): Uint8Array {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  const bytes = new Uint8Array((base64.length * 3) / 4);
-  let i;
-  let j = 0;
-  for (i = 0; i < base64.length; i += 4) {
-    const a = chars.indexOf(base64[i]);
-    const b = chars.indexOf(base64[i + 1]);
-    const c = chars.indexOf(base64[i + 2]);
-    const d = chars.indexOf(base64[i + 3]);
-    bytes[j++] = (a << 2) | (b >> 4);
-    if (base64[i + 2] !== "=") {
-      bytes[j++] = ((b & 15) << 4) | (c >> 2);
-    }
-    if (base64[i + 3] !== "=") {
-      bytes[j++] = ((c & 3) << 6) | d;
-    }
-  }
-  return bytes.slice(0, j);
 }
