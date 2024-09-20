@@ -20,13 +20,13 @@ const external = [
 ];
 
 const stopFile = {
-  "fs/promises": "../../../bundle-not-impl.js",
-  "../runtime/store-file.js": "../../bundle-not-impl.js",
-  "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
-  "./mem-filesystem.js": "../../../bundle-not-impl.js",
-  "./gateways/file/gateway.js": "../bundle-not-impl.js",
-  "./node-sys-container.js": "../bundle-not-impl.js",
-  "./key-bag-file.js": "../bundle-not-impl.js",
+  // "fs/promises": "../../../bundle-not-impl.js",
+  // "../runtime/store-file.js": "../../bundle-not-impl.js",
+  // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
+  // "./mem-filesystem.js": "../../../bundle-not-impl.js",
+  // "./gateways/file/gateway.js": "../bundle-not-impl.js",
+  // "./node-sys-container.js": "../bundle-not-impl.js",
+  // "./key-bag-file.js": "../bundle-not-impl.js",
 };
 
 const ourMultiformat = {
@@ -96,6 +96,47 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ],
     dts: {
       footer: "declare module '@fireproof/netlify'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/partykit",
+    entry: ["src/partykit/index.ts"],
+    platform: "browser",
+    outDir: "dist/partykit",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...stopFile,
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/partykit'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/partykit",
+    entry: ["src/partykit/index.ts"],
+    platform: "browser",
+    outDir: "dist/partykit",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/partykit'",
     },
   },
   {
