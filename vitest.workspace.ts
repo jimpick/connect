@@ -17,11 +17,11 @@ void s3;
 
 export default defineWorkspace([
   // nodeSqlite3Wasm,
-  betterSqlite3,
+  // betterSqlite3,
   // connector,
   // s3,
-  aws,
-  // netlify,
-  partykit,
+  // aws,
+  netlify,
+  // partykit,
   //cf_kv
 ]);
