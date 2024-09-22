@@ -1,8 +1,8 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect as connectModule } from "./connect-netlify";
-const connect = connectModule.netlify;
+import { connect as connectModule } from "./partykit";
+const connect = connectModule.partykit;
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -158,6 +158,24 @@ describe("loading the base store", () => {
     expect(docs.rows.length).toBe(10);
     expect(docs.rows[0].value._id).toMatch("key");
     expect(docs.rows[0].value.hello).toMatch("world");
+
+    console.log("db2 WRITE", db2.name);
+    // it should sync write from the new db to the orginal db
+    const ok = await db2.put({ _id: "secondary", hello: "original" });
+    expect(ok).toBeDefined();
+    expect(ok.id).toBeDefined();
+    expect(ok.id).toBe("secondary");
+
+    await (await db2.blockstore.loader?.WALStore())?.process();
+
+    console.log("db2 processed", db2.name);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const docs2 = await db.get<{ hello: string }>("secondary");
+    expect(docs2).toBeDefined();
+    expect(docs2.hello).toBe("original");
+
   });
 });
 
