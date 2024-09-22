@@ -15,12 +15,29 @@ export class NetlifyGateway implements bs.Gateway {
     return Result.Ok(baseUrl.build().setParam("key", key).URI());
   }
 
-  async destroy(uri: URI): Promise<Result<void>> {
-    const remoteBaseUrl = uri.getParam("remoteBaseUrl");
+  async destroy(url: URI): Promise<Result<void>> {
+    const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
+    console.log("DESTROY store", store, url.toString());
+    if (store !== "meta") {
+      return Result.Ok(undefined);
+      // return Result.Err(new Error("Store is not meta"));
+    }
+    let name = url.getParam("name");
+    if (!name) {
+      return Result.Err(new Error("Name not found in the URI"));
+    }
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
+    const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
     const fetchUrl = new URL(remoteBaseUrl);
+    fetchUrl.searchParams.set("meta", name);
+    console.log("DESTROY fetchUrl", fetchUrl.toString());
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to destroy meta database: ${response.statusText}`));
@@ -35,9 +52,7 @@ export class NetlifyGateway implements bs.Gateway {
     const path = "/fireproof";
     const urlString = `${protocol}://${host}${path}`;
     const baseUrl = BuildURI.from(urlString).URI();
-    console.log("baseUrl", urlString, baseUrl.toString());
     const ret = uri.build().defParam("version", "v0.1-netlify").defParam("remoteBaseUrl", baseUrl.toString()).URI();
-
     return Result.Ok(ret);
   }
 
@@ -47,10 +62,20 @@ export class NetlifyGateway implements bs.Gateway {
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
+    console.log("PUT store", store, url.toString());
     const key = url.getParam("key");
     if (!key) {
       return Result.Err(new Error("Key not found in the URI"));
     }
+    let name = url.getParam("name");
+    if (!name) {
+      return Result.Err(new Error("Name not found in the URI"));
+    }
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
     const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
@@ -58,12 +83,16 @@ export class NetlifyGateway implements bs.Gateway {
     const fetchUrl = new URL(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set("meta", key);
+        fetchUrl.searchParams.set("meta", name);
         break;
       default:
         fetchUrl.searchParams.set("car", key);
         break;
     }
+    if (store === "meta") {
+      body = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
+    }
+    console.log("PUT fetchUrl", fetchUrl.toString());
     const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
@@ -77,6 +106,15 @@ export class NetlifyGateway implements bs.Gateway {
     if (!key) {
       return Result.Err(new Error("Key not found in the URI"));
     }
+    let name = url.getParam("name");
+    if (!name) {
+      return Result.Err(new Error("Name not found in the URI"));
+    }
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
     const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
@@ -84,35 +122,59 @@ export class NetlifyGateway implements bs.Gateway {
     const fetchUrl = new URL(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set("meta", key);
+        fetchUrl.searchParams.set("meta", name);
         break;
       default:
         fetchUrl.searchParams.set("car", key);
         break;
     }
+    console.time(`GET fetchUrl: ${fetchUrl.toString()}`);
 
     const response = await fetch(fetchUrl.toString());
+
+    console.timeEnd(`GET fetchUrl: ${fetchUrl.toString()}`);
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
     }
 
     const data = new Uint8Array(await response.arrayBuffer());
-
+    if (store === "meta") {
+      bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+    }
     return Result.Ok(data);
   }
 
   async delete(url: URI): Promise<bs.VoidResult> {
+    const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
+    const key = url.getParam("key");
+    console.log("DESTROY store", store, url.toString());
+    let name = url.getParam("name");
+    if (!name) {
+      return Result.Err(new Error("Name not found in the URI"));
+    }
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
     const remoteBaseUrl = url.getParam("remoteBaseUrl");
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
-    const carId = url.getParam("car");
-    if (!carId) {
-      return Result.Err(new Error("Car ID not specified for delete operation"));
-    }
     const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.searchParams.set("car", carId);
+    switch (store) {
+      case "meta":
+        fetchUrl.searchParams.set("meta", name);
+        break;
+      default:
+        if (!key) {
+          return Result.Err(new Error("Key not found in the URI"));
+        }
+        fetchUrl.searchParams.set("car", key);
+        break;
+    }
+    console.log("DELETE fetchUrl", fetchUrl.toString());
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to delete car: ${response.statusText}`));
