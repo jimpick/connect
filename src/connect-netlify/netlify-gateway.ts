@@ -17,7 +17,7 @@ export class NetlifyGateway implements bs.Gateway {
 
   async destroy(url: URI): Promise<Result<void>> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    console.log("DESTROY store", store, url.toString());
+
     if (store !== "meta") {
       return Result.Ok(undefined);
       // return Result.Err(new Error("Store is not meta"));
@@ -37,7 +37,7 @@ export class NetlifyGateway implements bs.Gateway {
     }
     const fetchUrl = new URL(remoteBaseUrl);
     fetchUrl.searchParams.set("meta", name);
-    console.log("DESTROY fetchUrl", fetchUrl.toString());
+
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to destroy meta database: ${response.statusText}`));
@@ -62,7 +62,7 @@ export class NetlifyGateway implements bs.Gateway {
 
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    console.log("PUT store", store, url.toString());
+
     const key = url.getParam("key");
     if (!key) {
       return Result.Err(new Error("Key not found in the URI"));
@@ -92,7 +92,7 @@ export class NetlifyGateway implements bs.Gateway {
     if (store === "meta") {
       body = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
     }
-    console.log("PUT fetchUrl", fetchUrl.toString());
+
     const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
@@ -128,11 +128,8 @@ export class NetlifyGateway implements bs.Gateway {
         fetchUrl.searchParams.set("car", key);
         break;
     }
-    console.time(`GET fetchUrl: ${fetchUrl.toString()}`);
 
     const response = await fetch(fetchUrl.toString());
-
-    console.timeEnd(`GET fetchUrl: ${fetchUrl.toString()}`);
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
@@ -148,7 +145,7 @@ export class NetlifyGateway implements bs.Gateway {
   async delete(url: URI): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
     const key = url.getParam("key");
-    console.log("DESTROY store", store, url.toString());
+
     let name = url.getParam("name");
     if (!name) {
       return Result.Err(new Error("Name not found in the URI"));
@@ -174,12 +171,39 @@ export class NetlifyGateway implements bs.Gateway {
         fetchUrl.searchParams.set("car", key);
         break;
     }
-    console.log("DELETE fetchUrl", fetchUrl.toString());
     const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to delete car: ${response.statusText}`));
     }
     return Result.Ok(undefined);
+  }
+
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
+    url = url.build().setParam("key", "main").URI();
+
+    let lastData: Uint8Array | undefined = undefined;
+    let interval = 100;
+    const fetchData = async () => {
+      const result = await this.get(url);
+
+      if (result.isOk()) {
+        const data = result.Ok();
+        if (!lastData || !data.every((value, index) => lastData && value === lastData[index])) {
+          lastData = data;
+
+          callback(data);
+          interval = 100; // Reset interval when data changes
+        } else {
+          interval *= 2; // Double the interval when data is unchanged
+        }
+      }
+      timeoutId = setTimeout(fetchData, interval);
+    };
+    let timeoutId = setTimeout(fetchData, interval);
+
+    return Result.Ok(() => {
+      clearTimeout(timeoutId);
+    });
   }
 }
 

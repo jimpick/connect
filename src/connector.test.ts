@@ -1,8 +1,8 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect as connectModule } from "./partykit";
-const connect = connectModule.partykit;
+import { connect as connectModule } from "./connect-netlify";
+const connect = connectModule.netlify;
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -170,12 +170,11 @@ describe("loading the base store", () => {
 
     console.log("db2 processed", db2.name);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const docs2 = await db.get<{ hello: string }>("secondary");
     expect(docs2).toBeDefined();
     expect(docs2.hello).toBe("original");
-
   });
 });
 
