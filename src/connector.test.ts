@@ -1,12 +1,12 @@
 import { describe } from "vitest";
-import { ensureSuperThis, fireproof, ConfigOpts, SuperThis, Database, bs } from "@fireproof/core";
+import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
 import { connect } from "./partykit";
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
-import exp from "constants";
+
 // import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 // import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
 

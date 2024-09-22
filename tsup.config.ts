@@ -19,15 +19,15 @@ const external = [
   "better-sqlite3",
 ];
 
-const stopFile = {
-  // "fs/promises": "../../../bundle-not-impl.js",
-  // "../runtime/store-file.js": "../../bundle-not-impl.js",
-  // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
-  // "./mem-filesystem.js": "../../../bundle-not-impl.js",
-  // "./gateways/file/gateway.js": "../bundle-not-impl.js",
-  // "./node-sys-container.js": "../bundle-not-impl.js",
-  // "./key-bag-file.js": "../bundle-not-impl.js",
-};
+// const stopFile = {
+//   // "fs/promises": "../../../bundle-not-impl.js",
+//   // "../runtime/store-file.js": "../../bundle-not-impl.js",
+//   // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
+//   // "./mem-filesystem.js": "../../../bundle-not-impl.js",
+//   // "./gateways/file/gateway.js": "../bundle-not-impl.js",
+//   // "./node-sys-container.js": "../bundle-not-impl.js",
+//   // "./key-bag-file.js": "../bundle-not-impl.js",
+// };
 
 const ourMultiformat = {
   // "multiformats/block": `${__dirname}/src/runtime/multiformat/block.ts`
