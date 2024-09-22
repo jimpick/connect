@@ -125,7 +125,7 @@ export class PartyKitGateway implements bs.Gateway {
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
       if (store === "meta") {
-        bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+        body = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
       }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
@@ -168,6 +168,7 @@ export class PartyKitGateway implements bs.Gateway {
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      console.log("downloadUrl", downloadUrl.toString());
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
@@ -223,17 +224,23 @@ function pkKey(set?: PartySocketOptions): string {
 // partykit://localhost:1999/?name=test-public-api&protocol=ws&store=meta
 function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const host = uri.host;
+  console.log("pkURLhost", host);
+  if (host === ".") {
+    console.trace("pkURLhost", uri.toString());
+  }
   const name = uri.getParam("name");
+  const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
-  const path = `/parties/fireproof/${name}`;
+  const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).setParam(type, key).URI();
 }
 
 function pkBaseURL(uri: URI): URI {
   const host = uri.host;
   const name = uri.getParam("name");
+  const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
-  const path = `/parties/fireproof/${name}`;
+  const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).URI();
 }
 

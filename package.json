@@ -12,6 +12,7 @@
     "pub:noop": "echo",
     "pub:netlify": "tsx ./version-copy-package.ts ./dist/netlify/package-netlify.json",
     "pub:s3": "tsx ./version-copy-package.ts ./dist/s3/package-s3.json",
+    "pub:partykit": "tsx ./version-copy-package.ts ./dist/partykit/package-partykit.json",
     "presmoke": "pnpm run build",
     "xsmoke": "pnpm run '/smoke:/'",
     "presmoke:node": "cd dist/fireproof-core ; pnpm pack",
