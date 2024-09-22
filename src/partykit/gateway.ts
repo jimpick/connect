@@ -225,7 +225,7 @@ function pkKey(set?: PartySocketOptions): string {
 function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const host = uri.host;
   console.log("pkURLhost", host);
-  if (host === '.') {
+  if (host === ".") {
     console.trace("pkURLhost", uri.toString());
   }
   const name = uri.getParam("name");
