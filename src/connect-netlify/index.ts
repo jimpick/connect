@@ -13,7 +13,7 @@ import { bs } from "@fireproof/core";
 // const cx = connect.netlify(db, url);
 
 if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")) {
-  const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-partykit?fs=mem");
+  const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-netlify?fs=mem");
   url.searchParams.set("extractKey", "_deprecated_internal_api");
   process.env.FP_KEYBAG_URL = url.toString();
 }
