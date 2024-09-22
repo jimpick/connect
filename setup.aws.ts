@@ -12,4 +12,4 @@ url.setParam("dataUrl", "https://fp1-uploads-201698179963.s3.us-east-2.amazonaws
 console.log("Setting up AWS store with URL:", url.toString());
 
 process.env.FP_STORAGE_URL = url.toString();
-process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-aws?fs=mem";
+process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-aws?fs=mem&extractKey=_deprecated_internal_api";
