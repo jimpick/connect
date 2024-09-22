@@ -130,7 +130,6 @@ export class PartyKitGateway implements bs.Gateway {
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      console.log("uploadUrl", uploadUrl.toString());
       const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
       if (response.status === 404) {
         throw new Error(`Failure in uploading ${store}!`);
@@ -175,7 +174,6 @@ export class PartyKitGateway implements bs.Gateway {
         throw new Error(`Failure in downloading ${store}!`);
       }
       const body = new Uint8Array(await response.arrayBuffer());
-      console.log("body as decoded string", new TextDecoder().decode(body));
       if (store === "meta") {
         bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
       }
@@ -231,16 +229,18 @@ function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
     console.trace("pkURLhost", uri.toString());
   }
   const name = uri.getParam("name");
+  const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
-  const path = `/parties/fireproof/${name}`;
+  const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).setParam(type, key).URI();
 }
 
 function pkBaseURL(uri: URI): URI {
   const host = uri.host;
   const name = uri.getParam("name");
+  const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
-  const path = `/parties/fireproof/${name}`;
+  const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).URI();
 }
 
