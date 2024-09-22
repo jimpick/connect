@@ -1,6 +1,6 @@
 import { connectionFactory } from "../connection-from-store";
 import { CoerceURI } from "@adviser/cement";
-import { type Connectable } from "@fireproof/core";
+import { bs } from "@fireproof/core";
 
 // Usage:
 //
@@ -14,7 +14,7 @@ import { type Connectable } from "@fireproof/core";
 // const cx = connect.netlify(db, url);
 
 export const connect = {
-  netlify: async ({ sthis, blockstore }: Connectable, url?: CoerceURI) => {
+  netlify: async ({ sthis, blockstore }: bs.Connectable, url?: CoerceURI) => {
     const connection = await connectionFactory(sthis, url);
     await connection.connect_X(blockstore);
     //return connection;

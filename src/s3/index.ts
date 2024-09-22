@@ -1,6 +1,6 @@
 import { connectionFactory } from "../connection-from-store";
 import { CoerceURI } from "@adviser/cement";
-import { type Connectable } from "@fireproof/core";
+import { bs } from "@fireproof/core";
 
 // Usage:
 //
@@ -19,7 +19,7 @@ import { type Connectable } from "@fireproof/core";
 // const cx = connect.s3(db, url);
 
 export const connect = {
-  s3: async ({ sthis, blockstore }: Connectable, url?: CoerceURI) => {
+  s3: async ({ sthis, blockstore }: bs.Connectable, url?: CoerceURI) => {
     const connection = await connectionFactory(sthis, url);
     await connection.connect_X(blockstore);
     //return connection;
