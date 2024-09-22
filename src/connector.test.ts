@@ -2,7 +2,7 @@ import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
 import { connect as connectModule } from "./connect-netlify";
-const connect = connectModule.netlify
+const connect = connectModule.netlify;
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";

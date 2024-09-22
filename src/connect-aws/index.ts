@@ -27,7 +27,14 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
 registerAWSStoreProtocol();
 
 export const connect = {
-  aws: ({ sthis, blockstore, name }: bs.Connectable, url = "https://aws.amazon.com", region = "us-east-2", uploadUrl = "https://7leodn3dj2.execute-api.us-east-2.amazonaws.com/uploads", webSocketUrl = "wss://fufauby0ii.execute-api.us-east-2.amazonaws.com/Prod", dataUrl = "https://fp1-uploads-201698179963.s3.us-east-2.amazonaws.com") => {
+  aws: (
+    { sthis, blockstore, name }: bs.Connectable,
+    url = "https://aws.amazon.com",
+    region = "us-east-2",
+    uploadUrl = "https://7leodn3dj2.execute-api.us-east-2.amazonaws.com/uploads",
+    webSocketUrl = "wss://fufauby0ii.execute-api.us-east-2.amazonaws.com/Prod",
+    dataUrl = "https://fp1-uploads-201698179963.s3.us-east-2.amazonaws.com"
+  ) => {
     const urlObj = new URL(url);
     urlObj.searchParams.set("name", name || "default");
     urlObj.searchParams.set("region", region);

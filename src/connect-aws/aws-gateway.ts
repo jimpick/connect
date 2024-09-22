@@ -76,7 +76,13 @@ export class AWSGateway implements bs.Gateway {
       ? this.putMeta(url, uploadUrl, key, name, body)
       : this.putData(uploadUrl, store, key, name, body);
   }
-  private async putMeta(url: URI,uploadUrl: string, key: string, name: string, body: Uint8Array): Promise<bs.VoidResult> {
+  private async putMeta(
+    url: URI,
+    uploadUrl: string,
+    key: string,
+    name: string,
+    body: Uint8Array
+  ): Promise<bs.VoidResult> {
     const index = url.getParam("index");
     if (index) {
       name += `-${index}`;
