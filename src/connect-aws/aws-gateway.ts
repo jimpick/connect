@@ -241,10 +241,34 @@ export class AWSGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
-  // async subscribe(_uri: URI, _callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
-  //   // Implementation pending
-  //   return Result.Ok(undefined);
-  // }
+  // this should be a shared fallback
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
+    url = url.build().setParam("key", "main").URI();
+
+    let lastData: Uint8Array | undefined = undefined;
+    let interval = 100;
+    const fetchData = async () => {
+      const result = await this.get(url);
+
+      if (result.isOk()) {
+        const data = result.Ok();
+        if (!lastData || !data.every((value, index) => lastData && value === lastData[index])) {
+          lastData = data;
+
+          callback(data);
+          interval = 100; // Reset interval when data changes
+        } else {
+          interval *= 2; // Double the interval when data is unchanged
+        }
+      }
+      timeoutId = setTimeout(fetchData, interval);
+    };
+    let timeoutId = setTimeout(fetchData, interval);
+
+    return Result.Ok(() => {
+      clearTimeout(timeoutId);
+    });
+  }
 }
 
 export class AWSTestStore implements bs.TestGateway {

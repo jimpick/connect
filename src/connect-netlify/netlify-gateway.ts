@@ -178,6 +178,7 @@ export class NetlifyGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
+  // this should be a shared fallback
   async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
     url = url.build().setParam("key", "main").URI();
 
