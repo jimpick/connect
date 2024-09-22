@@ -125,11 +125,12 @@ export class PartyKitGateway implements bs.Gateway {
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
       if (store === "meta") {
-        bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+        body = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
       }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      console.log("uploadUrl", uploadUrl.toString());
       const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
       if (response.status === 404) {
         throw new Error(`Failure in uploading ${store}!`);
@@ -168,11 +169,13 @@ export class PartyKitGateway implements bs.Gateway {
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      console.log("downloadUrl", downloadUrl.toString());
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
       }
       const body = new Uint8Array(await response.arrayBuffer());
+      console.log("body as decoded string", new TextDecoder().decode(body));
       if (store === "meta") {
         bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
       }
@@ -223,6 +226,10 @@ function pkKey(set?: PartySocketOptions): string {
 // partykit://localhost:1999/?name=test-public-api&protocol=ws&store=meta
 function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const host = uri.host;
+  console.log("pkURLhost", host);
+  if (host === '.') {
+    console.trace("pkURLhost", uri.toString());
+  }
   const name = uri.getParam("name");
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
   const path = `/parties/fireproof/${name}`;

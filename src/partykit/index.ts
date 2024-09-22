@@ -1,6 +1,8 @@
 import { connectionFactory } from "../connection-from-store";
 import { bs } from "@fireproof/core";
 
+import { registerPartyKitStoreProtocol } from "./gateway";
+
 // Usage:
 //
 // import { useFireproof } from 'use-fireproof'
@@ -22,16 +24,16 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
   process.env.FP_KEYBAG_URL = url.toString();
 }
 
+registerPartyKitStoreProtocol();
+
 export const connect = {
   partykit: ({ sthis, blockstore, name }: bs.Connectable, url = "http://localhost:1999?protocol=ws") => {
     const urlObj = new URL(url);
     urlObj.searchParams.set("name", name || "default");
-    console.log("Connecting to partykit", urlObj.toString());
-    return connectionFactory(sthis, urlObj.toString().replace("http", "partykit")).then(async (connection) =>
-      connection.connect_X(blockstore).then(() => {
-        console.log("Connected to partykit");
-        return connection;
-      })
-    );
+    const fpUrl = urlObj.toString().replace("http", "partykit");
+    console.log("Connecting to partykit", fpUrl);
+    const connection = connectionFactory(sthis, fpUrl);
+    connection.connect_X(blockstore);
+    return connection;
   },
 };
