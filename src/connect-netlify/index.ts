@@ -1,19 +1,22 @@
-// import { ConnectNetlify } from "./connect-netlify.js";
-// import { bs } from "@fireproof/core";
+import { connectionFactory } from "../connection-from-store";
+import { CoerceURI } from "@adviser/cement";
+import { bs } from "@fireproof/core";
 
-// const netlifyCxs = new Map<string, ConnectNetlify>();
+// Usage:
+//
+// import { useFireproof } from 'use-fireproof'
+// import { connect } from '@fireproof/netlify'
+//
+// const { db } = useFireproof('test')
+//
+// const url = URI.from("netlify://localhost:8888").build();
+//
+// const cx = connect.netlify(db, url);
 
-// export { ConnectNetlify };
-
-// export const connect = {
-//   netlify: ({ name, blockstore }: bs.Connectable, refresh = false) => {
-//     if (!name) throw new Error("database name is required");
-//     if (!refresh && netlifyCxs.has(name)) {
-//       return netlifyCxs.get(name);
-//     }
-//     const connection = new ConnectNetlify(name);
-//     connection.connect(blockstore);
-//     netlifyCxs.set(name, connection);
-//     return connection;
-//   },
-// };
+export const connect = {
+  netlify: async ({ sthis, blockstore }: bs.Connectable, url?: CoerceURI) => {
+    const connection = await connectionFactory(sthis, url);
+    await connection.connect_X(blockstore);
+    //return connection;
+  },
+};

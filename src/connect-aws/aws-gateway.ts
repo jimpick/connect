@@ -73,18 +73,18 @@ export class AWSGateway implements bs.Gateway {
     }
 
     return store === "meta"
-      ? this.putMeta(uploadUrl, key, name, body)
+      ? this.putMeta(url, uploadUrl, key, name, body)
       : this.putData(uploadUrl, store, key, name, body);
   }
-  private async putMeta(uploadUrl: string, key: string, name: string, body: Uint8Array): Promise<bs.VoidResult> {
+  private async putMeta(url: URI,uploadUrl: string, key: string, name: string, body: Uint8Array): Promise<bs.VoidResult> {
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
     const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: "meta", key, name }).toString()}`);
-    // console.log("Upload Meta URL:", fetchUrl.toString());
-
-    // console.log("Body as string:", new TextDecoder().decode(body));
-
+    body = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
     const done = await fetch(fetchUrl, { method: "PUT", body: new TextDecoder().decode(body) });
-    // console.log("Upload Meta response status:", done.status);
-
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload meta ${done.statusText}`));
     }
@@ -168,7 +168,13 @@ export class AWSGateway implements bs.Gateway {
   private async getMeta(url: URI): Promise<bs.GetResult> {
     const dataUrl = url.getParam("uploadUrl");
     const key = url.getParam("key");
-    const name = url.getParam("name");
+    let name = url.getParam("name");
+    const index = url.getParam("index");
+    if (index) {
+      name += `-${index}`;
+    }
+    name += ".fp";
+
     console.log("Get Meta URL:", url.toString());
     if (!dataUrl) {
       return Result.Err(new Error("Download URL not found in the URI"));
@@ -197,6 +203,7 @@ export class AWSGateway implements bs.Gateway {
       data.length,
       new TextDecoder().decode(data)
     );
+    bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
     return Result.Ok(data);
   }
 

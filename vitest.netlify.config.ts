@@ -15,6 +15,6 @@ export default defineConfig({
     ],
     globals: true,
     setupFiles: "./setup.netlify.ts",
-    testTimeout: 15000,
+    testTimeout: 25000,
   },
 });

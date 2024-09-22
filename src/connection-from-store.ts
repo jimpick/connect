@@ -35,9 +35,13 @@ export class ConnectionFromStore extends bs.ConnectionBase {
       // data: this.urlData,
       // meta: this.urlMeta,
     };
+    const name = this.url.getParam("name");
+    if (!name) {
+      throw this.logger.Error().Msg("name parameter is missing in the URL").AsError();
+    }
     const storeRuntime = bs.toStoreRuntime({ stores }, this.sthis);
     const loader = {
-      // name: this.url.toString(),
+      name,
       ebOpts: {
         logger: this.logger,
         store: { stores },
@@ -57,6 +61,6 @@ export class ConnectionFromStore extends bs.ConnectionBase {
   }
 }
 
-export async function connectionFactory(sthis: SuperThis, iurl: CoerceURI): Promise<bs.ConnectionBase> {
+export function connectionFactory(sthis: SuperThis, iurl: CoerceURI): bs.ConnectionBase {
   return new ConnectionFromStore(sthis, URI.from(iurl));
 }
