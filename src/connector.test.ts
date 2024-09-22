@@ -1,7 +1,8 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect } from "./connect-aws";
+import { connect as connectModule } from "./connect-netlify";
+const connect = connectModule.netlify
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -48,7 +49,7 @@ describe("loading the base store", () => {
     process.env.FP_STORAGE_URL = "./dist/fp-dir-file";
     dbName = "test-source-" + Math.random().toString(36).substring(7);
     db = fireproof(dbName);
-    cx = connect.aws(db);
+    cx = connect(db);
     await cx.loaded;
     await smokeDB(db);
     // console.log("beforeEach", db.name);
@@ -147,7 +148,7 @@ describe("loading the base store", () => {
       },
     });
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect.aws(db2);
+    const cx2 = connect(db2);
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -297,7 +298,7 @@ describe("loading the base store", () => {
 //     expect(alice.blockstore.loader).toBeDefined();
 //     expect(alice.blockstore.loader?.sthis).toBeDefined();
 
-//     const connection = await connect.partykit(alice, bobURL.toString());
+//     const connection = await connect(alice, bobURL.toString());
 
 //     // Assert that the connection loader is defined
 //     expect(connection.loader).toBeDefined();
@@ -313,7 +314,7 @@ describe("loading the base store", () => {
 //     expect(bob.blockstore.loader).toBeDefined();
 //     expect(bob.blockstore.loader?.sthis).toBeDefined();
 
-//     const connectionBob = await connect.partykit(bob, bobURL.toString());
+//     const connectionBob = await connect(bob, bobURL.toString());
 
 //     messagePromise = new Promise<void>((resolve) => {
 //       messageResolve = resolve;
