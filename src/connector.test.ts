@@ -1,7 +1,7 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect } from "./partykit";
+import { connect } from "./connect-aws";
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -48,7 +48,7 @@ describe("loading the base store", () => {
     process.env.FP_STORAGE_URL = "./dist/fp-dir-file";
     dbName = "test-source-" + Math.random().toString(36).substring(7);
     db = fireproof(dbName);
-    cx = connect.partykit(db);
+    cx = connect.aws(db);
     await cx.loaded;
     await smokeDB(db);
     // console.log("beforeEach", db.name);
@@ -147,7 +147,7 @@ describe("loading the base store", () => {
       },
     });
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect.partykit(db2);
+    const cx2 = connect.aws(db2);
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
