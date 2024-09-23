@@ -114,8 +114,10 @@ describe("loading the base store", () => {
     const metaGetResult = await metaGateway.get(metaUrl?.Ok());
     expect(metaGetResult).toBeDefined();
     expect(metaGetResult.Ok()).toBeDefined();
-    // if (!metaGetResult.Ok()) return;
-    // const dbMeta = (await metaStore?.gateway.handleByteHeads(metaGetResult?.Ok())) as unknown as bs.DbMeta;
+    const metaBody = metaGetResult.Ok();
+    const decodedMetaBody = db.sthis.txt.decode(metaBody);
+    expect(decodedMetaBody).toBeDefined();
+    expect(decodedMetaBody).toMatch(/"parents":\["bafy/);
     const dbMeta = (await bs.setCryptoKeyFromGatewayMetaPayload(
       metaStore._url,
       db.sthis,
