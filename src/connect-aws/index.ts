@@ -1,6 +1,5 @@
 import { connectionFactory } from "../connection-from-store";
-import { bs } from "@fireproof/core";
-
+import { bs, SuperThis } from "@fireproof/core";
 import { registerAWSStoreProtocol } from "./aws-gateway";
 
 // Usage:
@@ -18,6 +17,22 @@ import { registerAWSStoreProtocol } from "./aws-gateway";
 //   process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-aws?fs=mem";
 // }
 
+interface LocalConnectable extends bs.Connectable {
+  sthis: SuperThis;
+}
+
+// Define a type for the connect object
+interface ConnectType {
+  aws: (
+    { sthis, blockstore, name }: LocalConnectable,
+    url?: string,
+    region?: string,
+    uploadUrl?: string,
+    webSocketUrl?: string,
+    dataUrl?: string
+  ) => bs.Connection;
+}
+
 if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")) {
   const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-aws?fs=mem");
   url.searchParams.set("extractKey", "_deprecated_internal_api");
@@ -26,9 +41,9 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
 
 registerAWSStoreProtocol();
 
-export const connect = {
+export const connect: ConnectType = {
   aws: (
-    { sthis, blockstore, name }: bs.Connectable,
+    { sthis, blockstore, name }: LocalConnectable,
     url = "https://aws.amazon.com",
     region = "us-east-2",
     uploadUrl = "https://7leodn3dj2.execute-api.us-east-2.amazonaws.com/uploads",

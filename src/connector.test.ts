@@ -42,7 +42,7 @@ interface ExtendedStore {
 
 describe("loading the base store", () => {
   let db: Database;
-  let cx: bs.ConnectionBase;
+  let cx: bs.Connection;
   let dbName: string;
   beforeEach(async () => {
     // const originalEnv = { FP_STORAGE_URL: process.env.FP_STORAGE_URL, FP_KEYBAG_URL: process.env.FP_KEYBAG_URL };

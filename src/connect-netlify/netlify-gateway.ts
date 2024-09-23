@@ -2,6 +2,9 @@ import { KeyedResolvOnce, Result, URI, BuildURI } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
 import fetch from "cross-fetch";
 
+
+
+
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;

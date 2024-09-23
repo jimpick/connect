@@ -1,7 +1,15 @@
 import { connectionFactory } from "../connection-from-store";
-import { bs } from "@fireproof/core";
-
+import { bs, SuperThis } from "@fireproof/core";
 import { registerPartyKitStoreProtocol } from "./gateway";
+
+interface LocalConnectable extends bs.Connectable {
+  sthis: SuperThis;
+}
+
+// Define a type for the connect object
+interface ConnectType {
+  partykit: ({ sthis, blockstore, name }: LocalConnectable, url?: string) => bs.Connection;
+}
 
 // Usage:
 //
@@ -26,8 +34,8 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
 
 registerPartyKitStoreProtocol();
 
-export const connect = {
-  partykit: ({ sthis, blockstore, name }: bs.Connectable, url = "http://localhost:1999?protocol=ws") => {
+export const connect: ConnectType = {
+  partykit: ({ sthis, blockstore, name }: LocalConnectable, url = "http://localhost:1999?protocol=ws") => {
     const urlObj = new URL(url);
     urlObj.searchParams.set("name", name || "default");
     const fpUrl = urlObj.toString().replace("http", "partykit");
