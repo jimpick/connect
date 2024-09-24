@@ -1,5 +1,5 @@
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
-import { bs, SuperThis } from "@fireproof/core";
+import { bs } from "@fireproof/core";
 import { registerAWSStoreProtocol } from "./aws-gateway";
 import { KeyedResolvOnce } from "@adviser/cement";
 
