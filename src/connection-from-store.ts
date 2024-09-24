@@ -1,5 +1,5 @@
-import { CoerceURI, URI } from "@adviser/cement";
-import { bs, ensureLogger, SuperThis } from "@fireproof/core";
+import { CoerceURI, runtimeFn, URI } from "@adviser/cement";
+import { bs, Database, ensureLogger, SuperThis } from "@fireproof/core";
 
 // export interface StoreOptions {
 //   readonly data: bs.DataStore;
@@ -64,3 +64,20 @@ export class ConnectionFromStore extends bs.ConnectionBase {
 export function connectionFactory(sthis: SuperThis, iurl: CoerceURI): bs.ConnectionBase {
   return new ConnectionFromStore(sthis, URI.from(iurl));
 }
+
+export function makeKeyBagUrlExtractable(sthis: SuperThis) {
+  let base = sthis.env.get("FP_KEYBAG_URL");
+  if (!base) {
+    if (runtimeFn().isBrowser) {
+      base = "indexdb://fp-keybag";
+    } else {
+      base = "file://./dist/kb-dir-partykit?fs=mem";
+    }
+  }
+  const kbUrl = new URL(base);
+  kbUrl.searchParams.set("extractKey", "_deprecated_internal_api");
+  sthis.env.set("FP_KEYBAG_URL", kbUrl.toString());
+  console.log("Setting up keybag with URL:", kbUrl.toString());
+}
+
+export type ConnectFunction = (db: Database, url?: string) => bs.Connection;

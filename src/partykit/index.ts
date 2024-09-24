@@ -1,15 +1,7 @@
-import { connectionFactory } from "../connection-from-store";
-import { bs, SuperThis } from "@fireproof/core";
+import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
+import { bs, Database } from "@fireproof/core";
 import { registerPartyKitStoreProtocol } from "./gateway";
-
-interface LocalConnectable extends bs.Connectable {
-  sthis: SuperThis;
-}
-
-// Define a type for the connect object
-interface ConnectType {
-  partykit: ({ sthis, blockstore, name }: LocalConnectable, url?: string) => bs.Connection;
-}
+import { KeyedResolvOnce } from "@adviser/cement";
 
 // Usage:
 //
@@ -26,7 +18,11 @@ interface ConnectType {
 //   process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-partykit?fs=mem";
 // }
 
-if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")) {
+if (
+  typeof process !== "undefined" &&
+  process.env &&
+  !process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")
+) {
   const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-partykit?fs=mem");
   url.searchParams.set("extractKey", "_deprecated_internal_api");
   process.env.FP_KEYBAG_URL = url.toString();
@@ -34,14 +30,17 @@ if (!process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api"))
 
 registerPartyKitStoreProtocol();
 
-export const connect: ConnectType = {
-  partykit: ({ sthis, blockstore, name }: LocalConnectable, url = "http://localhost:1999?protocol=ws") => {
-    const urlObj = new URL(url);
-    urlObj.searchParams.set("name", name || "default");
-    const fpUrl = urlObj.toString().replace("http", "partykit");
+const connectionCache = new KeyedResolvOnce<bs.Connection>();
+export const connect: ConnectFunction = (db: Database, url = "http://localhost:1999?protocol=ws") => {
+  const { sthis, blockstore, name } = db;
+  const urlObj = new URL(url);
+  urlObj.searchParams.set("name", name || "default");
+  const fpUrl = urlObj.toString().replace("http", "partykit");
+  return connectionCache.get(fpUrl).once(() => {
+    makeKeyBagUrlExtractable(sthis);
     console.log("Connecting to partykit", fpUrl);
     const connection = connectionFactory(sthis, fpUrl);
     connection.connect_X(blockstore);
     return connection;
-  },
+  });
 };
