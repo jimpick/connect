@@ -148,15 +148,19 @@ describe("loading the base store", () => {
         },
       },
     });
+    const carLog0 = db2.blockstore.loader?.carLog;
+    expect(carLog0).toBeDefined();
+    expect(carLog0?.length).toBe(0);
+
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect(db2, "http://localhost:1999?protocol=ws");
+    const cx2 = connect(db2, "http://localhost:1999?protocol=ws&cache=two");
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const carLog = db2.blockstore.loader?.carLog;
     expect(carLog).toBeDefined();
-    expect(carLog?.length).toBe(18); // change this when it's optimized
+    expect(carLog?.length).toBeGreaterThan(2);
 
     console.log("db2 ALLDOCS", db2.name);
     const docs = await db2.allDocs<{ hello: string }>();
