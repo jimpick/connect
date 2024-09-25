@@ -1,8 +1,7 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect as connectModule } from "./connect-netlify";
-const connect = connectModule.netlify;
+import { connect } from "./partykit";
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -118,11 +117,8 @@ describe("loading the base store", () => {
     const decodedMetaBody = db.sthis.txt.decode(metaBody);
     expect(decodedMetaBody).toBeDefined();
     expect(decodedMetaBody).toMatch(/"parents":\["bafy/);
-    const dbMeta = (await bs.setCryptoKeyFromGatewayMetaPayload(
-      metaStore._url,
-      db.sthis,
-      metaGetResult?.Ok()
-    )) as unknown as bs.DbMeta;
+    const dbMetaRes = await bs.setCryptoKeyFromGatewayMetaPayload(metaStore._url, db.sthis, metaGetResult?.Ok());
+    const dbMeta = dbMetaRes.Ok() as unknown as bs.DbMeta;
     expect(dbMeta).toBeDefined();
     expect(dbMeta.key).toBeDefined();
   });
@@ -149,11 +145,32 @@ describe("loading the base store", () => {
         },
       },
     });
+    const carLog0 = db2.blockstore.loader?.carLog;
+    expect(carLog0).toBeDefined();
+    expect(carLog0?.length).toBe(0);
+
+    // const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+
+    const remoteMetaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
+
+    const url = remoteMetaStore?._url;
+    // console.log("metaStore", url.toString());
+
+    const parsedUrl = new URL(url.toString());
+    parsedUrl.searchParams.set("cache", "buster");
+
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect(db2);
+    // const cx2 = connect(db2, parsedUrl.toString());
+    const cx2 = connect(db2, "http://localhost:1999?protocol=ws&cache=two");
+
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const carLog = db2.blockstore.loader?.carLog;
+    expect(carLog).toBeDefined();
+    expect(carLog?.length).toBeGreaterThan(2);
+
     console.log("db2 ALLDOCS", db2.name);
     const docs = await db2.allDocs<{ hello: string }>();
     expect(docs).toBeDefined();
@@ -172,7 +189,7 @@ describe("loading the base store", () => {
 
     console.log("db2 processed", db2.name);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const docs2 = await db.get<{ hello: string }>("secondary");
     expect(docs2).toBeDefined();

@@ -2,9 +2,6 @@ import { KeyedResolvOnce, Result, URI, BuildURI } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
 import fetch from "cross-fetch";
 
-
-
-
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
@@ -93,7 +90,11 @@ export class NetlifyGateway implements bs.Gateway {
         break;
     }
     if (store === "meta") {
-      body = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
+      const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
+      if (bodyRes.isErr()) {
+        return Result.Err(bodyRes.Err());
+      }
+      body = bodyRes.Ok();
     }
 
     const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
@@ -140,7 +141,10 @@ export class NetlifyGateway implements bs.Gateway {
 
     const data = new Uint8Array(await response.arrayBuffer());
     if (store === "meta") {
-      bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+      const res = await bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+      if (res.isErr()) {
+        return Result.Err(res.Err());
+      }
     }
     return Result.Ok(data);
   }

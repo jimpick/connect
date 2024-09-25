@@ -19,25 +19,27 @@ export default class Server implements Party.Server {
   constructor(public party: Party.Party) {}
 
   async onStart() {
-    console.log("starting");
+    // console.log("starting");
     return this.party.storage.get("main").then((head) => {
       if (head) {
-        console.log("loaded existing clock head", head);
+        // console.log("loaded existing clock head", head);
         this.clockHead = head as Map<string, CRDTEntry>;
       }
     });
   }
 
   async onRequest(request: Party.Request) {
+    // console.log("request!", request.method, request.url);
     // Check if it's a preflight request (OPTIONS) and handle it
     if (request.method === "OPTIONS") {
       return ok();
     }
 
     const url = new URL(request.url);
+    // console.log("url", url.toString());
     const carId = url.searchParams.get("car");
     if (carId) {
-      console.log("carid", request.method, carId, request.url);
+      // console.log("carid", request.method, carId, request.url);
       if (request.method === "PUT") {
         const carArrayBuffer = await request.arrayBuffer();
         if (carArrayBuffer) {
@@ -61,10 +63,10 @@ export default class Server implements Party.Server {
         return json({ error: "Method not allowed" }, 405);
       }
     } else {
-      console.log("meta", request.method, request.url);
+      // console.log("meta", request.method, request.url);
       if (request.method === "GET") {
         const metaValues = Array.from(this.clockHead.values());
-        console.log("meta GOT", metaValues);
+        // console.log("meta GOT", metaValues);
         return json(metaValues, 200);
       } else if (request.method === "DELETE") {
         await this.party.storage.deleteAll();
@@ -73,7 +75,7 @@ export default class Server implements Party.Server {
         return json({ ok: true }, 200);
       } else if (request.method === "PUT") {
         const requestBody = await request.text();
-        console.log("meta PUT", requestBody);
+        // console.log("meta PUT", requestBody);
         this.onMessage(requestBody, { id: "server" } as Party.Connection);
         return json({ ok: true }, 200);
       }
@@ -82,7 +84,7 @@ export default class Server implements Party.Server {
   }
 
   async onConnect(conn: Party.Connection) {
-    console.log("connected", this.party.id, conn.id, [...this.clockHead.values()].length);
+    // console.log("connected", this.party.id, conn.id, [...this.clockHead.values()].length);
     for (const value of this.clockHead.values()) {
       conn.send(JSON.stringify(value));
     }
