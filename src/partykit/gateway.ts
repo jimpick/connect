@@ -123,21 +123,13 @@ export class PartyKitGateway implements bs.Gateway {
     await this.ready();
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+      if (store === "meta") {
+        body = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+      }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      console.log("uploadUrl", uploadUrl.toString());
-      if (store === "meta") {
-        try {
-          body = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
-        } catch (error) {
-          this.logger.Error().Msg(`Error adding crypto key to gateway meta payload: ${(error as Error).message}`);
-          throw error;
-        }
-        console.log("uploadUrl", uploadUrl.toString(), new TextDecoder().decode(body));
-      }
       const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
-      console.log("uploadUrl response", response.status);
       if (response.status === 404) {
         throw new Error(`Failure in uploading ${store}!`);
       }
@@ -175,14 +167,14 @@ export class PartyKitGateway implements bs.Gateway {
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      console.log("downloadUrl", downloadUrl.toString());
+      // console.log("downloadUrl", downloadUrl.toString());
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
       }
       const body = new Uint8Array(await response.arrayBuffer());
       if (store === "meta") {
-        console.log("download body", new TextDecoder().decode(body));
+        // console.log("download body", new TextDecoder().decode(body));
         bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
       }
       return body;
