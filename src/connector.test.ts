@@ -117,11 +117,8 @@ describe("loading the base store", () => {
     const decodedMetaBody = db.sthis.txt.decode(metaBody);
     expect(decodedMetaBody).toBeDefined();
     expect(decodedMetaBody).toMatch(/"parents":\["bafy/);
-    const dbMeta = (await bs.setCryptoKeyFromGatewayMetaPayload(
-      metaStore._url,
-      db.sthis,
-      metaGetResult?.Ok()
-    )) as unknown as bs.DbMeta;
+    const dbMetaRes = await bs.setCryptoKeyFromGatewayMetaPayload(metaStore._url, db.sthis, metaGetResult?.Ok());
+    const dbMeta = dbMetaRes.Ok() as unknown as bs.DbMeta;
     expect(dbMeta).toBeDefined();
     expect(dbMeta.key).toBeDefined();
   });
@@ -163,7 +160,9 @@ describe("loading the base store", () => {
     parsedUrl.searchParams.set("cache", "buster");
 
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect(db2, parsedUrl.toString());
+    // const cx2 = connect(db2, parsedUrl.toString());
+    const cx2 = connect(db2, "http://localhost:1999?protocol=ws&cache=two");
+
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));

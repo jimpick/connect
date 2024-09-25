@@ -89,7 +89,10 @@ export class AWSGateway implements bs.Gateway {
     }
     name += ".fp";
     const fetchUrl = new URL(`${uploadUrl}?${new URLSearchParams({ type: "meta", key, name }).toString()}`);
-    body = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
+    const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(url, this.sthis, body);
+    if (bodyRes.isErr()) {
+      return Result.Err(bodyRes.Err());
+    }
     const done = await fetch(fetchUrl, { method: "PUT", body: new TextDecoder().decode(body) });
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload meta ${done.statusText}`));

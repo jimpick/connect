@@ -807,7 +807,7 @@ packages:
     engines: {node: '>=14'}
 
   '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-+6f6621bnVH2DtuUgFoZzYRCKmDkxG09auiKXtuNcC86NjnCxPnqGyV2g+OtLswj0BqLEvPCA6oSFESResMh2g==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    resolution: {integrity: sha512-VIPPbR0OEp5NwZqaaoUabAqCOsXer6kZ0LVGfhQIMnpbr/ey/Y0diQbDTP+71TWGfXbOfZQzdoWE1fxn2kLGxA==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
     version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'

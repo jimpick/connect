@@ -124,7 +124,11 @@ export class PartyKitGateway implements bs.Gateway {
     return exception2Result(async () => {
       const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
       if (store === "meta") {
-        body = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+        const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+        if (bodyRes.isErr()) {
+          throw bodyRes.Err();
+        }
+        body = bodyRes.Ok();
       }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
@@ -167,7 +171,7 @@ export class PartyKitGateway implements bs.Gateway {
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const downloadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      // console.log("downloadUrl", downloadUrl.toString());
+      console.log("downloadUrl", downloadUrl.toString());
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
         throw new Error(`Failure in downloading ${store}!`);
@@ -175,7 +179,11 @@ export class PartyKitGateway implements bs.Gateway {
       const body = new Uint8Array(await response.arrayBuffer());
       if (store === "meta") {
         // console.log("download body", new TextDecoder().decode(body));
-        bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
+        const resKeyInfo = await bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
+        if (resKeyInfo.isErr()) {
+          console.log("Error in setCryptoKeyFromGatewayMetaPayload", resKeyInfo.Err(), new TextDecoder().decode(body));
+          throw resKeyInfo.Err();
+        }
       }
       return body;
     });
