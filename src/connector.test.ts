@@ -152,8 +152,18 @@ describe("loading the base store", () => {
     expect(carLog0).toBeDefined();
     expect(carLog0?.length).toBe(0);
 
+    // const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+
+    const remoteMetaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
+
+    const url = remoteMetaStore?._url;
+    // console.log("metaStore", url.toString());
+
+    const parsedUrl = new URL(url.toString());
+    parsedUrl.searchParams.set("cache", "buster");
+
     console.log("db2 CONNECT", db2.name);
-    const cx2 = connect(db2, "http://localhost:1999?protocol=ws&cache=two");
+    const cx2 = connect(db2, parsedUrl.toString());
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
