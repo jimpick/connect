@@ -37,9 +37,14 @@ export const connect: ConnectFunction = (
   url = "http://localhost:1999?protocol=ws"
 ) => {
   const { sthis, blockstore, name: dbName } = db;
+  if (!dbName) {
+    throw new Error("dbName is required");
+  }
   const urlObj = new URL(url);
   const existingName = urlObj.searchParams.get("name");
-  urlObj.searchParams.set("name", remoteDbName || existingName || dbName || "default");
+  urlObj.searchParams.set("name", remoteDbName || existingName || dbName);
+  urlObj.searchParams.set("localName", dbName);
+  urlObj.searchParams.set("storekey", `@${dbName}:data@`);
   const fpUrl = urlObj.toString().replace("http://", "partykit://").replace("https://", "partykit://");
   console.log("fpUrl", fpUrl);
   return connectionCache.get(fpUrl).once(() => {
@@ -50,3 +55,4 @@ export const connect: ConnectFunction = (
     return connection;
   });
 };
+

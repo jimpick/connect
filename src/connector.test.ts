@@ -139,6 +139,8 @@ describe("loading the base store", () => {
 
   it("should sync to an empty db", async () => {
     // await (await db.blockstore.loader?.WALStore())?.process();
+    console.log("db-names", db.name, emptyDbName, remoteDbName);
+
     const db2 = fireproof(emptyDbName);
     await db2.ready;
     const carLog0 = db2.blockstore.loader?.carLog;
