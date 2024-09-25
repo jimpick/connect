@@ -22,7 +22,7 @@ export default defineWorkspace([
   // connector,
   // s3,
   //aws,
-  // netlify,
-  partykit,
+  netlify,
+  // partykit,
   //cf_kv
 ]);

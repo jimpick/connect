@@ -1,7 +1,7 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect } from "./partykit";
+import { connect } from "./connect-netlify";
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
@@ -59,83 +59,83 @@ describe("loading the base store", () => {
     await (await db.blockstore.loader?.WALStore())?.process();
     console.log("beforeEach done", db.name);
   });
-  // it("should launch tests in the right environment", async () => {
-  //   console.log("beforeEach", process.env.FP_STORAGE_URL, process.env.FP_KEYBAG_URL, db.name);
-  //   const dbStorageUrl = db.blockstore.sthis.env.get("FP_STORAGE_URL");
-  //   expect(dbStorageUrl).toBe("./dist/fp-dir-file");
-  //   const docs = await db.allDocs<{ hello: string }>();
-  //   expect(docs).toBeDefined();
-  //   expect(docs.rows.length).toBe(10);
-  //   expect(docs.rows[0].value._id).toMatch("key");
-  //   expect(docs.rows[0].value.hello).toMatch("world");
-  // });
+  it("should launch tests in the right environment", async () => {
+    console.log("beforeEach", process.env.FP_STORAGE_URL, process.env.FP_KEYBAG_URL, db.name);
+    const dbStorageUrl = db.blockstore.sthis.env.get("FP_STORAGE_URL");
+    expect(dbStorageUrl).toBe("./dist/fp-dir-file");
+    const docs = await db.allDocs<{ hello: string }>();
+    expect(docs).toBeDefined();
+    expect(docs.rows.length).toBe(10);
+    expect(docs.rows[0].value._id).toMatch("key");
+    expect(docs.rows[0].value.hello).toMatch("world");
+  });
 
-  // it("should have data in the local gateway", async () => {
-  //   const carLog = await db.blockstore.loader?.carLog;
-  //   expect(carLog).toBeDefined();
-  //   expect(carLog?.length).toBe(10);
-  //   if (!carLog) return;
-  //   const carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
-  //   const carGateway = carStore?.gateway;
-  //   const testKey = carLog[0][0].toString();
-  //   const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-  //   // await carGateway?.start(carStore?._url);
-  //   const carGetResult = await carGateway?.get(carUrl?.Ok());
-  //   expect(carGetResult).toBeDefined();
-  //   expect(carGetResult?.Ok()).toBeDefined();
-  // });
+  it("should have data in the local gateway", async () => {
+    const carLog = await db.blockstore.loader?.carLog;
+    expect(carLog).toBeDefined();
+    expect(carLog?.length).toBe(10);
+    if (!carLog) return;
+    const carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
+    const carGateway = carStore?.gateway;
+    const testKey = carLog[0][0].toString();
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    // await carGateway?.start(carStore?._url);
+    const carGetResult = await carGateway?.get(carUrl?.Ok());
+    expect(carGetResult).toBeDefined();
+    expect(carGetResult?.Ok()).toBeDefined();
+  });
 
-  // it("should have meta in the local gateway", async () => {
-  //   const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
-  //   const metaGateway = metaStore?.gateway;
-  //   const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
-  //   // await metaGateway?.start(metaStore?._url);
-  //   const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
-  //   expect(metaGetResult).toBeDefined();
-  //   expect(metaGetResult?.Ok()).toBeDefined();
-  // });
+  it("should have meta in the local gateway", async () => {
+    const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    const metaGateway = metaStore?.gateway;
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    // await metaGateway?.start(metaStore?._url);
+    const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
+    expect(metaGetResult).toBeDefined();
+    expect(metaGetResult?.Ok()).toBeDefined();
+  });
 
-  // it("should have data in the remote gateway", async () => {
-  //   const carLog = await db.blockstore.loader?.carLog;
-  //   expect(carLog).toBeDefined();
-  //   expect(carLog?.length).toBe(10);
-  //   if (!carLog) return;
-  //   await (await db.blockstore.loader?.WALStore())?.process();
-  //   const carStore = (await db.blockstore.loader?.remoteCarStore) as unknown as ExtendedStore;
-  //   const carGateway = carStore?.gateway;
-  //   const testKey = carLog[0][0].toString();
-  //   const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-  //   const carGetResult = await carGateway?.get(carUrl?.Ok());
-  //   expect(carGetResult).toBeDefined();
-  //   expect(carGetResult?.Ok()).toBeDefined();
-  // });
+  it("should have data in the remote gateway", async () => {
+    const carLog = await db.blockstore.loader?.carLog;
+    expect(carLog).toBeDefined();
+    expect(carLog?.length).toBe(10);
+    if (!carLog) return;
+    await (await db.blockstore.loader?.WALStore())?.process();
+    const carStore = (await db.blockstore.loader?.remoteCarStore) as unknown as ExtendedStore;
+    const carGateway = carStore?.gateway;
+    const testKey = carLog[0][0].toString();
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    const carGetResult = await carGateway?.get(carUrl?.Ok());
+    expect(carGetResult).toBeDefined();
+    expect(carGetResult?.Ok()).toBeDefined();
+  });
 
-  // it("should have meta in the remote gateway", async () => {
-  //   // await (await db.blockstore.loader?.WALStore())?.process();
-  //   const metaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
-  //   const metaGateway = metaStore.gateway;
-  //   const metaUrl = await metaGateway?.buildUrl(metaStore._url, "main");
-  //   // await metaGateway?.start(metaStore?._url);
-  //   console.log("metaUrl", metaUrl?.Ok()?.toString());
-  //   const metaGetResult = await metaGateway.get(metaUrl?.Ok());
-  //   expect(metaGetResult).toBeDefined();
-  //   expect(metaGetResult.Ok()).toBeDefined();
-  //   const metaBody = metaGetResult.Ok();
-  //   const decodedMetaBody = db.sthis.txt.decode(metaBody);
-  //   expect(decodedMetaBody).toBeDefined();
-  //   expect(decodedMetaBody).toMatch(/"parents":\["bafy/);
-  //   const dbMetaRes = await bs.setCryptoKeyFromGatewayMetaPayload(metaStore._url, db.sthis, metaGetResult?.Ok());
-  //   const dbMeta = dbMetaRes.Ok() as unknown as bs.DbMeta;
-  //   expect(dbMeta).toBeDefined();
-  //   expect(dbMeta.key).toBeDefined();
-  // });
+  it("should have meta in the remote gateway", async () => {
+    // await (await db.blockstore.loader?.WALStore())?.process();
+    const metaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
+    const metaGateway = metaStore.gateway;
+    const metaUrl = await metaGateway?.buildUrl(metaStore._url, "main");
+    // await metaGateway?.start(metaStore?._url);
+    console.log("metaUrl", metaUrl?.Ok()?.toString());
+    const metaGetResult = await metaGateway.get(metaUrl?.Ok());
+    expect(metaGetResult).toBeDefined();
+    expect(metaGetResult.Ok()).toBeDefined();
+    const metaBody = metaGetResult.Ok();
+    const decodedMetaBody = db.sthis.txt.decode(metaBody);
+    expect(decodedMetaBody).toBeDefined();
+    expect(decodedMetaBody).toMatch(/"parents":\["bafy/);
+    const dbMetaRes = await bs.setCryptoKeyFromGatewayMetaPayload(metaStore._url, db.sthis, metaGetResult?.Ok());
+    const dbMeta = dbMetaRes.Ok() as unknown as bs.DbMeta;
+    expect(dbMeta).toBeDefined();
+    expect(dbMeta.key).toBeDefined();
+  });
 
-  // it("should open an empty db", async () => {
-  //   const db2 = fireproof(emptyDbName);
-  //   const docs = await db2.allDocs<{ hello: string }>();
-  //   expect(docs).toBeDefined();
-  //   expect(docs.rows.length).toBe(0);
-  // });
+  it("should open an empty db", async () => {
+    const db2 = fireproof(emptyDbName);
+    const docs = await db2.allDocs<{ hello: string }>();
+    expect(docs).toBeDefined();
+    expect(docs.rows.length).toBe(0);
+  });
 
   it("should sync to an empty db", async () => {
     // await (await db.blockstore.loader?.WALStore())?.process();
@@ -159,7 +159,7 @@ describe("loading the base store", () => {
 
     console.log("db2 CONNECT", db2.name, remoteDbName, parsedUrl.toString());
     // const cx2 = connect(db2, parsedUrl.toString());
-    const cx2 = connect(db2, remoteDbName, `partykit://localhost:1999/?name=${remoteDbName}&protocol=ws&cache=bust`);
+    const cx2 = connect(db2, remoteDbName)//, `partykit://localhost:1999/?name=${remoteDbName}&protocol=ws&cache=bust`);
     // const cx2 = connect(db2, remoteDbName);
 
     await cx2.loaded;
@@ -188,7 +188,7 @@ describe("loading the base store", () => {
 
     console.log("db2 processed", db2.name);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const docs2 = await db.get<{ hello: string }>("secondary");
     expect(docs2).toBeDefined();
