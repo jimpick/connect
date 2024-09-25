@@ -153,6 +153,12 @@ describe("loading the base store", () => {
     await cx2.loaded;
     console.log("db2 LOADED", db2.name);
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const carLog = db2.blockstore.loader?.carLog;
+    expect(carLog).toBeDefined();
+    expect(carLog?.length).toBe(10);
+
+
     console.log("db2 ALLDOCS", db2.name);
     const docs = await db2.allDocs<{ hello: string }>();
     expect(docs).toBeDefined();
