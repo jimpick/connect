@@ -1,5 +1,5 @@
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
-import { bs } from "@fireproof/core";
+import { bs, Database } from "@fireproof/core";
 import { registerAWSStoreProtocol } from "./aws-gateway";
 import { KeyedResolvOnce } from "@adviser/cement";
 
@@ -32,20 +32,29 @@ registerAWSStoreProtocol();
 
 const connectionCache = new KeyedResolvOnce<bs.Connection>();
 export const connect: ConnectFunction = (
-  { sthis, blockstore, name }: bs.Connectable,
+  db: Database,
+  remoteDbName = "",
   url = "https://aws.amazon.com",
   region = "us-east-2",
   uploadUrl = "https://7leodn3dj2.execute-api.us-east-2.amazonaws.com/uploads",
   webSocketUrl = "wss://fufauby0ii.execute-api.us-east-2.amazonaws.com/Prod",
   dataUrl = "https://fp1-uploads-201698179963.s3.us-east-2.amazonaws.com"
 ) => {
+  const { sthis, blockstore, name: dbName } = db;
+  if (!dbName) {
+    throw new Error("dbName is required");
+  }
   const urlObj = new URL(url);
-  urlObj.searchParams.set("name", name || "default");
+  const existingName = urlObj.searchParams.get("name");
+  urlObj.searchParams.set("name", remoteDbName || existingName || dbName);
+  urlObj.searchParams.set("localName", dbName);
+  urlObj.searchParams.set("storekey", `@${dbName}:data@`);
   urlObj.searchParams.set("region", region);
   urlObj.searchParams.set("uploadUrl", uploadUrl);
   urlObj.searchParams.set("webSocketUrl", webSocketUrl);
   urlObj.searchParams.set("dataUrl", dataUrl);
-  const fpUrl = urlObj.toString().replace("https", "aws");
+  const fpUrl = urlObj.toString().replace("https://", "aws://");
+  console.log("fpUrl", fpUrl);
   return connectionCache.get(fpUrl).once(() => {
     makeKeyBagUrlExtractable(sthis);
     console.log("Connecting to AWS", fpUrl);
