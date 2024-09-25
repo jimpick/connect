@@ -1,4 +1,4 @@
-import { registerAWSStoreProtocol } from "./src/connect-aws/aws-gateway.ts";
+import { registerAWSStoreProtocol } from "./src/aws/gateway.ts";
 import { URI } from "@adviser/cement";
 
 registerAWSStoreProtocol();

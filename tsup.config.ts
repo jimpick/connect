@@ -78,26 +78,26 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   //     footer: "declare module '@fireproof/netlify'",
   //   },
   // },
-  // {
-  //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   format: ["esm", "cjs"],
-  //   name: "@fireproof/netlify",
-  //   entry: ["src/connect-netlify/index.ts"],
-  //   platform: "browser",
-  //   outDir: "dist/netlify",
-  //   esbuildPlugins: [
-  //     replace({
-  //       __packageVersion__: packageVersion(),
-  //       include: /version/,
-  //     }),
-  //     resolve({
-  //       ...ourMultiformat,
-  //     }),
-  //   ],
-  //   dts: {
-  //     footer: "declare module '@fireproof/netlify'",
-  //   },
-  // },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/netlify",
+    entry: ["src/netlify/index.ts"],
+    platform: "browser",
+    outDir: "dist/netlify",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/netlify'",
+    },
+  },
   // {
   //   ...LIBRARY_BUNDLE_OPTIONS,
   //   format: ["iife"],
@@ -201,26 +201,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   //     footer: "declare module '@fireproof/partykit'",
   //   },
   // },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/partykit",
-    entry: ["src/partykit/index.ts"],
-    platform: "browser",
-    outDir: "dist/partykit",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      resolve({
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/partykit'",
-    },
-  },
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);

@@ -1,4 +1,4 @@
-import { registerNetlifyStoreProtocol } from "./src/connect-netlify/netlify-gateway.ts";
+import { registerNetlifyStoreProtocol } from "./src/netlify/gateway.ts";
 import { URI } from "@adviser/cement";
 
 registerNetlifyStoreProtocol();

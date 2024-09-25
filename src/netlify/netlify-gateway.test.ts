@@ -1,5 +1,5 @@
 import { fireproof, Database } from "@fireproof/core";
-import { registerNetlifyStoreProtocol } from "./netlify-gateway";
+import { registerNetlifyStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 async function smokeDB(db: Database) {
