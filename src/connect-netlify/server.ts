@@ -51,7 +51,7 @@ export default async (req: Request) => {
                 void meta.delete(`${metaDb}/${p}`);
               }
             }
-            return { cid: blob.key.split("/")[1], data, parents: [] };
+            return { cid: blob.key.split("/")[1], data, parents };
           })
         )
       ).filter((entry) => entry.data !== null && !allParents.includes(entry.cid));
