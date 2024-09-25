@@ -126,13 +126,17 @@ export class PartyKitGateway implements bs.Gateway {
       if (store === "meta") {
         const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
         if (bodyRes.isErr()) {
+          console.log("Error in addCryptoKeyToGatewayMetaPayload", bodyRes.Err());
           throw bodyRes.Err();
+        } else {
+          console.log("Success in addCryptoKeyToGatewayMetaPayload");
         }
         body = bodyRes.Ok();
       }
       const key = uri.getParam("key");
       if (!key) throw new Error("key not found");
       const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+      console.log("uploadUrl", uploadUrl.toString());
       const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
       if (response.status === 404) {
         throw new Error(`Failure in uploading ${store}!`);
@@ -179,10 +183,13 @@ export class PartyKitGateway implements bs.Gateway {
       const body = new Uint8Array(await response.arrayBuffer());
       if (store === "meta") {
         // console.log("download body", new TextDecoder().decode(body));
+        // console.log("download body", new TextDecoder().decode(body));
         const resKeyInfo = await bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
         if (resKeyInfo.isErr()) {
           console.log("Error in setCryptoKeyFromGatewayMetaPayload", resKeyInfo.Err(), new TextDecoder().decode(body));
           throw resKeyInfo.Err();
+        } else {
+          console.log("Success in setCryptoKeyFromGatewayMetaPayload", resKeyInfo.Ok());
         }
       }
       return body;

@@ -93,7 +93,7 @@ export class AWSGateway implements bs.Gateway {
     if (bodyRes.isErr()) {
       return Result.Err(bodyRes.Err());
     }
-    const done = await fetch(fetchUrl, { method: "PUT", body: new TextDecoder().decode(body) });
+    const done = await fetch(fetchUrl, { method: "PUT", body: new TextDecoder().decode(bodyRes.Ok()) });
     if (!done.ok) {
       return Result.Err(new Error(`failed to upload meta ${done.statusText}`));
     }
@@ -212,7 +212,11 @@ export class AWSGateway implements bs.Gateway {
       data.length,
       new TextDecoder().decode(data)
     );
-    bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+    // bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+    const res = await bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, data);
+    if (res.isErr()) {
+      return Result.Err(res.Err());
+    }
     return Result.Ok(data);
   }
 

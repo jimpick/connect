@@ -21,8 +21,8 @@ export default defineWorkspace([
   // betterSqlite3,
   // connector,
   // s3,
-  //aws,
+  aws,
   // netlify,
-  partykit,
+  // partykit,
   //cf_kv
 ]);
