@@ -159,7 +159,7 @@ describe("loading the base store", () => {
 
     console.log("db2 CONNECT", db2.name, remoteDbName, parsedUrl.toString());
     // const cx2 = connect(db2, parsedUrl.toString());
-    const cx2 = connect(db2, remoteDbName)//, `partykit://localhost:1999/?name=${remoteDbName}&protocol=ws&cache=bust`);
+    const cx2 = connect(db2, remoteDbName); //, `partykit://localhost:1999/?name=${remoteDbName}&protocol=ws&cache=bust`);
     // const cx2 = connect(db2, remoteDbName);
 
     await cx2.loaded;

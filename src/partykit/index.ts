@@ -55,4 +55,3 @@ export const connect: ConnectFunction = (
     return connection;
   });
 };
-
