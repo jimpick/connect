@@ -31,11 +31,17 @@ if (
 registerPartyKitStoreProtocol();
 
 const connectionCache = new KeyedResolvOnce<bs.Connection>();
-export const connect: ConnectFunction = (db: Database, url = "http://localhost:1999?protocol=ws") => {
-  const { sthis, blockstore, name } = db;
+export const connect: ConnectFunction = (
+  db: Database,
+  remoteDbName = "",
+  url = "http://localhost:1999?protocol=ws"
+) => {
+  const { sthis, blockstore, name: dbName } = db;
   const urlObj = new URL(url);
-  urlObj.searchParams.set("name", name || "default");
-  const fpUrl = urlObj.toString().replace("http", "partykit");
+  const existingName = urlObj.searchParams.get("name");
+  urlObj.searchParams.set("name", remoteDbName || existingName || dbName || "default");
+  const fpUrl = urlObj.toString().replace("http://", "partykit://").replace("https://", "partykit://");
+  console.log("fpUrl", fpUrl);
   return connectionCache.get(fpUrl).once(() => {
     makeKeyBagUrlExtractable(sthis);
     console.log("Connecting to partykit", fpUrl);

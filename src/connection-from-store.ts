@@ -77,7 +77,7 @@ export function makeKeyBagUrlExtractable(sthis: SuperThis) {
   const kbUrl = new URL(base);
   kbUrl.searchParams.set("extractKey", "_deprecated_internal_api");
   sthis.env.set("FP_KEYBAG_URL", kbUrl.toString());
-  console.log("Setting up keybag with URL:", kbUrl.toString());
+  sthis.logger.Debug().Str("keyBagUrl", kbUrl.toString()).Str("base", base).Msg("Make keybag url extractable");
 }
 
-export type ConnectFunction = (db: Database, url?: string) => bs.Connection;
+export type ConnectFunction = (db: Database, name?: string, url?: string) => bs.Connection;
