@@ -1,25 +1,23 @@
 {
   "name": "@fireproof/netlify",
   "version": "0.18.0",
-  "description": "",
-  "main": "./dist/browser/index.cjs",
-  "module": "./dist/browser/index.esm.js",
+  "description": "PartyKit gateway for Netlify",
+  "main": "./index.cjs",
+  "module": "./index.js",
   "exports": {
     ".": {
-      "import": "./dist/browser/index.esm.js",
-      "require": "./dist/browser/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js"
+      "import": "./index.js",
+      "require": "./index.cjs",
+      "types": "./index.d.ts"
     }
   },
-  "browser": "./dist/index.browser.iife.js",
-  "types": "./dist/types/index.d.ts",
-  "files": ["dist/node", "dist/browser", "dist/types", "src/server.ts"],
+  "types": "./index.d.ts",
+  "files": ["index.js", "index.cjs", "index.d.ts", "index.d.cts", "index.js.map", "index.cjs.map"],
   "type": "module",
   "scripts": {},
-  "keywords": [],
+  "keywords": ["fireproof", "partykit", "gateway"],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0 OR MIT",
   "devDependencies": {},
   "dependencies": {
     "@netlify/blobs": "^7.4.0",
