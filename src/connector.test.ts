@@ -1,7 +1,7 @@
 import { describe } from "vitest";
 import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
 
-import { connect } from "./connect-aws";
+import { connect } from "./aws";
 
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";

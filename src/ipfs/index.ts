@@ -1,5 +1,5 @@
 import type { bs } from "@fireproof/core";
-import { ConnectUCAN, ConnectUCANParams } from "../connect-ucan/index.js";
+import { ConnectUCAN, ConnectUCANParams } from "../ucan/index.js";
 
 const ipfsCxs = new Map<string, ConnectUCAN>();
 

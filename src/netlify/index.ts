@@ -1,6 +1,6 @@
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
 import { bs, Database } from "@fireproof/core";
-import { registerNetlifyStoreProtocol } from "./netlify-gateway";
+import { registerNetlifyStoreProtocol } from "./gateway";
 import { KeyedResolvOnce } from "@adviser/cement";
 
 // Usage:
