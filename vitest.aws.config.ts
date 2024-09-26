@@ -10,7 +10,7 @@ export default defineConfig({
       "node_modules/@fireproof/core/tests/fireproof/config.test.ts",
     ],
     include: [
-      "src/connect-aws/*test.?(c|m)[jt]s?(x)",
+      "src/aws/*test.?(c|m)[jt]s?(x)",
       "node_modules/@fireproof/core/tests/**/*test.?(c|m)[jt]s?(x)",
       "src/connector.test.ts",
     ],
