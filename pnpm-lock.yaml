@@ -69,6 +69,9 @@ importers:
       '@smithy/types':
         specifier: ^3.3.0
         version: 3.3.0
+      '@types':
+        specifier: link:@types
+        version: link:@types
       '@types/better-sqlite3':
         specifier: ^7.6.11
         version: 7.6.11
@@ -99,6 +102,9 @@ importers:
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
+      semver:
+        specifier: ^7.6.3
+        version: 7.6.3
       std-env:
         specifier: ^3.7.0
         version: 3.7.0
@@ -807,7 +813,7 @@ packages:
     engines: {node: '>=14'}
 
   '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-BTspJIiZVrKv89UHURidlyBdX2lJkxgAihXaUGdZrMv+gVIA2XInouTyQAaB3yyMVZaeZjmL/fEtfZ3ygUPIDg==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    resolution: {integrity: sha512-y0mJAAH4TzCm6XuXb3PaogNrY64KcjnySRZWblWQHCJ52jui1AEVqf/7sWRy6NhHgvqS6oNfMm6CKHjDR++RQg==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
     version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
@@ -2640,8 +2646,8 @@ packages:
     resolution: {integrity: sha512-th5B4L2U+eGLq1TVh7zNRGBapioSORUeymIydxgFpwww9d2qyKvtuPU2jJuHvYAwwqi2Y596QBL3eEqcPEYL8Q==}
     engines: {node: '>=10'}
 
-  semver@7.6.2:
-    resolution: {integrity: sha512-FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==}
+  semver@7.6.3:
+    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -4565,7 +4571,7 @@ snapshots:
       fast-glob: 3.3.2
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.6.2
+      semver: 7.6.3
       ts-api-utils: 1.3.0(typescript@5.5.4)
     optionalDependencies:
       typescript: 5.5.4
@@ -5019,7 +5025,7 @@ snapshots:
       dot-prop: 7.2.0
       env-paths: 3.0.0
       json-schema-typed: 8.0.1
-      semver: 7.6.2
+      semver: 7.6.3
 
   consola@3.2.3: {}
 
@@ -5811,7 +5817,7 @@ snapshots:
 
   node-abi@3.65.0:
     dependencies:
-      semver: 7.6.2
+      semver: 7.6.3
 
   node-fetch-native@1.6.4: {}
 
@@ -6126,7 +6132,7 @@ snapshots:
       '@types/node-forge': 1.3.11
       node-forge: 1.3.1
 
-  semver@7.6.2: {}
+  semver@7.6.3: {}
 
   shebang-command@2.0.0:
     dependencies:
