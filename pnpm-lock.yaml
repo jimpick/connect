@@ -69,9 +69,6 @@ importers:
       '@smithy/types':
         specifier: ^3.3.0
         version: 3.3.0
-      '@types':
-        specifier: link:@types
-        version: link:@types
       '@types/better-sqlite3':
         specifier: ^7.6.11
         version: 7.6.11
