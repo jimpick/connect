@@ -59,7 +59,7 @@ describe("loading the base store", () => {
     remoteDbName = "test-remote-" + Math.random().toString(36).substring(7);
     db = fireproof(dbName);
     if (context.task.file.projectName === undefined) {
-      throw new Error('projectName is undefined');
+      throw new Error("projectName is undefined");
     }
     connect = await getConnect(context.task.file.projectName);
     cx = connect(db, remoteDbName);
