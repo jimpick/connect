@@ -35,6 +35,7 @@ jobs:
         run: |
           git config --global url."https://".insteadOf git+ssh://
           git config --global -l
+          ls -l ../fireproof/dist/fireproof-core/
           pnpm install -f ../fireproof/dist/fireproof-core/fireproof-core-*.tgz
           pnpm install
 
