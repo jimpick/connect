@@ -1,14 +1,17 @@
-import { describe } from "vitest";
-import { fireproof, SuperThis, Database, bs } from "@fireproof/core";
-
-import { connect } from "./aws";
-
 // import { connectionFactory } from "./connection-from-store";
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
+import { type Database, type SuperThis, bs, fireproof } from "@fireproof/core";
+import { type TaskContext, describe } from "vitest";
+import type { ConnectFunction } from "./connection-from-store";
 
 // import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 // import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
+
+async function getConnect(moduleName: string) {
+  const connect = await import(`./${moduleName}`).then((module) => module.connect);
+  return connect;
+}
 
 async function smokeDB(db: Database) {
   const ran = Math.random().toString();
@@ -45,13 +48,20 @@ describe("loading the base store", () => {
   let dbName: string;
   let emptyDbName: string;
   let remoteDbName: string;
-  beforeEach(async () => {
+  let connect: ConnectFunction;
+
+  beforeEach(async (context: TaskContext) => {
+    // console.log(context)
     // const originalEnv = { FP_STORAGE_URL: process.env.FP_STORAGE_URL, FP_KEYBAG_URL: process.env.FP_KEYBAG_URL };
     process.env.FP_STORAGE_URL = "./dist/fp-dir-file";
     dbName = "test-local-" + Math.random().toString(36).substring(7);
     emptyDbName = "test-empty-" + Math.random().toString(36).substring(7);
     remoteDbName = "test-remote-" + Math.random().toString(36).substring(7);
     db = fireproof(dbName);
+    if (context.task.file.projectName === undefined) {
+      throw new Error("projectName is undefined");
+    }
+    connect = await getConnect(context.task.file.projectName);
     cx = connect(db, remoteDbName);
     await cx.loaded;
     console.log("beforeEach", db.name);
