@@ -72,11 +72,13 @@ jobs:
           git fetch --tags --force
           # we need to have a safe way to store of allowedSigners
           ls -l ../fireproof/
-          cat../fireproof/allowed_signers
+          cat ../fireproof/allowed_signers
           git config --local --add gpg.ssh.allowedSignersFile ../fireproof/allowed_signers
           echo "GITHUB_REF->"$GITHUB_REF
           # test tag signature
+          echo "about to test tag signature"
           git tag -v $(git describe --tags --abbrev=0)
+          echo "after testing tag signature"
           # should only run if a tag is set
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           pnpm run publish
