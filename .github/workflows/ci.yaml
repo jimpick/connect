@@ -52,8 +52,8 @@ jobs:
         run: |
           pnpm run prepare-s3-test
           sleep 3
-      - uses: JarvusInnovations/background-action@v1
       - name: gateway servers
+        uses: JarvusInnovations/background-action@v1
         working-directory: ./connector
         run: pnpm run setup-gateway-servers &
         wait-on: |
