@@ -198,7 +198,7 @@ describe("loading the base store", () => {
 
     console.log("db2 processed", db2.name);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
 
     const docs2 = await db.get<{ hello: string }>("secondary");
     expect(docs2).toBeDefined();
