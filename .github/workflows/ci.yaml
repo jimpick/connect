@@ -52,9 +52,13 @@ jobs:
         run: |
           pnpm run prepare-s3-test
           sleep 3
+      - uses: JarvusInnovations/background-action@v1
       - name: gateway servers
         working-directory: ./connector
-        run: pnpm run setup-gateway-servers && sleep 5
+        run: pnpm run setup-gateway-servers &
+        wait-on: |
+           tcp:localhost:1999 # partykit
+           tcp:localhost:8888 # netlify
       - name: test
         working-directory: ./connector
         run: pnpm run test-gateways
