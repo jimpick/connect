@@ -1,6 +1,6 @@
 # Testing
 
-ll gateways are enabled by default in the Fireproof test suite. Before running the tests, you need to set up the gateway servers for PartyKit and Netlify:
+All gateways are enabled by default in the Fireproof test suite. Before running the tests, you need to set up the gateway servers for PartyKit and Netlify:
 
 ```console
 $ pnpm setup-gateway-servers
