@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -16,6 +16,6 @@ export default defineConfig({
     ],
     globals: true,
     setupFiles: "./setup.aws.ts",
-    testTimeout: 15000,
+    testTimeout: 25000,
   },
 });

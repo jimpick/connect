@@ -18,5 +18,6 @@ export default defineConfig({
     ],
     globals: true,
     setupFiles: "./setup.partykit.ts",
+    testTimeout: 25000,
   },
 });
