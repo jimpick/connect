@@ -1,6 +1,7 @@
 # Testing
 
 All connectors are enabled by default in the Fireproof test suite. Before running the tests, you need to set up the connector servers for PartyKit and Netlify:
+
 ```console
 $ pnpm setup-connector-servers
 ```
