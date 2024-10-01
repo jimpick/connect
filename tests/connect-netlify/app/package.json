@@ -8,7 +8,7 @@
     "copy-server": "cp ../../../src/netlify/server.ts netlify/edge-functions/fireproof.ts",
     "watch-server": "chokidar \"../../../src/netlify/server.ts\" -c \"npm run copy-server\"",
     "predev": "npm run copy-server && npm run watch-server &",
-    "dev": "npx netlify dev"
+    "dev": "npx netlify dev --no-open"
   },
   "author": "",
   "license": "ISC",
