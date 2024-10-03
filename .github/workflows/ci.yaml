@@ -53,10 +53,19 @@ jobs:
         run: |
           pnpm run prepare-s3-test
           sleep 3
-      #     temporarily disabled to test publish
-      #      - name: test
-      #        working-directory: ./connector
-      #        run: pnpm run test
+
+      - uses: JarvusInnovations/background-action@v1
+        name: gateway servers
+        with:
+          working-directory: ./connector
+          run: pnpm run setup-gateway-servers &
+          # partykit:1999 netlify:8888
+          wait-on: |
+            tcp:localhost:1999 
+            tcp:localhost:8888
+      - name: test
+        working-directory: ./connector
+        run: pnpm run test-gateways
 
       - name: stop S3 Mock
         working-directory: ./connector

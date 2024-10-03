@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -10,7 +10,7 @@ export default defineConfig({
       "node_modules/@fireproof/core/tests/fireproof/config.test.ts",
     ],
     include: [
-      "src/connect-netlify/*test.?(c|m)[jt]s?(x)",
+      "src/netlify/*test.?(c|m)[jt]s?(x)",
       "node_modules/@fireproof/core/tests/**/*test.?(c|m)[jt]s?(x)",
       "src/connector.test.ts",
     ],
