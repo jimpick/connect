@@ -1,164 +1,40 @@
 import "./styles.css";
 
-import { fireproof } from "@fireproof/core";
-import { connect } from "@fireproof/partykit";
+import * as ps from "partysocket";
 
-// Import necessary types
-import type { Database, DocBase } from "@fireproof/core";
-import type { PartyKitConnection } from "@fireproof/partykit";
-interface TodoDoc extends DocBase {
-  actor: string;
-  created: number;
-  task: string;
-  completed: boolean;
-  clicks?: number;
-}
+declare const PARTYKIT_HOST: string;
 
-declare global {
-  interface Window {
-    db: Database;
-    cx: PartyKitConnection;
-    changeList: (event: Event) => void;
-    createTodoClick: (event: Event) => void;
-    redraw: () => void;
-  }
-}
+let pingInterval: ReturnType<typeof setInterval>;
 
 // Let's append all the messages we get into this DOM element
-// const output = document.getElementById("app") as HTMLDivElement;
+const output = document.getElementById("app") as HTMLDivElement;
 
 // Helper function to add a new line to the DOM
-// function add(text: string) {
-//   const node = document.createElement("div");
-//   node.textContent = text;
-//   output.appendChild(node);
-// }
-
-// Main application function
-function todoApp() {
-  const actorTag = Math.random().toString(36).substring(2, 7);
-  let dbName: string;
-  let db: Database;
-  let cx: PartyKitConnection;
-  let dbUnsubscribe: () => void;
-
-  // Initialize the database
-  async function setupDb(name: string) {
-    const input = document.querySelector<HTMLInputElement>("#todo");
-    if (!input) {
-      return;
-    }
-    input.disabled = true;
-
-    dbName = name;
-    db = fireproof(name, { autoCompact: 100, threshold: 50000 });
-    cx = connect.partykitRest(db);
-
-    window.db = db;
-    window.cx = cx;
-
-    await db.changes([], { limit: 1 });
-    input.disabled = false;
-
-    if (dbUnsubscribe) {
-      dbUnsubscribe();
-    }
-
-    dbUnsubscribe = db.subscribe(redraw);
-  }
-
-  let doing: Promise<void> | null = null;
-  const redraw = async () => {
-    if (doing) {
-      return doing;
-    }
-    doing = doRedraw().finally(() => {
-      doing = null;
-    });
-    return doing;
-  };
-  window.redraw = redraw;
-
-  const doRedraw = async () => {
-    const result = await db.allDocs().catch((e) => {
-      console.error("allDocs error", e);
-      return { rows: [] };
-    });
-    const ul = document.querySelector<HTMLUListElement>("ul");
-    if (!ul) {
-      return;
-    }
-    ul.innerHTML = "";
-    for (const row of result.rows) {
-      const doc = row.value as TodoDoc;
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = doc.completed;
-
-      checkbox.onchange = async (e) => {
-        const target = e.target as HTMLInputElement;
-        target.indeterminate = true;
-        const clicks = doc.clicks || 0;
-        doc.clicks = clicks + 1;
-        doc.completed = !doc.completed;
-        await db.put(doc);
-      };
-
-      const textSpan = document.createElement("span");
-      textSpan.innerText = `${doc.actor}:${doc.clicks || 0} ${doc.task}`;
-
-      const li = document.createElement("li");
-      li.appendChild(checkbox);
-      li.appendChild(textSpan);
-      ul.appendChild(li);
-    }
-  };
-
-  async function initialize() {
-    const params = new URLSearchParams(location.search);
-    const listQ = params.get("list");
-    await setupDb(listQ || "my-list");
-
-    const input = document.querySelector<HTMLInputElement>("#list");
-    if (!input) {
-      return;
-    }
-    input.value = dbName;
-    redraw();
-  }
-
-  async function changeList(e: Event) {
-    e.preventDefault();
-    const input = document.querySelector<HTMLInputElement>("#list");
-    if (!input) {
-      return;
-    }
-    dbName = input.value;
-    history.pushState(null, "", location.pathname + "?list=" + encodeURIComponent(dbName));
-    await setupDb(dbName);
-    redraw();
-  }
-  window.changeList = changeList;
-
-  async function createTodoClick(e: Event) {
-    e.preventDefault();
-    const input = document.querySelector<HTMLInputElement>("#todo");
-    if (!input) {
-      return;
-    }
-    input.disabled = true;
-    await db.put({
-      actor: actorTag,
-      created: Date.now(),
-      task: input.value,
-      completed: false,
-    });
-    input.disabled = false;
-    input.value = "";
-  }
-  window.createTodoClick = createTodoClick;
-
-  window.onload = initialize;
+function add(text: string) {
+  output.appendChild(document.createTextNode(text));
+  output.appendChild(document.createElement("br"));
 }
 
-todoApp();
+// A PartySocket is like a WebSocket, except it's a bit more magical.
+// It handles reconnection logic, buffering messages while it's offline, and more.
+const conn = new ps.PartySocket({
+  host: PARTYKIT_HOST,
+  room: "my-new-room",
+});
+
+// You can even start sending messages before the connection is open!
+conn.addEventListener("message", (event) => {
+  add(`Received -> ${event.data}`);
+});
+
+// Let's listen for when the connection opens
+// And send a ping every 2 seconds right after
+conn.addEventListener("open", () => {
+  add("Connected!");
+  add("Sending a ping every 2 seconds...");
+  // TODO: make this more interesting / nice
+  clearInterval(pingInterval);
+  pingInterval = setInterval(() => {
+    conn.send("ping");
+  }, 1000);
+});
