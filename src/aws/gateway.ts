@@ -194,7 +194,12 @@ export class AWSGateway implements bs.Gateway {
     const response = await fetch(fetchUrl);
 
     if (!response.ok) {
-      this.logger.Error().Int("status", response.status).Str("statusText", response.statusText).Str("response", await response.text()).Msg("Download Meta response error");
+      this.logger
+        .Error()
+        .Int("status", response.status)
+        .Str("statusText", response.statusText)
+        .Str("response", await response.text())
+        .Msg("Download Meta response error");
       return Result.Err(new NotFoundError(`meta not found: ${url}`));
     }
 

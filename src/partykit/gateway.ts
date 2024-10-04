@@ -182,7 +182,11 @@ export class PartyKitGateway implements bs.Gateway {
         // console.log("download body", new TextDecoder().decode(body));
         const resKeyInfo = await bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
         if (resKeyInfo.isErr()) {
-          this.logger.Error().Err(resKeyInfo.Err()).Str("body", new TextDecoder().decode(body)).Msg("Error in setCryptoKeyFromGatewayMetaPayload");
+          this.logger
+            .Error()
+            .Err(resKeyInfo.Err())
+            .Str("body", new TextDecoder().decode(body))
+            .Msg("Error in setCryptoKeyFromGatewayMetaPayload");
           throw resKeyInfo.Err();
         }
       }
