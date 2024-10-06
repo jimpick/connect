@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
-import {polyfillNode} from "esbuild-plugin-polyfill-node";
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 // Correctly resolve __dirname
 const __filename = fileURLToPath(import.meta.url);
