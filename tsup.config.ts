@@ -1,91 +1,48 @@
 import { defineConfig, Options } from "tsup";
+import path from "path";
+import { fileURLToPath } from "url";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
+import {polyfillNode} from "esbuild-plugin-polyfill-node";
 
-const external = [
-  "path",
-  "react",
-  "fs",
-  "fs/promises",
-  "util",
-  "os",
-  "url",
-  "node:fs",
-  "node:path",
-  "node:os",
-  "node:url",
-  "assert",
-  "stream",
-  "better-sqlite3",
-];
+// Correctly resolve __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// const stopFile = {
-//   // "fs/promises": "../../../bundle-not-impl.js",
-//   // "../runtime/store-file.js": "../../bundle-not-impl.js",
-//   // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
-//   // "./mem-filesystem.js": "../../../bundle-not-impl.js",
-//   // "./gateways/file/gateway.js": "../bundle-not-impl.js",
-//   // "./node-sys-container.js": "../bundle-not-impl.js",
-//   // "./key-bag-file.js": "../bundle-not-impl.js",
-// };
-
+// Existing 'ourMultiformat' object or any other resolve mappings you have
 const ourMultiformat = {
-  // "multiformats/block": `${__dirname}/src/runtime/multiformat/block.ts`
+  // ... your existing mappings ...
 };
 
+function packageVersion() {
+  let version = "refs/tags/v0.0.0-smoke";
+  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+    version = process.env.GITHUB_REF;
+  }
+  version = version.split("/").slice(-1)[0].replace(/^v/, "");
+  return JSON.stringify(version);
+}
+
 const LIBRARY_BUNDLE_OPTIONS: Options = {
-  format: ["esm", "cjs"],
   target: ["esnext", "node18"],
   globalName: "Connect",
-  external,
   clean: true,
   sourcemap: true,
   metafile: true,
   minify: false,
 };
 
-function packageVersion() {
-  // return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
-  let version = "refs/tags/v0.0.0-smoke";
-  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
-    version = process.env.GITHUB_REF;
-  }
-  version = version.split("/").slice(-1)[0].replace(/^v/, "");
-  // console.log(`Patch version ${version} in package.json`);
-  // packageJson.version = version;
-  return JSON.stringify(version);
-}
-
-const LIBRARY_BUNDLES: readonly Options[] = [
-  // {
-  //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   format: ["iife"],
-  //   name: "@fireproof/netlify",
-  //   entry: ["src/connect-netlify/index.ts"],
-  //   platform: "browser",
-  //   outDir: "dist/netlify",
-  //   esbuildPlugins: [
-  //     replace({
-  //       __packageVersion__: packageVersion(),
-  //       include: /version/,
-  //     }),
-  //     resolve({
-  //       ...stopFile,
-  //       ...ourMultiformat,
-  //     }),
-  //   ],
-  //   dts: {
-  //     footer: "declare module '@fireproof/netlify'",
-  //   },
-  // },
+const LIBRARY_BUNDLES: Options[] = [
+  // IIFE build with moduleReplacementPlugin
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/netlify",
-    entry: ["src/netlify/index.ts"],
+    format: ["iife"],
+    name: "@fireproof/partykit",
+    entry: ["src/partykit/index.ts"],
     platform: "browser",
-    outDir: "dist/netlify",
+    outDir: "dist/partykit",
     esbuildPlugins: [
+      polyfillNode(),
       replace({
         __packageVersion__: packageVersion(),
         include: /version/,
@@ -94,31 +51,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         ...ourMultiformat,
       }),
     ],
-    dts: {
-      footer: "declare module '@fireproof/netlify'",
-    },
+    dts: false, // No type declarations needed for IIFE build
   },
-  // {
-  //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   format: ["iife"],
-  //   name: "@fireproof/partykit",
-  //   entry: ["src/partykit/index.ts"],
-  //   platform: "browser",
-  //   outDir: "dist/partykit",
-  //   esbuildPlugins: [
-  //     replace({
-  //       __packageVersion__: packageVersion(),
-  //       include: /version/,
-  //     }),
-  //     resolve({
-  //       ...stopFile,
-  //       ...ourMultiformat,
-  //     }),
-  //   ],
-  //   dts: {
-  //     footer: "declare module '@fireproof/partykit'",
-  //   },
-  // },
+  // ESM and CJS builds without moduleReplacementPlugin
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
@@ -127,6 +62,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     platform: "browser",
     outDir: "dist/partykit",
     esbuildPlugins: [
+      polyfillNode(),
       replace({
         __packageVersion__: packageVersion(),
         include: /version/,
@@ -168,6 +104,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     platform: "browser",
     outDir: "dist/s3",
     esbuildPlugins: [
+      polyfillNode(),
       replace({
         __packageVersion__: packageVersion(),
         include: /version/,
