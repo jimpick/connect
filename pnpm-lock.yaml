@@ -71,6 +71,9 @@ importers:
       util:
         specifier: ^0.12.5
         version: 0.12.5
+      uuidv7:
+        specifier: ^1.0.2
+        version: 1.0.2
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -828,7 +831,7 @@ packages:
     engines: {node: '>=14'}
 
   '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-wy5wuLyZsZ+1nNYEQOq/pmkvMiuPkPYMMfuKt27P19G7TTLy6xgCsOLGhYgPplx4JB5zGXKMbLoIEhgz/kPAVg==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    resolution: {integrity: sha512-7SOgJF6+jXcRKyIKDscn1fW5pzyZzRYKUJyF2MhL9EkQ6Ixutor85QZWxwRHBILsYIQYlqHxbyYGxfJ/+JWIjQ==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
     version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
@@ -3118,6 +3121,10 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
+  uuidv7@1.0.2:
+    resolution: {integrity: sha512-8JQkH4ooXnm1JCIhqTMbtmdnYEn6oKukBxHn1Ic9878jMkL7daTI7anTExfY18VRCX7tcdn5quzvCb6EWrR8PA==}
+    hasBin: true
+
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
 
@@ -4095,6 +4102,7 @@ snapshots:
       p-limit: 6.1.0
       prolly-trees: 1.0.4
       react: 18.3.1
+      uuidv7: 1.0.2
     transitivePeerDependencies:
       - typescript
 
@@ -6756,6 +6764,8 @@ snapshots:
       which-typed-array: 1.1.15
 
   uuid@9.0.1: {}
+
+  uuidv7@1.0.2: {}
 
   varint@6.0.0: {}
 

@@ -145,7 +145,11 @@ export class PartyKitGateway implements bs.Gateway {
 
   private notifySubscribers(data: Uint8Array): void {
     for (const callback of this.subscriberCallbacks) {
-      callback(data);
+      try {
+        callback(data);
+      } catch (error) {
+        this.logger.Error().Err(error).Msg("Error in subscriber callback execution");
+      }
     }
   }
   async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
