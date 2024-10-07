@@ -9,6 +9,7 @@ interface CRDTEntry {
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT,  DELETE",
+  "Access-Control-Max-Age": "86400", // Cache pre-flight response for 24 hours
 };
 
 const json = <T>(data: T, status = 200) => Response.json(data, { status, headers: CORS });
@@ -94,7 +95,7 @@ export default class Server implements Party.Server {
     // console.log("got", message);
     const entries = JSON.parse(message) as CRDTEntry[];
     const { cid, parents } = entries[0];
-
+    console.log("got", cid, parents);
     this.clockHead.set(cid, entries[0]);
     for (const p of parents) {
       this.clockHead.delete(p);
