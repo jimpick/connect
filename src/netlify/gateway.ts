@@ -185,8 +185,7 @@ export class NetlifyGateway implements bs.Gateway {
     return Result.Ok(undefined);
   }
 
-  // this should be a shared fallback
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.UnsubscribeResult> {
     url = url.build().setParam("key", "main").URI();
 
     let lastData: Uint8Array | undefined = undefined;
@@ -240,7 +239,7 @@ export function registerNetlifyStoreProtocol(protocol = "netlify:", overrideBase
     return bs.registerStoreProtocol({
       protocol,
       overrideBaseURL,
-      gateway: async (sthis) => {
+      gateway: async (sthis): Promise<bs.Gateway> => {
         return new NetlifyGateway(sthis);
       },
       test: async (sthis: SuperThis) => {
