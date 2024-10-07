@@ -152,20 +152,19 @@ export class PartyKitGateway implements bs.Gateway {
       }
     }
   }
-  async subscribe(uri: URI, callback: (data: Uint8Array) => void): Promise<bs.VoidResult> {
+  async subscribe(uri: URI, callback: (meta: Uint8Array) => void): Promise<bs.UnsubscribeResult> {
     await this.ready();
     await this.connectPartyKit();
-    return exception2Result(async () => {
-      const store = uri.getParam("store");
-      switch (store) {
-        case "meta":
-          this.subscriberCallbacks.add(callback);
-          return Result.Ok(() => {
-            this.subscriberCallbacks.delete(callback);
-          });
-        default:
-          throw new Error("store must be meta");
-      }
+
+    const store = uri.getParam("store");
+    if (store !== "meta") {
+      return Result.Err(new Error("store must be meta"));
+    }
+
+    this.subscriberCallbacks.add(callback);
+
+    return Result.Ok(() => {
+      this.subscriberCallbacks.delete(callback);
     });
   }
 

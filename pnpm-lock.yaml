@@ -831,7 +831,7 @@ packages:
     engines: {node: '>=14'}
 
   '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-EqO/HP74nXsVooPiMb9Ij9fl7oP/9kpaTG5i5UJar9MGQBXVGxJ2sjlTp4ul5pjLpAQHok0vY7QKfolAbQoKRw==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    resolution: {integrity: sha512-sNrRZ8ulr4D5B3XH4mdUyJ1iJN10/WvJqDPTYY8Xr/kUtoNZRpHzlZycDIHMK4deruJvBZX9kF9fmUFLqBetPA==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
     version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
@@ -4102,7 +4102,6 @@ snapshots:
       p-limit: 6.1.0
       prolly-trees: 1.0.4
       react: 18.3.1
-      uuidv7: 1.0.2
     transitivePeerDependencies:
       - typescript
 

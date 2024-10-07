@@ -6,7 +6,7 @@ import { URI } from "@adviser/cement";
 interface ExtendedGateway extends bs.Gateway {
   logger: { _attributes: { module: string; url?: string } };
   headerSize: number;
-  subscribe?: (url: URI, callback: (meta: Uint8Array) => void) => Promise<bs.VoidResult>;
+  subscribe?: (url: URI, callback: (meta: Uint8Array) => void) => Promise<bs.UnsubscribeResult>; // Changed VoidResult to UnsubscribeResult
 }
 
 interface ExtendedStore {
