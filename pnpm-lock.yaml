@@ -831,7 +831,7 @@ packages:
     engines: {node: '>=14'}
 
   '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-sNrRZ8ulr4D5B3XH4mdUyJ1iJN10/WvJqDPTYY8Xr/kUtoNZRpHzlZycDIHMK4deruJvBZX9kF9fmUFLqBetPA==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
+    resolution: {integrity: sha512-J4LKmqJL85f+TCGiGGsXBYipZHsIcM/HpVao/3NVRhl+RqFcNWv/JULxYD6D2oY523iyiwO1uPAyQC3zlLKmcA==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
     version: 0.0.0-smoke
     peerDependencies:
       react: '>=18.0.0'
@@ -2560,6 +2560,10 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  p-map@7.0.2:
+    resolution: {integrity: sha512-z4cYYMMdKHzw4O5UkWJImbZynVIo0lSGTXc7bzB1e/rrDqkgGUNysK/o4bTr+0+xKvvLoTyGqYC4Fgljy9qe1Q==}
+    engines: {node: '>=18'}
+
   p-queue@8.0.1:
     resolution: {integrity: sha512-NXzu9aQJTAzbBqOt2hwsR63ea7yvxJc0PwN/zobNAudYfb1B7R08SzB4TsLeSbUCuG467NhnoT0oO6w1qRO+BA==}
     engines: {node: '>=18'}
@@ -4100,6 +4104,8 @@ snapshots:
       memfs: 4.12.0
       multiformats: 13.3.0
       p-limit: 6.1.0
+      p-map: 7.0.2
+      p-retry: 6.2.0
       prolly-trees: 1.0.4
       react: 18.3.1
     transitivePeerDependencies:
@@ -4128,7 +4134,7 @@ snapshots:
 
   '@ipld/dag-pb@4.1.2':
     dependencies:
-      multiformats: 13.2.2
+      multiformats: 13.3.0
 
   '@ipld/dag-ucan@3.4.0':
     dependencies:
@@ -4207,7 +4213,7 @@ snapshots:
 
   '@multiformats/murmur3@2.1.8':
     dependencies:
-      multiformats: 13.2.2
+      multiformats: 13.3.0
       murmurhash3js-revisited: 3.0.0
 
   '@netlify/blobs@7.4.0': {}
@@ -6196,6 +6202,8 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  p-map@7.0.2: {}
 
   p-queue@8.0.1:
     dependencies:

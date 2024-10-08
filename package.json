@@ -7,6 +7,7 @@
   "scripts": {
     "prepublish": "pnpm run build",
     "publish": "pnpm run '/publish:/'",
+    "publish:aws": "tsx ./publish-package.ts ./dist/aws/package.json",
     "publish:netlify": "tsx ./publish-package.ts ./dist/netlify/package.json",
     "publish:s3": "tsx ./publish-package.ts ./dist/s3/package.json",
     "publish:partykit": "tsx ./publish-package.ts ./dist/partykit/package.json",
@@ -15,6 +16,7 @@
     "build:tsc": "tsc",
     "build:tsup": "tsup",
     "pub:noop": "echo",
+    "pub:aws": "tsx ./version-copy-package.ts ./dist/aws/package-aws.json",
     "pub:netlify": "tsx ./version-copy-package.ts ./dist/netlify/package-netlify.json",
     "pub:s3": "tsx ./version-copy-package.ts ./dist/s3/package-s3.json",
     "pub:partykit": "tsx ./version-copy-package.ts ./dist/partykit/package-partykit.json",

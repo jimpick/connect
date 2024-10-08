@@ -117,27 +117,90 @@ const LIBRARY_BUNDLES: Options[] = [
       footer: "declare module '@fireproof/s3'",
     },
   },
-  // {
-  //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   format: ["iife"],
-  //   name: "@fireproof/partykit",
-  //   entry: ["src/partykit/index.ts"],
-  //   platform: "browser",
-  //   outDir: "dist/partykit",
-  //   esbuildPlugins: [
-  //     replace({
-  //       __packageVersion__: packageVersion(),
-  //       include: /version/,
-  //     }),
-  //     resolve({
-  //       ...stopFile,
-  //       ...ourMultiformat,
-  //     }),
-  //   ],
-  //   dts: {
-  //     footer: "declare module '@fireproof/partykit'",
-  //   },
-  // },
+  // IIFE build with moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/netlify",
+    entry: ["src/netlify/index.ts"],
+    platform: "browser",
+    outDir: "dist/netlify",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: false, // No type declarations needed for IIFE build
+  },
+  // ESM and CJS builds without moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/netlify",
+    entry: ["src/netlify/index.ts"],
+    platform: "browser",
+    outDir: "dist/netlify",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/netlify'",
+    },
+  },
+  // IIFE build with moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/aws",
+    entry: ["src/aws/index.ts"],
+    platform: "browser",
+    outDir: "dist/aws",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: false, // No type declarations needed for IIFE build
+  },
+  // ESM and CJS builds without moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/aws",
+    entry: ["src/aws/index.ts"],
+    platform: "browser",
+    outDir: "dist/aws",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/aws'",
+    },
+  },
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);
