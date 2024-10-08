@@ -159,6 +159,48 @@ const LIBRARY_BUNDLES: Options[] = [
       footer: "declare module '@fireproof/netlify'",
     },
   },
+  // IIFE build with moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/aws",
+    entry: ["src/aws/index.ts"],
+    platform: "browser",
+    outDir: "dist/aws",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: false, // No type declarations needed for IIFE build
+  },
+  // ESM and CJS builds without moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/aws",
+    entry: ["src/aws/index.ts"],
+    platform: "browser",
+    outDir: "dist/aws",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/aws'",
+    },
+  },
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);
