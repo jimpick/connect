@@ -39,9 +39,13 @@ export default async (req: Request) => {
       const entries = (
         await Promise.all(
           blobs.map(async (blob) => {
-            const { data, parents } = await meta.get(blob.key, {
+            const blobContents = await meta.get(blob.key, {
               type: "json",
             });
+            if (!blobContents) {
+              return { cid: blob.key.split("/")[1], data: null };
+            }
+            const { data, parents } = blobContents;
             if (parents) {
               for (const p of parents) {
                 allParents.push(p.toString());
