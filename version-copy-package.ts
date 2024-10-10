@@ -5,7 +5,7 @@ import path from "path";
 import { $ } from "zx";
 
 async function copyFilesToDist(destDir: string) {
-  for (const file of ["./.gitignore", "./README.md", "./LICENSE.md"]) {
+  for (const file of ["./.gitignore", "./LICENSE.md"]) {
     await fs.copyFile(file, path.join(destDir, file));
   }
 }
