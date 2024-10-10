@@ -46,9 +46,9 @@ You're all done on the server, and ready to develop locally and then deploy with
 
 ```js
 // you already have this in your app
-import { useFireproof } from 'use-fireproof'
+import { useFireproof } from "use-fireproof";
 // add this line
-import { connect } from '@fireproof/partykit'
+import { connect } from "@fireproof/partykit";
 ```
 
 Now later in your app connect to the party (be sure to do this a component that runs on every render, like your root component or layout):
@@ -70,24 +70,25 @@ In this example we use both the S3 and PartyKit connectors. You can use any comb
 
 ```ts
 function partykitS3({ name, blockstore }: Connectable, partyHost?: string, refresh?: boolean) {
-  if (!name) throw new Error('database name is required')
+  if (!name) throw new Error("database name is required");
   if (!refresh && partyCxs.has(name)) {
-    return partyCxs.get(name)!
+    return partyCxs.get(name)!;
   }
-  const s3conf = { // example values, replace with your own by deploying https://github.com/fireproof-storage/valid-cid-s3-bucket
-    upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-    download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-  }
-  const s3conn = new ConnectS3(s3conf.upload, s3conf.download, '')
-  s3conn.connectStorage(blockstore)
+  const s3conf = {
+    // example values, replace with your own by deploying https://github.com/fireproof-storage/valid-cid-s3-bucket
+    upload: "https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads",
+    download: "https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com",
+  };
+  const s3conn = new ConnectS3(s3conf.upload, s3conf.download, "");
+  s3conn.connectStorage(blockstore);
 
   if (!partyHost) {
-    console.warn('partyHost not provided, using localhost:1999')
-    partyHost = 'http://localhost:1999'
+    console.warn("partyHost not provided, using localhost:1999");
+    partyHost = "http://localhost:1999";
   }
-  const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
-  connection.connectMeta(blockstore)
-  partyCxs.set(name, connection)
-  return connection
+  const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams);
+  connection.connectMeta(blockstore);
+  partyCxs.set(name, connection);
+  return connection;
 }
 ```
