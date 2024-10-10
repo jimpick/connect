@@ -43,7 +43,7 @@ export default async (req: Request) => {
               type: "json",
             });
             if (!blobContents) {
-              return { data: null };
+              return { cid: blob.key.split("/")[1], data: null };
             }
             const { data, parents } = blobContents;
             if (parents) {
