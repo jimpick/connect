@@ -5,6 +5,8 @@ import { type Database, type SuperThis, bs, fireproof } from "@fireproof/core";
 import { mockSuperThis } from "../node_modules/@fireproof/core/tests/helpers";
 import { type TaskContext, describe } from "vitest";
 import type { ConnectFunction } from "./connection-from-store";
+import { smokeDB } from "../tests/helper";
+import exp from "constants";
 
 // import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 // import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
@@ -12,22 +14,6 @@ import type { ConnectFunction } from "./connection-from-store";
 async function getConnect(moduleName: string) {
   const connect = await import(`./${moduleName}`).then((module) => module.connect);
   return connect;
-}
-
-async function smokeDB(db: Database) {
-  const ran = Math.random().toString();
-  for (let i = 0; i < 10; i++) {
-    await db.put({ _id: `key${i}:${ran}`, hello: `world${i}` });
-  }
-  for (let i = 0; i < 10; i++) {
-    expect(await db.get<{ hello: string }>(`key${i}:${ran}`)).toEqual({
-      _id: `key${i}:${ran}`,
-      hello: `world${i}`,
-    });
-  }
-  const docs = await db.allDocs();
-  expect(docs.rows.length).toBeGreaterThan(9);
-  return docs.rows.map((row) => row.value);
 }
 
 // MUST go if superthis is there
@@ -39,7 +25,7 @@ interface ExtendedGateway extends bs.Gateway {
 }
 
 // MUST go if superthis is there
-interface ExtendedStore {
+interface ExtendedStore extends bs.BaseStore {
   gateway: ExtendedGateway;
   _url: URI;
   name: string;
@@ -124,11 +110,14 @@ describe("loading the base store", () => {
     // await (await db.blockstore.loader?.WALStore())?.process();
     const metaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
     const metaGateway = metaStore.gateway;
-    const metaUrl = await metaGateway?.buildUrl(metaStore._url, "main");
-    // await metaGateway?.start(metaStore?._url);
+    await metaGateway.start(metaStore.url());
+
+    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
     const metaGetResult = await metaGateway.get(metaUrl?.Ok());
-    expect(metaGetResult).toBeDefined();
-    expect(metaGetResult.Ok()).toBeDefined();
+    if (metaGetResult.isErr()) {
+      expect(metaGetResult.Err().message).toBe("xxx");
+    }
+    expect(metaGetResult.isOk()).toBeTruthy();
     const metaBody = metaGetResult.Ok();
     const decodedMetaBody = db.sthis.txt.decode(metaBody);
     expect(decodedMetaBody).toBeDefined();

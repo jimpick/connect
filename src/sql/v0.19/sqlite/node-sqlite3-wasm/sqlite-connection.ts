@@ -39,14 +39,16 @@ export class V0_19NSWConnection extends Sqlite3Connection {
   }
 
   constructor(_sthis: SuperThis, url: URI, opts: Partial<SQLOpts>) {
-    const sthis = ensureSuperLog(_sthis, "V0_19NSWConnection", { url });
+    const sthis = ensureSuperLog(_sthis, "V0_19NSWConnection");
     super(sthis, url, ensureSQLOpts(sthis, url, opts), new NSWTaste());
   }
   async connect(): Promise<void> {
     let fName = this.url.pathname;
+    // this.logger.Debug().Str("filename", fName).Msg("to-connect-x");
     if (!fName) {
-      throw this.logger.Error().Str("url", this.url.toString()).Msg("filename is empty").AsError();
+      throw this.logger.Error().Url(this.url).Msg("filename is empty").AsError();
     }
+    // this.logger.Debug().Str("filename", fName).Msg("to-connect");
     // const version = this.url.searchParams.get("version");
     // if (!version) {
     //   throw this.logger.Error().Str("url", this.url.toString()).Msg("version not found").AsError();

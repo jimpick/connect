@@ -1,21 +1,6 @@
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof } from "@fireproof/core";
 import { registerS3StoreProtocol } from "./s3-gateway";
-import { describe, it, expect } from "vitest";
-
-async function smokeDB(db: Database) {
-  const ran = Math.random().toString();
-  for (let i = 0; i < 10; i++) {
-    await db.put({ _id: `key${i}:${ran}`, hello: `world${i}` });
-  }
-  for (let i = 0; i < 10; i++) {
-    expect(await db.get<{ hello: string }>(`key${i}:${ran}`)).toEqual({
-      _id: `key${i}:${ran}`,
-      hello: `world${i}`,
-    });
-  }
-  const docs = await db.allDocs();
-  expect(docs.rows.length).toBeGreaterThan(9);
-}
+import { smokeDB } from "../../tests/helper";
 
 describe("store-register", () => {
   it("test unregister", async () => {

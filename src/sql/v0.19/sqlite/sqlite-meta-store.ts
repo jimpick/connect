@@ -66,6 +66,7 @@ export class V0_19_SqliteMetaStore implements MetaSQLStore {
   async startx(url: URI): Promise<URI> {
     this.logger.Debug().Url(url).Msg("starting");
     await this.dbConn.connect();
+    this.logger.Debug().Url(url).Msg("connected");
     const ret = await ensureSqliteVersion(this.sthis, url, this.dbConn);
     this.logger.Debug().Url(ret).Msg("started");
     return ret;

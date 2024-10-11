@@ -1,5 +1,16 @@
-import { BuildURI, KeyedResolvOnce, Result, URI } from "@adviser/cement";
+import { BuildURI, CoerceURI, exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+
+async function resultFetch(logger: Logger, curl: CoerceURI, init?: RequestInit): Promise<Result<Response>> {
+  const url = URI.from(curl);
+  try {
+    const ret = await fetch(url.asURL(), init);
+    logger.Debug().Url(url).Any("init", init).Int("status", ret.status).Msg("Fetch Done");
+    return Result.Ok(ret);
+  } catch (err) {
+    return logger.Error().Url(url).Any("init", init).Err(err).Msg("Fetch Error").ResultError();
+  }
+}
 
 export class AWSGateway implements bs.Gateway {
   readonly sthis: SuperThis;
@@ -23,9 +34,9 @@ export class AWSGateway implements bs.Gateway {
     await this.sthis.start();
     this.logger.Debug().Str("url", baseUrl.toString()).Msg("start");
 
-    const upload_webSocket_data_Url = baseUrl.getParamsResult("uploadUrl", "webSocketUrl", "dataUrl");
-    if (upload_webSocket_data_Url.isErr()) {
-      return Result.Err(upload_webSocket_data_Url.Err());
+    const rParams = baseUrl.getParamsResult("uploadUrl", "webSocketUrl", "dataUrl");
+    if (rParams.isErr()) {
+      return Result.Err(rParams.Err());
     }
     const ret = baseUrl
       .build()
@@ -73,11 +84,16 @@ export class AWSGateway implements bs.Gateway {
     if (bodyRes.isErr()) {
       return Result.Err(bodyRes.Err());
     }
-    const done = await fetch(fetchUrl.asURL(), { method: "PUT", body: this.sthis.txt.decode(bodyRes.Ok()) });
+    const rDone = await resultFetch(this.logger, fetchUrl, {
+      method: "PUT",
+      body: this.sthis.txt.decode(bodyRes.Ok()),
+    });
+    if (rDone.isErr()) {
+      return Result.Err(rDone.Err());
+    }
+    const done = rDone.Ok();
     if (!done.ok) {
-      return Result.Err(
-        this.logger.Error().Url(fetchUrl).Int("status", done.status).Msg("failed to upload meta").AsError()
-      );
+      return this.logger.Error().Url(fetchUrl).Int("status", done.status).Msg("failed to upload meta").ResultError();
     }
     return Result.Ok(undefined);
   }
@@ -91,23 +107,27 @@ export class AWSGateway implements bs.Gateway {
   ): Promise<bs.VoidResult> {
     const fetchUrl = BuildURI.from(uploadUrl).setParam("type", store).setParam("car", key).setParam("name", name).URI();
 
-    const done = await fetch(fetchUrl.asURL(), { method: "GET" });
+    const rDone = await resultFetch(this.logger, fetchUrl, { method: "GET" });
+    if (rDone.isErr()) {
+      return Result.Err(rDone.Err());
+    }
+    const done = rDone.Ok();
     if (!done.ok) {
-      return Result.Err(
-        this.logger.Error().Url(fetchUrl).Int("status", done.status).Msg("failed to upload meta").AsError()
-      );
+      return this.logger.Error().Url(fetchUrl).Int("status", done.status).Msg("failed to upload meta").ResultError();
     }
 
     const doneJson = await done.json();
     if (!doneJson.uploadURL) {
-      return Result.Err(this.logger.Error().Url(fetchUrl).Msg("Upload URL not found in the response").AsError());
+      return this.logger.Error().Url(fetchUrl).Msg("Upload URL not found in the response").ResultError();
     }
 
-    const uploadDone = await fetch(doneJson.uploadURL, { method: "PUT", body });
+    const ruploadDone = await resultFetch(this.logger, doneJson.uploadURL, { method: "PUT", body });
+    if (ruploadDone.isErr()) {
+      return Result.Err(ruploadDone.Err());
+    }
+    const uploadDone = ruploadDone.Ok();
     if (!uploadDone.ok) {
-      return Result.Err(
-        this.logger.Error().Int("status", uploadDone.status).Msg("Upload Data response error").AsError()
-      );
+      return this.logger.Error().Int("status", uploadDone.status).Msg("Upload Data response error").ResultError();
     }
 
     return Result.Ok(undefined);
@@ -134,12 +154,19 @@ export class AWSGateway implements bs.Gateway {
       return Result.Err(rParams.Err());
     }
     const { dataUrl, name, key } = rParams.Ok();
-    const fetchUrl = BuildURI.from(dataUrl).appendRelative(`/data/${name}/${key}.car`);
-
-    const response = await fetch(fetchUrl.URI().asURL());
-
+    const fetchUrl = BuildURI.from(dataUrl).appendRelative(`/data/${name}/${key}.car`).URI();
+    const rresponse = await resultFetch(this.logger, fetchUrl);
+    if (rresponse.isErr()) {
+      return Result.Err(rresponse.Err());
+    }
+    const response = rresponse.Ok();
     if (!response.ok) {
-      this.logger.Error().Url(fetchUrl).Int("status", response.status).Msg("Download Data response error");
+      this.logger
+        .Error()
+        .Url(fetchUrl, "fetchUrl")
+        .Url(dataUrl, "dataUrl")
+        .Int("status", response.status)
+        .Msg("Download Data response error");
       return Result.Err(new NotFoundError(`data not found: ${url}`));
     }
 
@@ -148,7 +175,7 @@ export class AWSGateway implements bs.Gateway {
   }
 
   private async getMeta(url: URI): Promise<bs.GetResult> {
-    const rParams = url.getParamsResult("uploadUrl", "key", "name");
+    const rParams = url.getParamsResult("dataUrl", "name", "key");
     if (rParams.isErr()) {
       return Result.Err(rParams.Err());
     }
@@ -160,7 +187,11 @@ export class AWSGateway implements bs.Gateway {
     }
     name += ".fp";
     const fetchUrl = BuildURI.from(dataUrl).setParam("type", "meta").setParam("key", key).setParam("name", name).URI();
-    const response = await fetch(fetchUrl.asURL());
+    const rresponse = await resultFetch(this.logger, fetchUrl);
+    if (rresponse.isErr()) {
+      return Result.Err(rresponse.Err());
+    }
+    const response = rresponse.Ok();
     if (!response.ok) {
       this.logger
         .Error()
@@ -188,10 +219,14 @@ export class AWSGateway implements bs.Gateway {
     }
     const { dataUrl, name } = rParams.Ok();
     const fetchUrl = BuildURI.from(dataUrl).appendRelative(`/wal/${name}.wal`).URI();
-    const response = await fetch(fetchUrl.asURL());
+    const rresponse = await exception2Result(() => fetch(fetchUrl.asURL()));
+    if (rresponse.isErr()) {
+      return Result.Err(rresponse.Err());
+    }
+    const response = rresponse.Ok();
     if (!response.ok) {
       // console.log("Download Wal response error:", response.status);
-      return Result.Err(new NotFoundError(`data not found: ${url}`));
+      return Result.Err(new NotFoundError(`wal not found: ${url}`));
     }
     const data = new Uint8Array(await response.arrayBuffer());
     return Result.Ok(data);
@@ -252,7 +287,6 @@ export class AWSTestStore implements bs.TestGateway {
 const onceRegisterAWSStoreProtocol = new KeyedResolvOnce<() => void>();
 export function registerAWSStoreProtocol(protocol = "aws:", overrideBaseURL?: string) {
   return onceRegisterAWSStoreProtocol.get(protocol).once(() => {
-    URI.protocolHasHostpart(protocol);
     return bs.registerStoreProtocol({
       protocol,
       overrideBaseURL,

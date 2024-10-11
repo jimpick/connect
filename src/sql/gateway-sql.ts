@@ -300,15 +300,18 @@ class SQLStoreGateway implements bs.Gateway {
   }
 }
 
+const _register = new ResolveOnce<boolean>();
+
 export function registerSqliteStoreProtocol() {
-  bs.registerStoreProtocol({
-    protocol: "sqlite:",
-    gateway: async (logger) => {
-      return new SQLStoreGateway(logger);
-    },
-    test: async (logger) => {
-      // const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
-      return new SQLTestStore(logger);
-    },
+  return _register.once(() => {
+    return bs.registerStoreProtocol({
+      protocol: "sqlite:",
+      gateway: async (sthis) => {
+        return new SQLStoreGateway(sthis);
+      },
+      test: async (sthis) => {
+        return new SQLTestStore(sthis);
+      },
+    });
   });
 }
