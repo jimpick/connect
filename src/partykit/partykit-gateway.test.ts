@@ -3,12 +3,13 @@ import { registerPartyKitStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { URI } from "@adviser/cement";
 
+// has to leave
 interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
   headerSize: number;
   subscribe?: (url: URI, callback: (meta: Uint8Array) => void) => Promise<bs.UnsubscribeResult>; // Changed VoidResult to UnsubscribeResult
 }
 
+// has to leave
 interface ExtendedStore {
   gateway: ExtendedGateway;
   _url: URI;

@@ -1,9 +1,10 @@
+import { URI } from "@adviser/cement";
 import type * as Party from "partykit/server";
 
 interface CRDTEntry {
-  data: string;
-  cid: string;
-  parents: string[];
+  readonly data: string;
+  readonly cid: string;
+  readonly parents: string[];
 }
 
 const CORS = {
@@ -36,9 +37,9 @@ export default class Server implements Party.Server {
       return ok();
     }
 
-    const url = new URL(request.url);
+    const url = URI.from(request.url);
     // console.log("url", url.toString());
-    const carId = url.searchParams.get("car");
+    const carId = url.getParam("car");
     if (carId) {
       // console.log("carid", request.method, carId, request.url);
       if (request.method === "PUT") {

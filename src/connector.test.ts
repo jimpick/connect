@@ -2,6 +2,7 @@
 // import { registerS3StoreProtocol } from "./s3/s3-gateway";
 import { URI, runtimeFn } from "@adviser/cement";
 import { type Database, type SuperThis, bs, fireproof } from "@fireproof/core";
+import { mockSuperThis } from "../node_modules/@fireproof/core/tests/helpers";
 import { type TaskContext, describe } from "vitest";
 import type { ConnectFunction } from "./connection-from-store";
 
@@ -29,13 +30,15 @@ async function smokeDB(db: Database) {
   return docs.rows.map((row) => row.value);
 }
 
+// MUST go if superthis is there
 interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
+  // logger: { _attributes: { module: string; url?: string } };
   headerSize: number;
   fidLength: number;
   handleByteHeads: (meta: Uint8Array) => Promise<bs.VoidResult>;
 }
 
+// MUST go if superthis is there
 interface ExtendedStore {
   gateway: ExtendedGateway;
   _url: URI;
@@ -49,14 +52,15 @@ describe("loading the base store", () => {
   let emptyDbName: string;
   let remoteDbName: string;
   let connect: ConnectFunction;
+  const sthis = mockSuperThis();
 
   beforeEach(async (context: TaskContext) => {
     // console.log(context)
     // const originalEnv = { FP_STORAGE_URL: process.env.FP_STORAGE_URL, FP_KEYBAG_URL: process.env.FP_KEYBAG_URL };
     process.env.FP_STORAGE_URL = "./dist/fp-dir-file";
-    dbName = "test-local-" + Math.random().toString(36).substring(7);
-    emptyDbName = "test-empty-" + Math.random().toString(36).substring(7);
-    remoteDbName = "test-remote-" + Math.random().toString(36).substring(7);
+    dbName = "test-local-" + sthis.nextId().str;
+    emptyDbName = "test-empty-" + sthis.nextId().str;
+    remoteDbName = "test-remote-" + sthis.nextId().str;
     db = fireproof(dbName);
     if (context.task.file.projectName === undefined) {
       throw new Error("projectName is undefined");
@@ -68,7 +72,7 @@ describe("loading the base store", () => {
     await (await db.blockstore.loader?.WALStore())?.process();
   });
   it("should launch tests in the right environment", async () => {
-    const dbStorageUrl = db.blockstore.sthis.env.get("FP_STORAGE_URL");
+    const dbStorageUrl = sthis.env.get("FP_STORAGE_URL");
     expect(dbStorageUrl).toBe("./dist/fp-dir-file");
     const docs = await db.allDocs<{ hello: string }>();
     expect(docs).toBeDefined();
@@ -158,13 +162,13 @@ describe("loading the base store", () => {
 
     // const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
 
-    const remoteMetaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
+    // const remoteMetaStore = (await db.blockstore.loader?.remoteMetaStore) as unknown as ExtendedStore;
 
-    const url = remoteMetaStore?._url;
+    // const url = remoteMetaStore?._url;
     // console.log("metaStore", url.toString());
 
-    const parsedUrl = new URL(url.toString());
-    parsedUrl.searchParams.set("cache", "two");
+    // const parsedUrl = url.build().setParam("cache", "two");
+    // parsedUrl.searchParams.set("cache", "two");
 
     // const cx2 = connect(db2, parsedUrl.toString());
     const cx2 = connect(db2, remoteDbName); //, `partykit://localhost:1999/?name=${remoteDbName}&protocol=ws&cache=bust`);

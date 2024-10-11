@@ -1,4 +1,4 @@
-import { CoerceURI, runtimeFn, URI } from "@adviser/cement";
+import { BuildURI, CoerceURI, runtimeFn, URI } from "@adviser/cement";
 import { bs, Database, ensureLogger, SuperThis } from "@fireproof/core";
 
 // export interface StoreOptions {
@@ -35,13 +35,13 @@ export class ConnectionFromStore extends bs.ConnectionBase {
       // data: this.urlData,
       // meta: this.urlMeta,
     };
-    const name = this.url.getParam("name");
-    if (!name) {
-      throw this.logger.Error().Msg("name parameter is missing in the URL").AsError();
+    const rName = this.url.getParamResult("name");
+    if (rName.isErr()) {
+      throw this.logger.Error().Err(rName).Msg("missing Parameter").AsError();
     }
     const storeRuntime = bs.toStoreRuntime({ stores }, this.sthis);
     const loader = {
-      name,
+      name: rName.Ok(),
       ebOpts: {
         logger: this.logger,
         store: { stores },
@@ -71,13 +71,13 @@ export function makeKeyBagUrlExtractable(sthis: SuperThis) {
     if (runtimeFn().isBrowser) {
       base = "indexdb://fp-keybag";
     } else {
-      base = "file://./dist/kb-dir-partykit?fs=mem";
+      base = "file://./dist/kb-dir-partykit";
     }
   }
-  const kbUrl = new URL(base);
-  kbUrl.searchParams.set("extractKey", "_deprecated_internal_api");
+  const kbUrl = BuildURI.from(base);
+  kbUrl.defParam("extractKey", "_deprecated_internal_api");
   sthis.env.set("FP_KEYBAG_URL", kbUrl.toString());
-  sthis.logger.Debug().Str("keyBagUrl", kbUrl.toString()).Str("base", base).Msg("Make keybag url extractable");
+  sthis.logger.Debug().Url(kbUrl, "keyBagUrl").Msg("Make keybag url extractable");
 }
 
 export type ConnectFunction = (db: Database, name?: string, url?: string) => bs.Connection;

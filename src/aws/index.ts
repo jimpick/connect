@@ -1,7 +1,7 @@
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
 import { bs, Database } from "@fireproof/core";
 import { registerAWSStoreProtocol } from "./gateway";
-import { KeyedResolvOnce } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, runtimeFn } from "@adviser/cement";
 
 // Usage:
 //
@@ -18,11 +18,7 @@ import { KeyedResolvOnce } from "@adviser/cement";
 //   process.env.FP_KEYBAG_URL = "file://./dist/kb-dir-aws?fs=mem";
 // }
 
-if (
-  typeof process !== "undefined" &&
-  process.env &&
-  !process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")
-) {
+if (!runtimeFn().isBrowser) {
   const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-aws?fs=mem");
   url.searchParams.set("extractKey", "_deprecated_internal_api");
   process.env.FP_KEYBAG_URL = url.toString();
@@ -34,7 +30,7 @@ const connectionCache = new KeyedResolvOnce<bs.Connection>();
 export const connect: ConnectFunction = (
   db: Database,
   remoteDbName = "",
-  url = "https://aws.amazon.com",
+  url = "aws://aws.amazon.com",
   region = "us-east-2",
   uploadUrl = "https://7leodn3dj2.execute-api.us-east-2.amazonaws.com/uploads",
   webSocketUrl = "wss://fufauby0ii.execute-api.us-east-2.amazonaws.com/Prod",
@@ -44,19 +40,18 @@ export const connect: ConnectFunction = (
   if (!dbName) {
     throw new Error("dbName is required");
   }
-  const urlObj = new URL(url);
-  const existingName = urlObj.searchParams.get("name");
-  urlObj.searchParams.set("name", remoteDbName || existingName || dbName);
-  urlObj.searchParams.set("localName", dbName);
-  urlObj.searchParams.set("storekey", `@${dbName}:data@`);
-  urlObj.searchParams.set("region", region);
-  urlObj.searchParams.set("uploadUrl", uploadUrl);
-  urlObj.searchParams.set("webSocketUrl", webSocketUrl);
-  urlObj.searchParams.set("dataUrl", dataUrl);
-  const fpUrl = urlObj.toString().replace("https://", "aws://");
-  return connectionCache.get(fpUrl).once(() => {
+  const urlObj = BuildURI.from(url);
+  const existingName = urlObj.getParam("name");
+  urlObj.setParam("name", remoteDbName || existingName || dbName);
+  urlObj.defParam("localName", dbName);
+  urlObj.defParam("storekey", `@${dbName}:data@`);
+  urlObj.defParam("region", region);
+  urlObj.defParam("uploadUrl", uploadUrl);
+  urlObj.defParam("webSocketUrl", webSocketUrl);
+  urlObj.defParam("dataUrl", dataUrl);
+  return connectionCache.get(urlObj.toString()).once(() => {
     makeKeyBagUrlExtractable(sthis);
-    const connection = connectionFactory(sthis, fpUrl);
+    const connection = connectionFactory(sthis, urlObj);
     connection.connect_X(blockstore);
     return connection;
   });

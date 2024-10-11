@@ -1,6 +1,7 @@
 import { fireproof, Database } from "@fireproof/core";
 import { registerNetlifyStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { URI } from "@adviser/cement";
 
 async function smokeDB(db: Database) {
   const ran = Math.random().toString();
@@ -52,14 +53,15 @@ describe("NetlifyGateway", () => {
     expect(loader.ebOpts).toBeDefined();
     expect(loader.ebOpts.store).toBeDefined();
     expect(loader.ebOpts.store.stores).toBeDefined();
-    if (!loader.ebOpts.store.stores) {
-      throw new Error("Loader stores is not defined");
-    }
-    if (!loader.ebOpts.store.stores.base) {
-      throw new Error("Loader stores.base is not defined");
-    }
+    expect(loader.ebOpts.store.stores?.base).toBeDefined();
+    // if (!loader.ebOpts.store.stores) {
+    //   throw new Error("Loader stores is not defined");
+    // }
+    // if (!loader.ebOpts.store.stores.base) {
+    //   throw new Error("Loader stores.base is not defined");
+    // }
 
-    const baseUrl = new URL(loader.ebOpts.store.stores.base.toString());
+    const baseUrl = URI.from(loader.ebOpts.store.stores?.base?.toString());
     expect(baseUrl.protocol).toBe("netlify:");
     expect(baseUrl.hostname).toBe("localhost");
     expect(baseUrl.port).toBe("8888");
