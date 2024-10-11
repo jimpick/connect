@@ -138,7 +138,7 @@ export class NetlifyGateway implements bs.Gateway {
 
     const rresponse = await exception2Result(() => {
       return fetch(fetchUrl.URI().asURL());
-    })
+    });
     if (rresponse.isErr()) {
       return this.logger.Error().Url(fetchUrl).Err(rresponse).Msg("Failed to fetch").ResultError();
     }
