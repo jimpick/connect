@@ -1,4 +1,3 @@
-import { URI } from "@adviser/cement";
 import type * as Party from "partykit/server";
 
 interface CRDTEntry {
@@ -37,9 +36,9 @@ export default class Server implements Party.Server {
       return ok();
     }
 
-    const url = URI.from(request.url);
+    const url = new URL(request.url);
     // console.log("url", url.toString());
-    const carId = url.getParam("car");
+    const carId = url.searchParams.get("car");
     if (carId) {
       // console.log("carid", request.method, carId, request.url);
       if (request.method === "PUT") {
