@@ -115,10 +115,9 @@ describe("loading the base store", () => {
     const carStore = (await db.blockstore.loader?.remoteCarStore) as unknown as ExtendedStore;
     const carGateway = carStore?.gateway;
     const testKey = carLog[0][0].toString();
-    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    const carGetResult = await carGateway?.get(carUrl?.Ok());
-    expect(carGetResult).toBeDefined();
-    expect(carGetResult?.Ok()).toBeDefined();
+    const carUrl = await carGateway?.buildUrl(carStore._url, testKey);
+    const carGetResult = await carGateway?.get(carUrl.Ok());
+    expect(carGetResult.Ok()).toBeDefined();
   });
 
   it("should have meta in the remote gateway", async () => {

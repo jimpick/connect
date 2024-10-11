@@ -100,7 +100,6 @@
     "assert": "^2.1.0",
     "better-sqlite3": "^11.2.1",
     "cborg": "^4.2.3",
-    "cross-fetch": "^4.0.0",
     "events": "^3.3.0",
     "idb": "^8.0.0",
     "multiformats": "^13.2.2",

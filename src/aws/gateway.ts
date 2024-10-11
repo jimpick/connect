@@ -1,6 +1,5 @@
 import { BuildURI, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
-import fetch from "cross-fetch";
 
 export class AWSGateway implements bs.Gateway {
   readonly sthis: SuperThis;

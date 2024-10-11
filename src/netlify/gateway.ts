@@ -1,6 +1,5 @@
-import { KeyedResolvOnce, Result, URI, BuildURI } from "@adviser/cement";
+import { KeyedResolvOnce, Result, URI, BuildURI, exception2Result } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
-import fetch from "cross-fetch";
 
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
@@ -137,7 +136,13 @@ export class NetlifyGateway implements bs.Gateway {
         break;
     }
 
-    const response = await fetch(fetchUrl.URI().asURL());
+    const rresponse = await exception2Result(() => {
+      return fetch(fetchUrl.URI().asURL());
+    })
+    if (rresponse.isErr()) {
+      return this.logger.Error().Url(fetchUrl).Err(rresponse).Msg("Failed to fetch").ResultError();
+    }
+    const response = rresponse.Ok();
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
