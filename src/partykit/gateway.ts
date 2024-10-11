@@ -11,7 +11,7 @@ export class PartyKitGateway implements bs.Gateway {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.id = sthis.nextId().str.toString();
+    this.id = sthis.nextId().str;
     this.logger = ensureLogger(sthis, "PartyKitGateway", {
       url: () => this.url?.toString(),
       this: this.id,
@@ -30,22 +30,25 @@ export class PartyKitGateway implements bs.Gateway {
     await this.sthis.start();
 
     this.url = uri;
-    const ret = uri.build().defParam("version", "v0.1-partykit").URI();
+    const ret = uri.build().defParam("version", "v0.1-partykit");
 
-    let dbName = uri.getParam("name");
-    if (!dbName) {
-      this.logger.Error().Msg("Database name (name) parameter is missing in the URI");
-      return Result.Err(this.logger.Error().Msg("name not found").AsError());
+    const rName = uri.getParamResult("name");
+    if (rName.isErr()) {
+      return this.logger.Error().Err(rName).Msg("name not found").ResultError();
     }
+    let dbName = rName.Ok();
     if (this.url.hasParam("index")) {
       dbName = dbName + "-idx";
     }
-    const party = uri.getParam("party") || "fireproof";
-    const proto = uri.getParam("protocol") || "wss";
-    let possibleUndef = {};
-    if (proto) {
-      possibleUndef = { protocol: proto };
-    }
+    ret.defParam("party", "fireproof");
+    ret.defParam("protocol", "wss");
+    // const party = uri.getParam("party") || "fireproof";
+    // const proto = uri.getParam("protocol") || "wss";
+    let possibleUndef: {
+      protocol: "wss" | "ws" | undefined;
+      protocols?: string[];
+      prefix?: string;
+    } = { protocol: ret.getParam("protocol") as "wss" | "ws" };
 
     const protocolsStr = uri.getParam("protocols");
     if (protocolsStr) {
@@ -68,7 +71,7 @@ export class PartyKitGateway implements bs.Gateway {
       id: this.id,
       host: this.url.host,
       room: dbName,
-      party,
+      party: ret.getParam("party"),
       ...possibleUndef,
       query,
       path: this.url.pathname.replace(/^\//, ""),
@@ -80,7 +83,7 @@ export class PartyKitGateway implements bs.Gateway {
     }
     this.pso = partySockOpts;
 
-    return Result.Ok(ret);
+    return Result.Ok(ret.URI());
   }
 
   async ready(): Promise<void> {
@@ -99,8 +102,7 @@ export class PartyKitGateway implements bs.Gateway {
         this.logger.Debug().Msg("party open");
         this.party?.addEventListener("message", async (event: MessageEvent<string>) => {
           this.logger.Debug().Msg(`got message: ${event.data}`);
-          const enc = new TextEncoder();
-          const mbin = enc.encode(event.data);
+          const mbin = this.sthis.txt.encode(event.data);
           this.notifySubscribers(mbin);
         });
         exposedResolve(true);
@@ -121,22 +123,23 @@ export class PartyKitGateway implements bs.Gateway {
 
   async put(uri: URI, body: Uint8Array): Promise<Result<void>> {
     await this.ready();
-    return exception2Result(async () => {
-      const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
-      if (store === "meta") {
-        const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
-        if (bodyRes.isErr()) {
-          this.logger.Error().Err(bodyRes.Err()).Msg("Error in addCryptoKeyToGatewayMetaPayload");
-          throw bodyRes.Err();
-        }
-        body = bodyRes.Ok();
+    const { store } = getStore(uri, this.sthis, (...args) => args.join("/"));
+    if (store === "meta") {
+      const bodyRes = await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+      if (bodyRes.isErr()) {
+        this.logger.Error().Err(bodyRes.Err()).Msg("Error in addCryptoKeyToGatewayMetaPayload");
+        throw bodyRes.Err();
       }
-      const key = uri.getParam("key");
-      if (!key) throw new Error("key not found");
-      const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
-      const response = await fetch(uploadUrl.toString(), { method: "PUT", body: body });
+      body = bodyRes.Ok();
+    }
+    const rkey = uri.getParamResult("key");
+    if (rkey.isErr()) return Result.Err(rkey.Err());
+    const key = rkey.Ok();
+    const uploadUrl = store === "meta" ? pkMetaURL(uri, key) : pkCarURL(uri, key);
+    return exception2Result(async () => {
+      const response = await fetch(uploadUrl.asURL(), { method: "PUT", body: body });
       if (response.status === 404) {
-        throw new Error(`Failure in uploading ${store}!`);
+        throw this.logger.Error().Url(uploadUrl).Msg(`Failure in uploading ${store}!`).AsError();
       }
     });
   }
@@ -181,14 +184,13 @@ export class PartyKitGateway implements bs.Gateway {
       }
       const body = new Uint8Array(await response.arrayBuffer());
       if (store === "meta") {
-        // console.log("download body", new TextDecoder().decode(body));
-        // console.log("download body", new TextDecoder().decode(body));
         const resKeyInfo = await bs.setCryptoKeyFromGatewayMetaPayload(uri, this.sthis, body);
         if (resKeyInfo.isErr()) {
           this.logger
             .Error()
-            .Err(resKeyInfo.Err())
-            .Str("body", new TextDecoder().decode(body))
+            .Url(uri)
+            .Err(resKeyInfo)
+            .Any("body", body)
             .Msg("Error in setCryptoKeyFromGatewayMetaPayload");
           throw resKeyInfo.Err();
         }
@@ -216,7 +218,7 @@ export class PartyKitGateway implements bs.Gateway {
     await this.ready();
     return exception2Result(async () => {
       const deleteUrl = pkBaseURL(uri);
-      const response = await fetch(deleteUrl.toString(), { method: "DELETE" });
+      const response = await fetch(deleteUrl.asURL(), { method: "DELETE" });
       if (response.status === 404) {
         throw new Error("Failure in deleting data!");
       }
@@ -243,6 +245,7 @@ function pkURL(uri: URI, key: string, type: "car" | "meta"): URI {
   const name = uri.getParam("name");
   const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
+  // TODO extract url from uri
   const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).setParam(type, key).URI();
 }
@@ -252,6 +255,7 @@ function pkBaseURL(uri: URI): URI {
   const name = uri.getParam("name");
   const idx = uri.getParam("index") || "";
   const protocol = uri.getParam("protocol") === "ws" ? "http" : "https";
+  // TODO extract url from uri
   const path = `/parties/fireproof/${name}${idx}`;
   return BuildURI.from(`${protocol}://${host}${path}`).URI();
 }
@@ -276,7 +280,7 @@ export class PartyKitTestStore implements bs.TestGateway {
   async get(uri: URI, key: string): Promise<Uint8Array> {
     const url = uri.build().setParam("key", key).URI();
     const dbFile = this.sthis.pathOps.join(rt.getPath(url, this.sthis), rt.getFileName(url, this.sthis));
-    this.logger.Debug().Url(url.asURL()).Str("dbFile", dbFile).Msg("get");
+    this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await this.gateway.get(url);
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
     return buffer.Ok();

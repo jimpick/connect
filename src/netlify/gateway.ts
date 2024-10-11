@@ -1,6 +1,5 @@
-import { KeyedResolvOnce, Result, URI, BuildURI } from "@adviser/cement";
+import { KeyedResolvOnce, Result, URI, BuildURI, exception2Result } from "@adviser/cement";
 import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
-import fetch from "cross-fetch";
 
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
@@ -19,13 +18,15 @@ export class NetlifyGateway implements bs.Gateway {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
 
     if (store !== "meta") {
+      // why are the other store types not supported?
       return Result.Ok(undefined);
       // return Result.Err(new Error("Store is not meta"));
     }
-    let name = url.getParam("name");
-    if (!name) {
-      return Result.Err(new Error("Name not found in the URI"));
+    const rName = url.getParamResult("name");
+    if (rName.isErr()) {
+      return Result.Err(rName.Err());
     }
+    let name = rName.Ok();
     const index = url.getParam("index");
     if (index) {
       name += `-${index}`;
@@ -35,18 +36,23 @@ export class NetlifyGateway implements bs.Gateway {
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
-    const fetchUrl = new URL(remoteBaseUrl);
-    fetchUrl.searchParams.set("meta", name);
+    const fetchUrl = BuildURI.from(remoteBaseUrl).setParam("meta", name).URI();
 
-    const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
+    const response = await fetch(fetchUrl.asURL(), { method: "DELETE" });
     if (!response.ok) {
-      return Result.Err(new Error(`Failed to destroy meta database: ${response.statusText}`));
+      return this.logger
+        .Error()
+        .Str("status", response.statusText)
+        .Msg("Failed to destroy meta database")
+        .ResultError();
     }
     return Result.Ok(undefined);
   }
 
   async start(uri: URI): Promise<Result<URI>> {
     // Convert netlify: to https: or http: based on the environment
+    // the url should contain a parameter which describe if http or https is to use
+    // the other parameters should also configurable
     const protocol = uri.host.startsWith("localhost") ? "http" : "https";
     const host = uri.host;
     const path = "/fireproof";
@@ -63,14 +69,12 @@ export class NetlifyGateway implements bs.Gateway {
   async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
 
-    const key = url.getParam("key");
-    if (!key) {
-      return Result.Err(new Error("Key not found in the URI"));
+    const rParams = url.getParamsResult("key", "name");
+    if (rParams.isErr()) {
+      return this.logger.Error().Url(url).Err(rParams).Msg("Put Error").ResultError();
     }
-    let name = url.getParam("name");
-    if (!name) {
-      return Result.Err(new Error("Name not found in the URI"));
-    }
+    const { key } = rParams.Ok();
+    let { name } = rParams.Ok();
     const index = url.getParam("index");
     if (index) {
       name += `-${index}`;
@@ -80,13 +84,13 @@ export class NetlifyGateway implements bs.Gateway {
     if (!remoteBaseUrl) {
       return Result.Err(new Error("Remote base URL not found in the URI"));
     }
-    const fetchUrl = new URL(remoteBaseUrl);
+    const fetchUrl = BuildURI.from(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set("meta", name);
+        fetchUrl.setParam("meta", name);
         break;
       default:
-        fetchUrl.searchParams.set("car", key);
+        fetchUrl.setParam("car", key);
         break;
     }
     if (store === "meta") {
@@ -97,43 +101,48 @@ export class NetlifyGateway implements bs.Gateway {
       body = bodyRes.Ok();
     }
 
-    const done = await fetch(fetchUrl.toString(), { method: "PUT", body });
+    const done = await fetch(fetchUrl.URI().asURL(), { method: "PUT", body });
     if (!done.ok) {
-      return Result.Err(new Error(`failed to upload ${store} ${done.statusText}`));
+      return this.logger
+        .Error()
+        .Url(fetchUrl.URI())
+        .Int("status", done.status)
+        .Msg(`failed to upload ${store}`)
+        .ResultError();
     }
     return Result.Ok(undefined);
   }
 
   async get(url: URI): Promise<bs.GetResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const key = url.getParam("key");
-    if (!key) {
-      return Result.Err(new Error("Key not found in the URI"));
+    const rParams = url.getParamsResult("key", "name", "remoteBaseUrl");
+    if (rParams.isErr()) {
+      return Result.Err(rParams.Err());
     }
-    let name = url.getParam("name");
-    if (!name) {
-      return Result.Err(new Error("Name not found in the URI"));
-    }
+    const { key, remoteBaseUrl } = rParams.Ok();
+    let { name } = rParams.Ok();
     const index = url.getParam("index");
     if (index) {
       name += `-${index}`;
     }
     name += ".fp";
-    const remoteBaseUrl = url.getParam("remoteBaseUrl");
-    if (!remoteBaseUrl) {
-      return Result.Err(new Error("Remote base URL not found in the URI"));
-    }
-    const fetchUrl = new URL(remoteBaseUrl);
+    const fetchUrl = BuildURI.from(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set("meta", name);
+        fetchUrl.setParam("meta", name);
         break;
       default:
-        fetchUrl.searchParams.set("car", key);
+        fetchUrl.setParam("car", key);
         break;
     }
 
-    const response = await fetch(fetchUrl.toString());
+    const rresponse = await exception2Result(() => {
+      return fetch(fetchUrl.URI().asURL());
+    });
+    if (rresponse.isErr()) {
+      return this.logger.Error().Url(fetchUrl).Err(rresponse).Msg("Failed to fetch").ResultError();
+    }
+    const response = rresponse.Ok();
 
     if (!response.ok) {
       return Result.Err(new NotFoundError(`${store} not found: ${url}`));
@@ -151,34 +160,31 @@ export class NetlifyGateway implements bs.Gateway {
 
   async delete(url: URI): Promise<bs.VoidResult> {
     const { store } = getStore(url, this.sthis, (...args) => args.join("/"));
-    const key = url.getParam("key");
-
-    let name = url.getParam("name");
-    if (!name) {
-      return Result.Err(new Error("Name not found in the URI"));
+    const rParams = url.getParamsResult("key", "name", "remoteBaseUrl");
+    if (rParams.isErr()) {
+      return Result.Err(rParams.Err());
     }
+    const { key, remoteBaseUrl } = rParams.Ok();
+    let { name } = rParams.Ok();
+
     const index = url.getParam("index");
     if (index) {
       name += `-${index}`;
     }
     name += ".fp";
-    const remoteBaseUrl = url.getParam("remoteBaseUrl");
-    if (!remoteBaseUrl) {
-      return Result.Err(new Error("Remote base URL not found in the URI"));
-    }
-    const fetchUrl = new URL(remoteBaseUrl);
+    const fetchUrl = BuildURI.from(remoteBaseUrl);
     switch (store) {
       case "meta":
-        fetchUrl.searchParams.set("meta", name);
+        fetchUrl.setParam("meta", name);
         break;
       default:
         if (!key) {
           return Result.Err(new Error("Key not found in the URI"));
         }
-        fetchUrl.searchParams.set("car", key);
+        fetchUrl.setParam("car", key);
         break;
     }
-    const response = await fetch(fetchUrl.toString(), { method: "DELETE" });
+    const response = await fetch(fetchUrl.URI().asURL(), { method: "DELETE" });
     if (!response.ok) {
       return Result.Err(new Error(`Failed to delete car: ${response.statusText}`));
     }
@@ -186,10 +192,12 @@ export class NetlifyGateway implements bs.Gateway {
   }
 
   async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.UnsubscribeResult> {
-    url = url.build().setParam("key", "main").URI();
+    url = url.build().setParam("key", "main").defParam("interval", "100").defParam("maxInterval", "3000").URI();
 
     let lastData: Uint8Array | undefined = undefined;
-    let interval = 100;
+    const initInterval = parseInt(url.getParam("interval") || "100", 10);
+    const maxInterval = parseInt(url.getParam("maxInterval") || "3000", 10);
+    let interval = initInterval;
     const fetchData = async () => {
       const result = await this.get(url);
 
@@ -199,9 +207,9 @@ export class NetlifyGateway implements bs.Gateway {
           lastData = data;
 
           callback(data);
-          interval = 100; // Reset interval when data changes
+          interval = initInterval; // Reset interval when data changes
         } else {
-          interval = Math.min(interval * 2, 3000);
+          interval = Math.min(interval * 2, maxInterval);
         }
       }
       timeoutId = setTimeout(fetchData, interval);

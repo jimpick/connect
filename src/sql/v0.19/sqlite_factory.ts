@@ -69,6 +69,7 @@ export async function v0_19sqliteConnectionFactory(
   switch (upUrl.getParam("taste")) {
     case "node-sqlite3-wasm": {
       const { V0_19NSWConnection } = await import("./sqlite/node-sqlite3-wasm/sqlite-connection.js");
+      sthis.logger.Debug().Str("databaseURL", upUrl.toString()).Msg("connecting to node-sqlite3-wasm");
       return {
         dbConn: new V0_19NSWConnection(sthis, upUrl, opts),
         url: upUrl.build().setParam("taste", "node-sqlite3-wasm").URI(),
@@ -77,6 +78,7 @@ export async function v0_19sqliteConnectionFactory(
     case "better-sqlite3":
     default: {
       const { V0_19BS3Connection } = await import("./sqlite/better-sqlite3/sqlite-connection.js");
+      sthis.logger.Debug().Str("databaseURL", upUrl.toString()).Msg("connecting to better-sqlite3");
       return {
         dbConn: new V0_19BS3Connection(sthis, upUrl, opts),
         url: upUrl.build().setParam("taste", "better-sqlite3").URI(),

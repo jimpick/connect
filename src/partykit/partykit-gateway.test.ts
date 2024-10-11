@@ -2,33 +2,19 @@ import { fireproof, Database, bs } from "@fireproof/core";
 import { registerPartyKitStoreProtocol } from "./gateway";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { URI } from "@adviser/cement";
+import { smokeDB } from "../../tests/helper";
 
+// has to leave
 interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
   headerSize: number;
   subscribe?: (url: URI, callback: (meta: Uint8Array) => void) => Promise<bs.UnsubscribeResult>; // Changed VoidResult to UnsubscribeResult
 }
 
+// has to leave
 interface ExtendedStore {
   gateway: ExtendedGateway;
   _url: URI;
   name: string;
-}
-
-async function smokeDB(db: Database) {
-  const ran = Math.random().toString();
-  for (let i = 0; i < 10; i++) {
-    await db.put({ _id: `key${i}:${ran}`, hello: `world${i}` });
-  }
-  for (let i = 0; i < 10; i++) {
-    expect(await db.get<{ hello: string }>(`key${i}:${ran}`)).toEqual({
-      _id: `key${i}:${ran}`,
-      hello: `world${i}`,
-    });
-  }
-  const docs = await db.allDocs();
-  expect(docs.rows.length).toBeGreaterThan(9);
-  return docs.rows.map((row) => row.value);
 }
 
 describe("PartyKitGateway", () => {

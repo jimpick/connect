@@ -240,7 +240,7 @@ export interface versionUnregister {
 }
 
 export function registerS3StoreProtocol(protocol = "s3:", overrideBaseURL?: string): versionUnregister {
-  URI.protocolHasHostpart(protocol);
+  // URI.protocolHasHostpart(protocol);
   const unreg: versionUnregister = (() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _f: any = bs.registerStoreProtocol({

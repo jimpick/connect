@@ -1,7 +1,7 @@
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store";
 import { bs, Database } from "@fireproof/core";
 import { registerNetlifyStoreProtocol } from "./gateway";
-import { KeyedResolvOnce } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, runtimeFn } from "@adviser/cement";
 
 // Usage:
 //
@@ -14,13 +14,9 @@ import { KeyedResolvOnce } from "@adviser/cement";
 //
 // const cx = connect.netlify(db, url);
 
-if (
-  typeof process !== "undefined" &&
-  process.env &&
-  !process.env.FP_KEYBAG_URL?.includes("extractKey=_deprecated_internal_api")
-) {
-  const url = new URL(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-netlify?fs=mem");
-  url.searchParams.set("extractKey", "_deprecated_internal_api");
+if (!runtimeFn().isBrowser) {
+  const url = BuildURI.from(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-netlify");
+  url.setParam("extractKey", "_deprecated_internal_api");
   process.env.FP_KEYBAG_URL = url.toString();
 }
 
@@ -30,21 +26,20 @@ const connectionCache = new KeyedResolvOnce<bs.Connection>();
 export const connect: ConnectFunction = (
   db: Database,
   remoteDbName = "",
-  url = "http://localhost:8888?protocol=ws"
+  url = "netlify://localhost:8888?protocol=ws"
 ) => {
   const { sthis, blockstore, name: dbName } = db;
   if (!dbName) {
     throw new Error("dbName is required");
   }
-  const urlObj = new URL(url);
-  const existingName = urlObj.searchParams.get("name");
-  urlObj.searchParams.set("name", remoteDbName || existingName || dbName);
-  urlObj.searchParams.set("localName", dbName);
-  urlObj.searchParams.set("storekey", `@${dbName}:data@`);
-  const fpUrl = urlObj.toString().replace("http://", "netlify://").replace("https://", "netlify://");
-  return connectionCache.get(fpUrl).once(() => {
+  const urlObj = BuildURI.from(url);
+  const existingName = urlObj.getParam("name");
+  urlObj.defParam("name", remoteDbName || existingName || dbName);
+  urlObj.defParam("localName", dbName);
+  urlObj.defParam("storekey", `@${dbName}:data@`);
+  return connectionCache.get(urlObj.toString()).once(() => {
     makeKeyBagUrlExtractable(sthis);
-    const connection = connectionFactory(sthis, fpUrl);
+    const connection = connectionFactory(sthis, urlObj);
     connection.connect_X(blockstore);
     return connection;
   });
