@@ -96,7 +96,6 @@ export default class Server implements Party.Server {
     // console.log("got", message);
     const entries = JSON.parse(message) as CRDTEntry[];
     const { cid, parents } = entries[0];
-    console.log("got", cid, parents);
     this.clockHead.set(cid, entries[0]);
     for (const p of parents) {
       this.clockHead.delete(p);

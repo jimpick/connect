@@ -6,7 +6,6 @@ import { mockSuperThis } from "../node_modules/@fireproof/core/tests/helpers";
 import { type TaskContext, describe } from "vitest";
 import type { ConnectFunction } from "./connection-from-store";
 import { smokeDB } from "../tests/helper";
-import exp from "constants";
 
 // import { registerPartyKitStoreProtocol } from "./partykit/gateway";
 // import { a } from "@adviser/cement/base-sys-abstraction-C9WW3w57";
