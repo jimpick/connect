@@ -15,8 +15,8 @@ importers:
         specifier: ^3.614.0
         version: 3.669.0
       '@fireproof/core':
-        specifier: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz
-        version: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)(typescript@5.6.3)
+        specifier: 0.19.101
+        version: 0.19.101(react@18.3.1)(typescript@5.6.3)
       '@netlify/blobs':
         specifier: ^8.1.0
         version: 8.1.0
@@ -41,12 +41,6 @@ importers:
       cborg:
         specifier: ^4.2.3
         version: 4.2.4
-      events:
-        specifier: ^3.3.0
-        version: 3.3.0
-      idb:
-        specifier: ^8.0.0
-        version: 8.0.0
       multiformats:
         specifier: ^13.2.2
         version: 13.3.0
@@ -62,15 +56,9 @@ importers:
       path:
         specifier: ^0.12.7
         version: 0.12.7
-      readable-stream:
-        specifier: ^4.5.2
-        version: 4.5.2
       util:
         specifier: ^0.12.5
         version: 0.12.5
-      uuidv7:
-        specifier: ^1.0.2
-        version: 1.0.2
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -857,9 +845,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz':
-    resolution: {integrity: sha512-iYLnSmmfb9NmWdZavDqm07Q/rhR6nSy8XyR6LeIN+BuMfQ/7FM1OimJsWv5EuUAcV6V1+dM/66p5AMO4CIG2ZA==, tarball: file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz}
-    version: 0.0.0-smoke
+  '@fireproof/core@0.19.101':
+    resolution: {integrity: sha512-3crvWjGphSb3ABaBozzoStpLWpkvajK86BTFgL0VXY6sSdOX58WNM/ZdZtCVXTygTBkm/gqxfQj9OQ+6CYNtWA==}
     peerDependencies:
       react: '>=18.0.0'
 
@@ -1495,10 +1482,6 @@ packages:
     resolution: {integrity: sha512-XEzfHgn4NVS212xXH+BRlFzMFoB+TaAeQHLrrW9zoWlPnKJJphdKE2hVJZBPovIU5HWSPNsNM4mdkowYEQ73OQ==}
     engines: {node: '>=18'}
 
-  abort-controller@3.0.0:
-    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
-    engines: {node: '>=6.5'}
-
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
@@ -1906,20 +1889,12 @@ packages:
   event-emitter@0.3.5:
     resolution: {integrity: sha512-D9rRn9y7kLPnJ+hMq7S/nhvoKwwvVJahBi2BPmx3bvbsEdK3W9ii8cBSGjP+72/LnM4n6fo3+dkCX5FeTQruXA==}
 
-  event-target-shim@5.0.1:
-    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
-    engines: {node: '>=6'}
-
   event-target-shim@6.0.2:
     resolution: {integrity: sha512-8q3LsZjRezbFZ2PN+uP+Q7pnHUMmAOziU2vA2OwoFaKIXxlxl38IylhSSgUorWu/rf4er67w0ikBqjBFk/pomA==}
     engines: {node: '>=10.13.0'}
 
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
-
-  events@3.3.0:
-    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
-    engines: {node: '>=0.8.x'}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -2364,8 +2339,8 @@ packages:
   magic-string@0.30.12:
     resolution: {integrity: sha512-Ea8I3sQMVXr8JhN4z+H/d8zwo+tYDgHE9+5G4Wnrwhs0gaK9fXTKx0Tw5Xwsd/bCPTTZNRAdpyzvoeORe9LYpw==}
 
-  memfs@4.13.0:
-    resolution: {integrity: sha512-dIs5KGy24fbdDhIAg0RxXpFqQp3RwL6wgSMRF9OSuphL/Uc9a4u2/SDJKPLj/zUgtOGKuHrRMrj563+IErj4Cg==}
+  memfs@4.14.0:
+    resolution: {integrity: sha512-JUeY0F/fQZgIod31Ja1eJgiSxLn7BfQlCnqhwXFBzFHEw63OdLK7VJUJ7bnzNsWgCyoUP5tEp1VRY8rDaYzqOA==}
     engines: {node: '>= 4.0.0'}
 
   memoizee@0.4.17:
@@ -2743,10 +2718,6 @@ packages:
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
-
-  readable-stream@4.5.2:
-    resolution: {integrity: sha512-yjavECdqeZ3GLXNgRXgeQEdz9fvDDkNKyHnbHRFtOr7/LcfgBcmct7t/ET+HaCTqfh06OzoAxrkN/IfjJBVe+g==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
@@ -3138,10 +3109,6 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    hasBin: true
-
-  uuidv7@1.0.2:
-    resolution: {integrity: sha512-8JQkH4ooXnm1JCIhqTMbtmdnYEn6oKukBxHn1Ic9878jMkL7daTI7anTExfY18VRCX7tcdn5quzvCb6EWrR8PA==}
     hasBin: true
 
   varint@6.0.0:
@@ -4139,7 +4106,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@file:../fireproof/dist/fireproof-core/fireproof-core-0.0.0-smoke.tgz(react@18.3.1)(typescript@5.6.3)':
+  '@fireproof/core@0.19.101(react@18.3.1)(typescript@5.6.3)':
     dependencies:
       '@adviser/cement': 0.2.34(typescript@5.6.3)
       '@ipld/car': 5.3.2
@@ -4151,7 +4118,7 @@ snapshots:
       charwise: 3.0.1
       idb: 8.0.0
       ipfs-unixfs-exporter: 13.6.1
-      memfs: 4.13.0
+      memfs: 4.14.0
       multiformats: 13.3.0
       p-limit: 6.1.0
       p-map: 7.0.2
@@ -4273,7 +4240,7 @@ snapshots:
       multiformats: 13.3.0
       murmurhash3js-revisited: 3.0.0
 
-  '@netlify/blobs@7.4.0': {}
+  '@netlify/blobs@8.1.0': {}
 
   '@noble/curves@1.6.0':
     dependencies:
@@ -5056,10 +5023,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  abort-controller@3.0.0:
-    dependencies:
-      event-target-shim: 5.0.1
-
   acorn-jsx@5.3.2(acorn@8.12.1):
     dependencies:
       acorn: 8.12.1
@@ -5573,13 +5536,9 @@ snapshots:
       d: 1.0.2
       es5-ext: 0.10.64
 
-  event-target-shim@5.0.1: {}
-
   event-target-shim@6.0.2: {}
 
   eventemitter3@5.0.1: {}
-
-  events@3.3.0: {}
 
   execa@5.1.1:
     dependencies:
@@ -6028,7 +5987,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  memfs@4.13.0:
+  memfs@4.14.0:
     dependencies:
       '@jsonjoy.com/json-pack': 1.1.0(tslib@2.7.0)
       '@jsonjoy.com/util': 1.5.0(tslib@2.7.0)
@@ -6416,14 +6375,6 @@ snapshots:
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
 
-  readable-stream@4.5.2:
-    dependencies:
-      abort-controller: 3.0.0
-      buffer: 6.0.3
-      events: 3.3.0
-      process: 0.11.10
-      string_decoder: 1.3.0
-
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
@@ -6810,8 +6761,6 @@ snapshots:
       which-typed-array: 1.1.15
 
   uuid@9.0.1: {}
-
-  uuidv7@1.0.2: {}
 
   varint@6.0.0: {}
 
