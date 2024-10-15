@@ -16,6 +16,18 @@ In your existing Fireproof app install the connector:
 npm install @fireproof/netlify
 ```
 
+In your netlify project, install the `@netlify/blobs` package:
+
+```sh
+npm install @netlify/blobs
+```
+
+And finally, copy the `server.ts` file from this repo into your project:
+
+```sh
+cp node_modules/@fireproof/netlify/server.ts netlify/edge-functions/fireproof.ts
+```
+
 ### 2. Connect
 
 You're all done on the server, and ready to develop locally and then deploy with no further changes. Now you just need to connect to the Netlify in your client code:
