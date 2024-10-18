@@ -201,6 +201,48 @@ const LIBRARY_BUNDLES: Options[] = [
       footer: "declare module '@fireproof/aws'",
     },
   },
+  // IIFE build with moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["iife"],
+    name: "@fireproof/cloud",
+    entry: ["src/cloud/index.ts"],
+    platform: "browser",
+    outDir: "dist/cloud",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: false, // No type declarations needed for IIFE build
+  },
+  // ESM and CJS builds without moduleReplacementPlugin
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/cloud",
+    entry: ["src/cloud/index.ts"],
+    platform: "browser",
+    outDir: "dist/cloud",
+    esbuildPlugins: [
+      polyfillNode(),
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/cloud'",
+    },
+  },
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);
