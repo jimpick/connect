@@ -205,7 +205,6 @@ export class FireproofCloudGateway implements bs.Gateway {
           break;
         default:
           throw new Error(`Unsupported store: ${store}`);
-
       }
       const response = await fetch(downloadUrl.toString(), { method: "GET" });
       if (response.status === 404) {
