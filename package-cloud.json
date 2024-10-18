@@ -1,0 +1,28 @@
+{
+  "name": "@fireproof/cloud",
+  "version": "0.18.0",
+  "description": "Fireproof Cloud gateway for Fireproof",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "browser": "./index.global.js",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs",
+      "script": "./index.global.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "types": "./index.d.ts",
+  "files": ["index.js", "index.cjs", "index.d.ts", "index.d.cts", "index.js.map", "index.cjs.map"],
+  "type": "module",
+  "scripts": {},
+  "keywords": ["fireproof", "partykit", "gateway"],
+  "author": "",
+  "license": "Apache-2.0 OR MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "partykit": "^0.0.0",
+    "cross-fetch": "^4.0.0"
+  }
+}
