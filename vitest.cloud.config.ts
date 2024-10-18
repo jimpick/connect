@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "fireproof-cloud",
+    name: "cloud",
     exclude: [
       "node_modules/@fireproof/core/tests/react/**",
       "node_modules/@fireproof/core/tests/fireproof/config.test.ts",
