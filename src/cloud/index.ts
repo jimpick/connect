@@ -30,7 +30,7 @@ const connectionCache = new KeyedResolvOnce<bs.Connection>();
 export const connect: ConnectFunction = (
   db: Database,
   remoteDbName = "",
-  url = "fireproof://fireproof-cloud.jchris.workers.dev?getBaseUrl=https://pub-6bc5b83e295847498a0d16230a55d5f6.r2.dev/"
+  url = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/"
 ) => {
   const { sthis, blockstore, name: dbName } = db;
   if (!dbName) {
