@@ -85,13 +85,13 @@ export function connect(
   remoteName: string | undefined,
   dashboardURI: CoerceURI = "https://dashboard.fireproof.storage/",
   remoteURI: CoerceURI = "fireproof://cloud.fireproof.direct"
-) {
+): Promise<bs.Connection> {
   const dbName = db.name as unknown as string;
   if (!dbName) {
     throw new Error("Database name is required for cloud connection");
   }
 
-  getOrCreateRemoteName(dbName, remoteName).then(async (doc) => {
+  return getOrCreateRemoteName(dbName, remoteName).then(async (doc) => {
     if (!doc) {
       throw new Error("Failed to get or create remote name");
     }
