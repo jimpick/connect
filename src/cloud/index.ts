@@ -38,7 +38,7 @@ const connectionCache = new KeyedResolvOnce<bs.Connection>();
 export const rawConnect: ConnectFunction = (
   db: Database,
   remoteDbName = "",
-  url = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/"
+  url = "fireproof://cloud.fireproof.direct"
 ) => {
   const { sthis, blockstore, name: dbName } = db;
   if (!dbName) {
@@ -49,7 +49,8 @@ export const rawConnect: ConnectFunction = (
   urlObj.defParam("name", remoteDbName || existingName || dbName);
   urlObj.defParam("localName", dbName);
   urlObj.defParam("storekey", `@${dbName}:data@`);
-  const fpUrl = urlObj.toString().replace("http://", "fireproof://").replace("https://", "fireprooff://");
+  urlObj.defParam("getBaseUrl", "https://storage.fireproof.direct/");
+  const fpUrl = urlObj.toString().replace("http://", "fireproof://").replace("https://", "fireproof://");
   return connectionCache.get(fpUrl).once(() => {
     makeKeyBagUrlExtractable(sthis);
     const connection = connectionFactory(sthis, fpUrl);
@@ -58,11 +59,16 @@ export const rawConnect: ConnectFunction = (
   });
 };
 
-async function getOrCreateRemoteName(dbName: string) {
+async function getOrCreateRemoteName(dbName: string, remoteName: string | undefined) {
   const syncDb = fireproof(SYNC_DB_NAME);
+
   const result = await syncDb.query<string, ConnectData>("localName", { key: dbName, includeDocs: true });
   if (result.rows.length === 0) {
-    const doc = { remoteName: syncDb.sthis.nextId().str, localName: dbName, firstConnect: true } as ConnectData;
+    const doc = {
+      remoteName: remoteName || syncDb.sthis.nextId().str,
+      localName: dbName,
+      firstConnect: !remoteName,
+    } as ConnectData;
     const { id } = await syncDb.put(doc);
     return { ...doc, _id: id };
   }
@@ -72,18 +78,20 @@ async function getOrCreateRemoteName(dbName: string) {
 
 export function connect(
   db: Database,
+  remoteName: string | undefined,
   dashboardURI: CoerceURI = "https://dashboard.fireproof.storage/",
-  remoteURI: CoerceURI = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/"
+  remoteURI: CoerceURI = "fireproof://cloud.fireproof.direct"
 ) {
   const dbName = db.name as unknown as string;
   if (!dbName) {
     throw new Error("Database name is required for cloud connection");
   }
 
-  getOrCreateRemoteName(dbName).then(async (doc) => {
+  getOrCreateRemoteName(dbName, remoteName).then(async (doc) => {
     if (!doc) {
       throw new Error("Failed to get or create remote name");
     }
+    const connection = rawConnect(db, doc.remoteName, URI.from(doc.endpoint).toString());
     if (
       doc.firstConnect &&
       runtimeFn().isBrowser &&
@@ -104,6 +112,6 @@ export function connect(
       }
       window.open(connectURI.toString(), "_blank");
     }
-    return rawConnect(db, doc.remoteName, URI.from(doc.endpoint).toString());
+    return connection;
   });
 }
