@@ -10,7 +10,7 @@ You can call the `connect` function with a database and it will provision a remo
 import { fireproof } from "@fireproof/core";
 import { connect } from "@fireproof/cloud";
 
-const database = await fireproof('my-db-name');
+const database = await fireproof("my-db-name");
 const connection = await connect(database);
 ```
 
@@ -22,7 +22,7 @@ In a React component, you can use the `useFireproof` hook to get the database an
 import { useFireproof } from "use-fireproof";
 import { connect } from "@fireproof/cloud";
 
-const { database } = useFireproof('my-db-name');
+const { database } = useFireproof("my-db-name");
 const [dashboardUrl, setDashboardUrl] = useState<string | undefined>();
 
 // there is a useConnection hook coming soon
@@ -35,7 +35,7 @@ useEffect(() => {
 
 ## The Second Argument
 
-The second argument to `connect` is the remote database name. This will be assigned for you if you don't provide one, and the created name will be persisted locally. 
+The second argument to `connect` is the remote database name. This will be assigned for you if you don't provide one, and the created name will be persisted locally.
 
 The most common way to use this is if you want to sync to a remote database. The UUID will have been assigned when on first sync, and now you want to connect a new client to that remote.
 
