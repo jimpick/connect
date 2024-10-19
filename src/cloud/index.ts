@@ -63,7 +63,7 @@ export const rawConnect: ConnectFunction = (
   });
 };
 
-async function getOrCreateRemoteName(dbName: string, remoteName: string | undefined) {
+async function getOrCreateRemoteName(dbName: string, remoteName?: string) {
   const syncDb = fireproof(SYNC_DB_NAME);
 
   const result = await syncDb.query<string, ConnectData>("localName", { key: dbName, includeDocs: true });
@@ -82,7 +82,7 @@ async function getOrCreateRemoteName(dbName: string, remoteName: string | undefi
 
 export function connect(
   db: Database,
-  remoteName: string | undefined,
+  remoteName?: string,
   dashboardURI: CoerceURI = "https://dashboard.fireproof.storage/",
   remoteURI: CoerceURI = "fireproof://cloud.fireproof.direct"
 ): Promise<bs.Connection> {
