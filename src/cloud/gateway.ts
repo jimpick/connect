@@ -284,8 +284,10 @@ function pkCarGetURL(uri: URI, key: string): URI {
   if (!baseUrl) {
     return pkURL(uri, key, "car");
   }
+  const name = uri.getParam("name");
+  const idx = uri.getParam("index") || "";
   const baseUri = URI.from(baseUrl).asURL();
-  baseUri.pathname = `/${key}`;
+  baseUri.pathname = `/${name}${idx}/${key}`;
   console.log("pkCarGetURL", baseUri.toString());
   return BuildURI.from(baseUri).URI();
 }
