@@ -50,7 +50,11 @@ export const rawConnect: ConnectFunction = (
   urlObj.defParam("localName", dbName);
   urlObj.defParam("storekey", `@${dbName}:data@`);
   urlObj.defParam("getBaseUrl", "https://storage.fireproof.direct/");
-  const fpUrl = urlObj.toString().replace("http://", "fireproof://").replace("https://", "fireproof://");
+  const fpUrl = urlObj
+    .toString()
+    .replace(/^http:\/\//, "fireproof://")
+    .replace(/^https:\/\//, "fireproof://");
+  // console.log("Config URL: " + fpUrl);
   return connectionCache.get(fpUrl).once(() => {
     makeKeyBagUrlExtractable(sthis);
     const connection = connectionFactory(sthis, fpUrl);
@@ -65,7 +69,7 @@ async function getOrCreateRemoteName(dbName: string, remoteName: string | undefi
   const result = await syncDb.query<string, ConnectData>("localName", { key: dbName, includeDocs: true });
   if (result.rows.length === 0) {
     const doc = {
-      remoteName: remoteName || syncDb.sthis.nextId().str,
+      remoteName: remoteName || syncDb.sthis.timeOrderedNextId().str,
       localName: dbName,
       firstConnect: !remoteName,
     } as ConnectData;
@@ -91,25 +95,28 @@ export function connect(
     if (!doc) {
       throw new Error("Failed to get or create remote name");
     }
+    doc.endpoint = URI.from(remoteURI).toString();
     const connection = rawConnect(db, doc.remoteName, URI.from(doc.endpoint).toString());
-    if (runtimeFn().isBrowser && window.location.href.indexOf(URI.from(dashboardURI).toString()) === -1) {
-      const connectURI = URI.from(dashboardURI).build().pathname("/fp/databases/connect");
-      connectURI.defParam("localName", dbName);
-      connectURI.defParam("remoteName", doc.remoteName);
-      if (doc.endpoint) {
-        connectURI.defParam("endpoint", doc.endpoint);
-      }
-      console.log("Fireproof cloud URL: " + connectURI.toString());
-      if (doc.firstConnect) {
-        // Set firstConnect to false after opening the window, so we don't constantly annoy with the dashboard
-        const syncDb = fireproof(SYNC_DB_NAME);
-        doc.endpoint = URI.from(remoteURI).toString();
-        doc.firstConnect = false;
-        await syncDb.put(doc);
-
-        window.open(connectURI.toString(), "_blank");
-      }
-      return connection;
+    const connectURI = URI.from(dashboardURI).build().pathname("/fp/databases/connect");
+    connectURI.defParam("localName", dbName);
+    connectURI.defParam("remoteName", doc.remoteName);
+    if (doc.endpoint) {
+      connectURI.defParam("endpoint", doc.endpoint);
     }
+    console.log("Fireproof Cloud: " + connectURI.toString());
+    if (
+      doc.firstConnect &&
+      runtimeFn().isBrowser &&
+      window.location.href.indexOf(URI.from(dashboardURI).toString()) === -1
+    ) {
+      // Set firstConnect to false after opening the window, so we don't constantly annoy with the dashboard
+      const syncDb = fireproof(SYNC_DB_NAME);
+      doc.firstConnect = false;
+      await syncDb.put(doc);
+
+      window.open(connectURI.toString(), "_blank");
+    }
+    connection.dashboardUrl = URI.from(connectURI);
+    return connection;
   });
 }
