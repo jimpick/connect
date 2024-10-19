@@ -92,26 +92,24 @@ export function connect(
       throw new Error("Failed to get or create remote name");
     }
     const connection = rawConnect(db, doc.remoteName, URI.from(doc.endpoint).toString());
-    if (
-      doc.firstConnect &&
-      runtimeFn().isBrowser &&
-      window.location.href.indexOf(URI.from(dashboardURI).toString()) === -1
-    ) {
-      // Set firstConnect to false after opening the window, so we don't constantly annoy with the dashboard
-      const syncDb = fireproof(SYNC_DB_NAME);
-      doc.endpoint = URI.from(remoteURI).toString();
-      doc.firstConnect = false;
-      await syncDb.put(doc);
-
+    if (runtimeFn().isBrowser && window.location.href.indexOf(URI.from(dashboardURI).toString()) === -1) {
       const connectURI = URI.from(dashboardURI).build().pathname("/fp/databases/connect");
-
       connectURI.defParam("localName", dbName);
       connectURI.defParam("remoteName", doc.remoteName);
       if (doc.endpoint) {
         connectURI.defParam("endpoint", doc.endpoint);
       }
-      window.open(connectURI.toString(), "_blank");
+      console.log("Fireproof cloud URL: " + connectURI.toString());
+      if (doc.firstConnect) {
+        // Set firstConnect to false after opening the window, so we don't constantly annoy with the dashboard
+        const syncDb = fireproof(SYNC_DB_NAME);
+        doc.endpoint = URI.from(remoteURI).toString();
+        doc.firstConnect = false;
+        await syncDb.put(doc);
+
+        window.open(connectURI.toString(), "_blank");
+      }
+      return connection;
     }
-    return connection;
   });
 }
