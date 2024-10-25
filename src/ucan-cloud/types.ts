@@ -68,4 +68,6 @@ export interface StoreAddSuccess {
   readonly url: string;
 }
 
-export type StoreGetSuccess = Uint8Array;
+export interface StoreGetSuccess {
+  readonly data: undefined | Uint8Array;
+}

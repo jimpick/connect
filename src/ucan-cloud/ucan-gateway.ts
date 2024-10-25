@@ -75,7 +75,8 @@ export class UCANGateway implements bs.Gateway {
       },
     });
 
-    this.logger.Debug().Str("clockId", clockId).Str("email", email).Msg("start");
+    this.logger.Debug().Str("clockId", clockId).Str("email", email).Str("serverId", serverId).Msg("start");
+
     // This
     this.inst = { clockId, email, server, service, w3 };
 
@@ -136,6 +137,8 @@ export class UCANGateway implements bs.Gateway {
         // const cid = CID.parse(key).toV1();
         const event = await Client.createClockEvent({ metadata });
 
+        this.logger.Debug().Str("cid", event.toString()).Msg("Event created");
+
         await Client.store({
           agent: this.inst.w3.agent.issuer,
           bytes: event.bytes,
@@ -144,11 +147,15 @@ export class UCANGateway implements bs.Gateway {
           service: this.inst.service,
         });
 
+        this.logger.Debug().Msg("Event stored");
+
         const { clockId, server, service } = this.inst;
         const agent = await this.agent();
 
         const advancement = await Client.advanceClock({ agent, clockId, event: event.cid, server, service });
         if (advancement.out.error) throw advancement.out.error;
+
+        this.logger.Debug().Str("cid", event.toString()).Msg("Clock advanced");
 
         break;
       }
@@ -184,8 +191,6 @@ export class UCANGateway implements bs.Gateway {
       name += `-${index}`;
     }
 
-    name += ".fp";
-
     this.logger.Debug().Str("store", store).Str("key", key).Msg("get");
 
     switch (store.toLowerCase()) {
@@ -199,7 +204,8 @@ export class UCANGateway implements bs.Gateway {
           service: this.inst.service,
         });
 
-        this.logger.Debug().Str("cid", cid.toString()).Any("data", res).Msg("DATA RETRIEVED");
+        this.logger.Debug().Str("cid", cid.toString()).Any("data", res).Msg("Data retrieved");
+
         if (!res) throw new NotFoundError();
         return res;
       }
@@ -211,7 +217,7 @@ export class UCANGateway implements bs.Gateway {
           service: this.inst.service,
         });
 
-        this.logger.Debug().Any("head", head.out).Msg("HEAD");
+        this.logger.Debug().Any("head", head.out).Msg("Meta (head) retrieved");
 
         if (head.out.error) throw head.out.error;
         if (head.out.ok.head === undefined) throw new NotFoundError();
@@ -225,11 +231,13 @@ export class UCANGateway implements bs.Gateway {
           service: this.inst.service,
         });
 
-        this.logger.Debug().Any("meta", res).Msg("retrieved");
+        this.logger.Debug().Any("meta", res).Msg("Meta (bytes) retrieved");
 
         if (!res) throw new NotFoundError();
         const metadata = await Client.metadataFromClockEvent(res);
         const resKeyInfo = await bs.setCryptoKeyFromGatewayMetaPayload(url, this.sthis, metadata);
+
+        this.logger.Debug().Any("meta", metadata).Msg("Meta (event) decoded");
 
         if (resKeyInfo.isErr()) {
           this.logger.Error().Err(resKeyInfo).Any("body", metadata).Msg("Error in setCryptoKeyFromGatewayMetaPayload");

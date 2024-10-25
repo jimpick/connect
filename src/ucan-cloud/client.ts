@@ -205,7 +205,8 @@ export async function retrieve({
     .execute(service);
 
   if (resp.out.error) throw resp.out.error;
-  return resp.out.ok;
+  if (resp.out.ok.data) return resp.out.ok.data;
+  return undefined;
 }
 
 export async function store({

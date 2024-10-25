@@ -1,6 +1,6 @@
 import { URI } from "@adviser/cement";
 import { fireproof, Database } from "@fireproof/core";
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { Absentee } from "@ucanto/principal";
 import * as UCANTO from "@ucanto/core";
 import { ed25519 } from "@ucanto/principal";
