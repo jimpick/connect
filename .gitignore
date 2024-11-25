@@ -3,6 +3,7 @@
 .idea
 .DS_Store
 .eslintcache
+**/.wrangler/
 pail.car
 
 # Directories
