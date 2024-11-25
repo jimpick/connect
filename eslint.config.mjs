@@ -15,6 +15,7 @@ export default tseslint.config(
       "**/node_modules/",
       "**/scripts/",
       "**/examples/",
+      "**/.wrangler/",
       "smoke/react/",
       "tests/connect-netlify/app/**/*.js",
     ],
