@@ -71,7 +71,7 @@ export function makeKeyBagUrlExtractable(sthis: SuperThis) {
     if (runtimeFn().isBrowser) {
       base = "indexdb://fp-keybag";
     } else {
-      base = "file://./dist/kb-dir-partykit";
+      base = "file:///tmp/dist/kb-dir-partykit";
     }
   }
   const kbUrl = BuildURI.from(base);

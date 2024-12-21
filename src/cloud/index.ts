@@ -27,7 +27,7 @@ const SYNC_DB_NAME = "fp_sync";
 // }
 
 if (!runtimeFn().isBrowser) {
-  const url = BuildURI.from(process.env.FP_KEYBAG_URL || "file://./dist/kb-dir-FireproofCloud");
+  const url = BuildURI.from(process.env.FP_KEYBAG_URL || "file:///tmp/dist/kb-dir-FireproofCloud");
   url.setParam("extractKey", "_deprecated_internal_api");
   process.env.FP_KEYBAG_URL = url.toString();
 }
@@ -104,7 +104,7 @@ export function connect(
       connectURI.defParam("endpoint", doc.endpoint);
     }
     // eslint-disable-next-line no-console
-    console.log("Fireproof Cloud: " + connectURI.toString());
+    // console.log("Fireproof Cloud: " + connectURI.toString());
     if (
       doc.firstConnect &&
       runtimeFn().isBrowser &&
