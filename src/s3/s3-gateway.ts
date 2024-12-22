@@ -11,7 +11,7 @@ import {
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
 import { AwsCredentialIdentity } from "@smithy/types";
-import { bs, rt, ensureLogger, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import { bs, rt, ensureLogger, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@jimpick/fireproof-core";
 
 export const S3_VERSION = "v0.1-s3";
 

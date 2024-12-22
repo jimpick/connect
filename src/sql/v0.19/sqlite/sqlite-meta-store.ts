@@ -3,7 +3,7 @@ import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../../typ
 import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result, URI, exception2Result } from "@adviser/cement";
 import { ensureSqliteVersion } from "./sqlite-ensure-version.js";
-import { ensureSuperLog, getStore, SuperThis } from "@fireproof/core";
+import { ensureSuperLog, getStore, SuperThis } from "@jimpick/fireproof-core";
 
 // export class MetaSQLRecordBuilder {
 //   readonly record: MetaRecord;

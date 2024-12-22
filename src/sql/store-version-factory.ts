@@ -1,5 +1,5 @@
 // import { Logger } from "@adviser/cement";
-import { ensureLogger, SuperThis } from "@fireproof/core";
+import { ensureLogger, SuperThis } from "@jimpick/fireproof-core";
 import { DBConnection, DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
 import { v0_19sqliteDataFactory, v0_19sqliteMetaFactory, v0_19sqliteWalFactory } from "./v0.19/sqlite_factory.js";
 // import { SQLITE_VERSION } from "./v0.19-better-sqlite3/version";

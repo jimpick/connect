@@ -53,7 +53,7 @@ jobs:
           pnpm install
       #          git config --global url."https://".insteadOf git+ssh://
       #          git config --global -l
-      #          pnpm remove @fireproof/core
+      #          pnpm remove @jimpick/fireproof-core
       #          pnpm install -f ../fireproof/dist/fireproof-core/fireproof-core-*.tgz
 
       - name: format-check

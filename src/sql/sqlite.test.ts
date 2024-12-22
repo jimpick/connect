@@ -1,4 +1,4 @@
-import { ensureSuperThis, fireproof, SysFileSystem, rt } from "@fireproof/core";
+import { ensureSuperThis, fireproof, SysFileSystem, rt } from "@jimpick/fireproof-core";
 import { registerSqliteStoreProtocol } from "./gateway-sql.js";
 import { V0_19SQL_VERSION } from "./v0.19/version.js";
 import { URI } from "@adviser/cement";

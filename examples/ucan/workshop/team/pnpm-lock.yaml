@@ -91,7 +91,7 @@ packages:
     resolution: {integrity: sha512-CXtq5nR4Su+2I47WPOlWud98Y5Lv8Kyxp2ukhgFx/eW6Blm18VXJO5WuQylPugRo8nbluoi6GvvxBLqHcvqUUw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/core@0.19.111':
+  '@jimpick/fireproof-core@0.19.111':
     resolution: {integrity: sha512-LJsXkGpMtDIvabX8YU24x33BV/oL1o6XdDAfbC2TpoRyNZ8pkqohibzHor+LFriMdRLtO2yqPkad2XnKgRZOqw==}
     peerDependencies:
       react: '>=18.0.0'
@@ -1808,7 +1808,7 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
-  '@fireproof/core@0.19.111(react@18.3.1)(typescript@5.6.3)':
+  '@jimpick/fireproof-core@0.19.111(react@18.3.1)(typescript@5.6.3)':
     dependencies:
       '@adviser/cement': 0.2.36(typescript@5.6.3)
       '@ipld/car': 5.3.3
@@ -1832,7 +1832,7 @@ snapshots:
 
   '@fireproof/ucan@0.19.112-dev-nf1(encoding@0.1.13)(react@18.3.1)(typescript@5.6.3)':
     dependencies:
-      '@fireproof/core': 0.19.111(react@18.3.1)(typescript@5.6.3)
+      '@jimpick/fireproof-core': 0.19.111(react@18.3.1)(typescript@5.6.3)
       '@ipld/dag-cbor': 9.2.2
       '@ucanto/client': 9.0.1
       '@ucanto/core': 10.0.1

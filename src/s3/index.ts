@@ -1,6 +1,6 @@
 import { connectionFactory } from "../connection-from-store.js";
 import { CoerceURI } from "@adviser/cement";
-import { Database } from "@fireproof/core";
+import { Database } from "@jimpick/fireproof-core";
 
 // Usage:
 //

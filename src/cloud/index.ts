@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, runtimeFn, URI } from "@adviser/cement";
-import { bs, Database, fireproof } from "@fireproof/core";
+import { bs, Database, fireproof } from "@jimpick/fireproof-core";
 import { ConnectFunction, connectionFactory, makeKeyBagUrlExtractable } from "../connection-from-store.js";
 import { registerFireproofCloudStoreProtocol } from "./gateway.js";
 

@@ -1,4 +1,4 @@
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@jimpick/fireproof-core";
 import * as UCAN from "@fireproof/connect/ucan";
 import meow from "meow";
 

@@ -19,7 +19,7 @@
   "keywords": ["fireproof", "partykit", "gateway"],
   "devDependencies": {},
   "dependencies": {
-    "@fireproof/core": "from-package-json",
+    "@jimpick/fireproof-core": "from-package-json",
     "partykit": "from-package-json",
     "partysocket": "from-package-json",
     "@adviser/cement": "from-package-json"

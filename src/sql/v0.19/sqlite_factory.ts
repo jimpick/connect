@@ -1,4 +1,4 @@
-import { Logger, SuperThis, SysFileSystem, rt } from "@fireproof/core";
+import { Logger, SuperThis, SysFileSystem, rt } from "@jimpick/fireproof-core";
 import { DataSQLStore, DBConnection, MetaSQLStore, SQLOpts, WalSQLStore } from "../types.js";
 import { ResolveOnce, URI } from "@adviser/cement";
 import { SQLConnectionResult } from "../sql-connection-factory.js";

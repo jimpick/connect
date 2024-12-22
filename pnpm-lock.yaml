@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@fireproof/core': file:../fireproof/dist/fireproof-core
+  '@jimpick/fireproof-core': file:../fireproof/dist/fireproof-core
 
 importers:
 
@@ -17,7 +17,7 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.705.0
         version: 3.705.0
-      '@fireproof/core':
+      '@jimpick/fireproof-core':
         specifier: file:../fireproof/dist/fireproof-core
         version: file:../fireproof/dist/fireproof-core(react@18.3.1)(typescript@5.7.2)
       '@fireproof/vendor':
@@ -1034,7 +1034,7 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@file:../fireproof/dist/fireproof-core':
+  '@jimpick/fireproof-core@file:../fireproof/dist/fireproof-core':
     resolution: {directory: ../fireproof/dist/fireproof-core, type: directory}
     peerDependencies:
       react: ^18.3.1
@@ -4857,7 +4857,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@file:../fireproof/dist/fireproof-core(react@18.3.1)(typescript@5.7.2)':
+  '@jimpick/fireproof-core@file:../fireproof/dist/fireproof-core(react@18.3.1)(typescript@5.7.2)':
     dependencies:
       '@adviser/cement': 0.2.41(typescript@5.7.2)
       '@fireproof/vendor': 1.0.0

@@ -1,4 +1,4 @@
-import { ensureLogger, SuperThis } from "@fireproof/core";
+import { ensureLogger, SuperThis } from "@jimpick/fireproof-core";
 import { DBConnection, SQLOpts } from "./types.js";
 import { v0_19sqliteConnectionFactory } from "./v0.19/sqlite_factory.js";
 import { URI } from "@adviser/cement";

@@ -1,4 +1,4 @@
-import { Database } from "@fireproof/core";
+import { Database } from "@jimpick/fireproof-core";
 
 export async function smokeDB(db: Database) {
   const ran = Math.random().toString();

@@ -1,4 +1,4 @@
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof, Database } from "@jimpick/fireproof-core";
 import { registerAWSStoreProtocol } from "./gateway.js";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { smokeDB } from "../../tests/helper.js";

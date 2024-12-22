@@ -1,4 +1,4 @@
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof, Database } from "@jimpick/fireproof-core";
 import { registerNetlifyStoreProtocol } from "./gateway.js";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { URI } from "@adviser/cement";

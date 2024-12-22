@@ -1,5 +1,5 @@
 import { KeyedResolvOnce, URI } from "@adviser/cement";
-import { bs, type Database } from "@fireproof/core";
+import { bs, type Database } from "@jimpick/fireproof-core";
 import { Delegation, Principal, SignerArchive } from "@ucanto/interface";
 import { Agent, type AgentMeta, type AgentData, type AgentDataExport } from "@web3-storage/access/agent";
 import { Absentee, ed25519 } from "@ucanto/principal";

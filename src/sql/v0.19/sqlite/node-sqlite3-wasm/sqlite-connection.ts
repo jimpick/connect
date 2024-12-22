@@ -3,7 +3,7 @@ import type { Database } from "node-sqlite3-wasm";
 import { KeyedResolvOnce, ResolveOnce, URI } from "@adviser/cement";
 
 import { SQLOpts } from "../../../types.js";
-import { ensureSuperLog, SuperThis } from "@fireproof/core";
+import { ensureSuperLog, SuperThis } from "@jimpick/fireproof-core";
 import { ensureSQLOpts } from "../../../ensurer.js";
 import { Sqlite3Connection, TasteHandler } from "../../sqlite_factory.js";
 

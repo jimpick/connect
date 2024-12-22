@@ -1,7 +1,7 @@
 import { V0_19BS3Connection } from "./better-sqlite3/sqlite-connection.js";
 import { V0_19SQL_VERSION } from "../version.js";
 import { ResolveOnce, URI } from "@adviser/cement";
-import { ensureLogger, SuperThis } from "@fireproof/core";
+import { ensureLogger, SuperThis } from "@jimpick/fireproof-core";
 
 const once = new ResolveOnce<string>();
 export async function ensureSqliteVersion(sthis: SuperThis, url: URI, dbConn: V0_19BS3Connection) {

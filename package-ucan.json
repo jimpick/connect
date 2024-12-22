@@ -19,7 +19,7 @@
   "scripts": {},
   "devDependencies": {},
   "dependencies": {
-    "@fireproof/core": "from-package-json",
+    "@jimpick/fireproof-core": "from-package-json",
     "@ipld/dag-cbor": "from-package-json",
     "@ucanto/client": "from-package-json",
     "@ucanto/core": "from-package-json",

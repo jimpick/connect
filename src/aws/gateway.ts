@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
-import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@jimpick/fireproof-core";
 
 async function resultFetch(logger: Logger, curl: CoerceURI, init?: RequestInit): Promise<Result<Response>> {
   const url = URI.from(curl);

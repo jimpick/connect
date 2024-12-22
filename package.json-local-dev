@@ -86,6 +86,11 @@
     "url": "https://github.com/fireproof-storage/connect/issues"
   },
   "homepage": "https://github.com/fireproof-storage/connect#readme",
+  "pnpm": {
+    "overrides": {
+      "@jimpick/fireproof-core": "file:../fireproof/dist/fireproof-core"
+    }
+  },
   "dependencies": {
     "@adviser/cement": "^0.2.41",
     "@aws-sdk/client-s3": "^3.705.0",

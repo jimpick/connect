@@ -19,7 +19,7 @@
   "keywords": ["fireproof", "netlify", "gateway"],
   "devDependencies": {},
   "dependencies": {
-    "@fireproof/core": "from-package-json",
+    "@jimpick/fireproof-core": "from-package-json",
     "@netlify/blobs": "^8.1.0"
   }
 }

@@ -58,7 +58,7 @@ function packageVersion() {
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   target: ["esnext", "node18"],
   globalName: "Connect",
-  external: ["@fireproof/core"],
+  external: ["@jimpick/fireproof-core"],
   clean: true,
   sourcemap: true,
   metafile: true,
@@ -80,7 +80,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@jimpick/fireproof-core", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
@@ -165,7 +165,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@jimpick/fireproof-core", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
@@ -208,7 +208,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@jimpick/fireproof-core", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
@@ -251,7 +251,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@jimpick/fireproof-core", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
@@ -294,7 +294,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@jimpick/fireproof-core", `${__dirname}/src/bundle-not-impl.js`),
       skipper("conf", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
@@ -343,7 +343,7 @@ const LIBRARY_BUNDLES: Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@fireproof/core", "use-fireproof"),
+      skipper("@jimpick/fireproof-core", "use-fireproof"),
       skipper("skip-iife", `${__dirname}/src/bundle-not-impl.js`),
       // skipper("store-conf", `${__dirname}/src/bundle-not-impl.js`),
 

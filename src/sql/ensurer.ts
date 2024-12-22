@@ -1,4 +1,4 @@
-import { SuperThis } from "@fireproof/core";
+import { SuperThis } from "@jimpick/fireproof-core";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames, SQLGestalt } from "./types.js";
 import { URI } from "@adviser/cement";
 

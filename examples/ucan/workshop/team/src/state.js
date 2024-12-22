@@ -1,5 +1,5 @@
 import * as UCAN from "@fireproof/ucan";
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@jimpick/fireproof-core";
 import { fxware, store } from "spellcaster/spellcaster.js";
 import { docIds, imageUrls } from "./db";
 import { byteArray } from "./image";

@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, runtimeFn, URI } from "@adviser/cement";
-import { bs, Database, ensureLogger, SuperThis } from "@fireproof/core";
+import { bs, Database, ensureLogger, SuperThis } from "@jimpick/fireproof-core";
 
 // export interface StoreOptions {
 //   readonly data: bs.DataStore;

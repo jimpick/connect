@@ -4,7 +4,7 @@ import { Logger, ResolveOnce, Result, URI, exception2Result } from "@adviser/cem
 import { SQLConnectionFactoryx } from "./sql-connection-factory.js";
 import { DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
 import { DataStoreFactory, MetaStoreFactory, WalStoreFactory } from "./store-version-factory.js";
-import { exceptionWrapper, getKey, getName, bs, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import { exceptionWrapper, getKey, getName, bs, NotFoundError, SuperThis, ensureSuperLog } from "@jimpick/fireproof-core";
 
 export class SQLWalGateway implements bs.Gateway {
   readonly storeType = "wal";

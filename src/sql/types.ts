@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { SysFileSystem } from "@fireproof/core";
+import { SysFileSystem } from "@jimpick/fireproof-core";
 
 export interface DBConnection {
   connect(): Promise<void>;

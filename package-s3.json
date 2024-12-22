@@ -18,7 +18,7 @@
   "scripts": {},
   "devDependencies": {},
   "dependencies": {
-    "@fireproof/core": "from-package-json",
+    "@jimpick/fireproof-core": "from-package-json",
     "@aws-sdk/client-s3": "^3.614.0"
   }
 }

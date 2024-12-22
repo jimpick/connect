@@ -1,4 +1,4 @@
-// import { ensureLogger, Falsy, bs } from "@fireproof/core";
+// import { ensureLogger, Falsy, bs } from "@jimpick/fireproof-core";
 // import { ensureSQLOpts } from "./ensurer.js";
 // import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
 

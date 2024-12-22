@@ -1,5 +1,5 @@
 import * as FP_UCAN from "@fireproof/ucan";
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@jimpick/fireproof-core";
 import { imgUrlToUint8Array } from "./image.js";
 import { addImage } from "./db.js";
 

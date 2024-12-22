@@ -5,7 +5,7 @@ import { Delegation, DID, generate } from "@ucanto/principal/ed25519";
 import { Driver } from "@web3-storage/access/drivers/types";
 import { AgentDataExport, AgentDataModel, CIDString, DelegationMeta, SpaceMeta } from "@web3-storage/access/types";
 import { ResolveOnce, URI } from "@adviser/cement";
-import { Database, fireproof } from "@fireproof/core";
+import { Database, fireproof } from "@jimpick/fireproof-core";
 
 function replacer(_k: string, v: { type: string; data: unknown[] }): unknown {
   // eslint-disable-next-line no-restricted-globals

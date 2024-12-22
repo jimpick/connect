@@ -1,6 +1,6 @@
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
-import { Logger, SuperThis, NotFoundError, ensureLogger, rt, isNotFoundError } from "@fireproof/core";
-import { getStore, bs } from "@fireproof/core";
+import { Logger, SuperThis, NotFoundError, ensureLogger, rt, isNotFoundError } from "@jimpick/fireproof-core";
+import { getStore, bs } from "@jimpick/fireproof-core";
 import { DID } from "@ucanto/core";
 import { ConnectionView, Delegation, Principal } from "@ucanto/interface";
 import { Agent, DidMailto } from "@web3-storage/access/agent";

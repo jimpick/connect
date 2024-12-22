@@ -7,7 +7,7 @@ This gateway intended for use with Fireproof Cloud.
 You can call the `connect` function with a database and it will provision a remote UUID for the database, and sync the database to the remote. It will also log a URL to the console that you can open in a browser to connect to the database, as well as try to open the URL in a new tab. Tell us what you think about this workflow!
 
 ```typescript
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@jimpick/fireproof-core";
 import { connect } from "@fireproof/cloud";
 
 const database = await fireproof("my-db-name");

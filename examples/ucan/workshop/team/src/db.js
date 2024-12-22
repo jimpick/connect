@@ -1,17 +1,17 @@
 /**
- * @typedef {import("@fireproof/core").Database} Database
- * @typedef {import("@fireproof/core").DocBase} DocBase
- * @typedef {import("@fireproof/core").DocTypes} DocTypes
+ * @typedef {import("@jimpick/fireproof-core").Database} Database
+ * @typedef {import("@jimpick/fireproof-core").DocBase} DocBase
+ * @typedef {import("@jimpick/fireproof-core").DocTypes} DocTypes
  */
 
 /**
  * @template T
- * @typedef {import("@fireproof/core").AllDocsResponse<DocBase & T>} AllDocsResponse
+ * @typedef {import("@jimpick/fireproof-core").AllDocsResponse<DocBase & T>} AllDocsResponse
  */
 
 /**
  * @template T
- * @typedef {import("@fireproof/core").DocWithId<DocBase & T>} DocWithId
+ * @typedef {import("@jimpick/fireproof-core").DocWithId<DocBase & T>} DocWithId
  */
 
 /**

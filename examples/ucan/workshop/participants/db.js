@@ -1,12 +1,12 @@
 /**
- * @typedef {import("@fireproof/core").Database} Database
+ * @typedef {import("@jimpick/fireproof-core").Database} Database
  */
 
-import { isNotFoundError } from "@fireproof/core";
+import { isNotFoundError } from "@jimpick/fireproof-core";
 
 /**
  * @template T
- * @typedef {import("@fireproof/core").AllDocsResponse<DocBase & T>} AllDocsResponse
+ * @typedef {import("@jimpick/fireproof-core").AllDocsResponse<DocBase & T>} AllDocsResponse
  */
 
 /**

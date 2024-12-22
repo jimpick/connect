@@ -1,5 +1,5 @@
 import { URI } from "@adviser/cement";
-import { fireproof, Database } from "@fireproof/core";
+import { fireproof, Database } from "@jimpick/fireproof-core";
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 
 import { registerUCANStoreProtocol } from "./ucan-gateway.js";

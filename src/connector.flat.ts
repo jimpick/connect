@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { ensureSuperThis, fireproof } from "@fireproof/core";
+import { ensureSuperThis, fireproof } from "@jimpick/fireproof-core";
 import { connectionFactory } from "./connection-from-store.js";
 import { URI } from "@adviser/cement";
 

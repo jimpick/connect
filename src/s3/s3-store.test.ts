@@ -1,4 +1,4 @@
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@jimpick/fireproof-core";
 import { registerS3StoreProtocol } from "./s3-gateway.js";
 import { smokeDB } from "../../tests/helper.js";
 

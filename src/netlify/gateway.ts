@@ -1,5 +1,5 @@
 import { KeyedResolvOnce, Result, URI, BuildURI, exception2Result } from "@adviser/cement";
-import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@fireproof/core";
+import { bs, getStore, Logger, NotFoundError, SuperThis, ensureSuperLog } from "@jimpick/fireproof-core";
 
 export class NetlifyGateway implements bs.Gateway {
   readonly sthis: SuperThis;
