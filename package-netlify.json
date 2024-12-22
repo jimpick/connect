@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/netlify",
+  "name": "@jimpick/fireproof-netlify",
   "version": "0.18.0",
   "description": "PartyKit gateway for Netlify",
   "main": "./index.cjs",

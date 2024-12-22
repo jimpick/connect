@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/partykit",
+  "name": "@jimpick/fireproof-partykit",
   "version": "0.18.0",
   "description": "PartyKit gateway for Fireproof",
   "main": "./index.cjs",

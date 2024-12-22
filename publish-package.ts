@@ -28,7 +28,7 @@ async function main() {
   }
   console.log(`Publishing package: ${packageJsonFile} version ${version} with tags ${tags.join(", ")}`);
   const tagsOpts = tags.map((i) => ["--tag", i]).flat();
-  await $`cd ${path.dirname(packageJsonFile)} && pnpm publish --access public --no-git-checks ${tagsOpts}`.pipe(
+  await $`cd ${path.dirname(packageJsonFile)} && pnpm publish --otp ${process.env.OTP} --access public --no-git-checks ${tagsOpts}`.pipe(
     process.stdout
   );
 }

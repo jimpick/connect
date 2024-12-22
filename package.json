@@ -89,7 +89,7 @@
   "dependencies": {
     "@adviser/cement": "^0.2.41",
     "@aws-sdk/client-s3": "^3.705.0",
-    "@jimpick/fireproof-core": "0.19.118-jim",
+    "@jimpick/fireproof-core": "0.19.118-jim2",
     "@fireproof/vendor": "1.0.0",
     "@jspm/core": "^2.1.0",
     "@netlify/blobs": "^8.1.0",
@@ -129,5 +129,6 @@
       "script": "./dist/ucan/web/index.global.js",
       "types": "./dist/ucan/index.d.ts"
     }
-  }
+  },
+  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
 }

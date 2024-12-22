@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/aws",
+  "name": "@jimpick/fireproof-aws",
   "version": "0.18.0",
   "description": "PartyKit gateway for AWS",
   "main": "./index.cjs",

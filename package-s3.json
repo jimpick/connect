@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/s3",
+  "name": "@jimpick/fireproof-s3",
   "version": "0.18.0",
   "description": "",
   "main": "./dist/browser/index.cjs",

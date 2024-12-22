@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@jimpick/fireproof-core': file:../fireproof/dist/fireproof-core
-
 importers:
 
   .:
@@ -17,12 +14,12 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.705.0
         version: 3.705.0
-      '@jimpick/fireproof-core':
-        specifier: file:../fireproof/dist/fireproof-core
-        version: file:../fireproof/dist/fireproof-core(react@18.3.1)(typescript@5.7.2)
       '@fireproof/vendor':
         specifier: 1.0.0
         version: 1.0.0
+      '@jimpick/fireproof-core':
+        specifier: 0.19.118-jim2
+        version: 0.19.118-jim2(react@18.3.1)(typescript@5.7.2)
       '@jspm/core':
         specifier: ^2.1.0
         version: 2.1.0
@@ -1034,11 +1031,6 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@jimpick/fireproof-core@file:../fireproof/dist/fireproof-core':
-    resolution: {directory: ../fireproof/dist/fireproof-core, type: directory}
-    peerDependencies:
-      react: ^18.3.1
-
   '@fireproof/vendor@1.0.0':
     resolution: {integrity: sha512-ucN0ICj7xbpbO3NWjAKKjMHkBn4vSRUdKn14LLaA0MILJowty+H4XBB8dCobwKemhW49ha5p520NOLRzJSKsow==}
 
@@ -1100,6 +1092,11 @@ packages:
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
+
+  '@jimpick/fireproof-core@0.19.118-jim2':
+    resolution: {integrity: sha512-o8OpXgA174zzUJ+V4ZOLnDEshRJbgsTwpn4I7InZY5RvHhZ5RWFmABOpmNJt+j+fdH3o/YfAYkNwoWoNTZW1Ow==}
+    peerDependencies:
+      react: ^18.3.1
 
   '@jridgewell/gen-mapping@0.3.5':
     resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
@@ -4857,23 +4854,6 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@jimpick/fireproof-core@file:../fireproof/dist/fireproof-core(react@18.3.1)(typescript@5.7.2)':
-    dependencies:
-      '@adviser/cement': 0.2.41(typescript@5.7.2)
-      '@fireproof/vendor': 1.0.0
-      '@ipld/unixfs': 3.0.0
-      charwise: 3.0.1
-      idb: 8.0.0
-      memfs: 4.15.0
-      multiformats: 13.3.1
-      p-limit: 6.1.0
-      p-map: 7.0.3
-      p-retry: 6.2.1
-      prolly-trees: 1.0.4
-      react: 18.3.1
-    transitivePeerDependencies:
-      - typescript
-
   '@fireproof/vendor@1.0.0':
     dependencies:
       '@ipld/dag-pb': 4.1.2
@@ -4973,6 +4953,23 @@ snapshots:
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
+
+  '@jimpick/fireproof-core@0.19.118-jim2(react@18.3.1)(typescript@5.7.2)':
+    dependencies:
+      '@adviser/cement': 0.2.41(typescript@5.7.2)
+      '@fireproof/vendor': 1.0.0
+      '@ipld/unixfs': 3.0.0
+      charwise: 3.0.1
+      idb: 8.0.0
+      memfs: 4.15.0
+      multiformats: 13.3.1
+      p-limit: 6.1.0
+      p-map: 7.0.3
+      p-retry: 6.2.1
+      prolly-trees: 1.0.4
+      react: 18.3.1
+    transitivePeerDependencies:
+      - typescript
 
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
